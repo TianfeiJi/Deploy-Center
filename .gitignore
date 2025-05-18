@@ -1,0 +1,22 @@
+# 隐藏文件
+.*
+
+# Python 编译缓存目录
+**/__pycache__/
+
+# 虚拟环境文件夹
+venv/
+env/
+
+# 日志文件
+logs/
+*.log
+
+# 临时文件
+temp/
+*.tmp
+*.temp
+
+# macOS 系统文件
+.DS_Store
+**/.DS_Store
