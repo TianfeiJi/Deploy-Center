@@ -1,5 +1,23 @@
 # Deploy Center
 
+<p align="center">
+  <a href="https://github.com/TianfeiJi/Deploy-Center">
+    <img alt="License" src="https://img.shields.io/github/license/TianfeiJi/Deploy-Center.svg">
+  </a>
+  <a href="https://github.com/TianfeiJi/Deploy-Center/stargazers">
+    <img alt="Stars" src="https://img.shields.io/github/stars/TianfeiJi/Deploy-Center.svg">
+  </a>
+  <a href="https://star-history.com/#TianfeiJi/Deploy-Center&Date">
+    <img src="https://api.star-history.com/svg?repos=TianfeiJi/Deploy-Center&type=Date" alt="Star History Chart" />
+  </a>
+  <a href="https://github.com/TianfeiJi/Deploy-Center/issues">
+    <img alt="Issues" src="https://img.shields.io/github/issues/TianfeiJi/Deploy-Center.svg">
+  </a>
+  <a href="https://github.com/TianfeiJi/Deploy-Center/commits/main">
+    <img alt="Last commit" src="https://img.shields.io/github/last-commit/TianfeiJi/Deploy-Center.svg">
+  </a>
+</p>
+
 ## Introduction
 
 **`Deploy Center`** is a lightweight project deployment management tool that supports front-end projects as well as various projects that can be deployed via Docker containers (such as Java, Python, etc.). By automating and standardizing operations, **Deploy Center** significantly improves operational efficiency, reduces manual intervention costs, and ensures the efficiency and stability of project deployments.

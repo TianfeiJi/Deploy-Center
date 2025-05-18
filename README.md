@@ -1,5 +1,23 @@
 # 部署中心 (Deploy Center)
 
+<p align="center">
+  <a href="https://github.com/TianfeiJi/Deploy-Center">
+    <img alt="License" src="https://img.shields.io/github/license/TianfeiJi/Deploy-Center.svg">
+  </a>
+  <a href="https://github.com/TianfeiJi/Deploy-Center/stargazers">
+    <img alt="Stars" src="https://img.shields.io/github/stars/TianfeiJi/Deploy-Center.svg">
+  </a>
+  <a href="https://star-history.com/#TianfeiJi/Deploy-Center&Date">
+    <img src="https://api.star-history.com/svg?repos=TianfeiJi/Deploy-Center&type=Date" alt="Star History Chart" />
+  </a>
+  <a href="https://github.com/TianfeiJi/Deploy-Center/issues">
+    <img alt="Issues" src="https://img.shields.io/github/issues/TianfeiJi/Deploy-Center.svg">
+  </a>
+  <a href="https://github.com/TianfeiJi/Deploy-Center/commits/main">
+    <img alt="Last commit" src="https://img.shields.io/github/last-commit/TianfeiJi/Deploy-Center.svg">
+  </a>
+</p>
+
 ## 项目介绍
 
 **`部署中心 (Deploy Center)`** 是一款轻量级的项目部署管理工具，它支持前端项目以及各类可通过 Docker 容器化部署的项目（如 Java、Python 等）。通过自动化和标准化操作，`Deploy Center` 能显著提升运维效率，降低人工干预成本，确保项目部署的高效性和稳定性。
