@@ -7,9 +7,6 @@
   <a href="https://github.com/TianfeiJi/Deploy-Center/stargazers">
     <img alt="Stars" src="https://img.shields.io/github/stars/TianfeiJi/Deploy-Center.svg">
   </a>
-  <a href="https://star-history.com/#TianfeiJi/Deploy-Center&Date">
-    <img src="https://api.star-history.com/svg?repos=TianfeiJi/Deploy-Center&type=Date" alt="Star History Chart" />
-  </a>
   <a href="https://github.com/TianfeiJi/Deploy-Center/issues">
     <img alt="Issues" src="https://img.shields.io/github/issues/TianfeiJi/Deploy-Center.svg">
   </a>
