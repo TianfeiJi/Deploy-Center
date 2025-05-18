@@ -19,14 +19,14 @@ graph TD
     D -- No --> E[Pop up 2FA binding dialog]
     E --> F[Call /api/deploy-center/2fa/setup to get QR code]
     F --> G[Display QR code, prompt user to bind]
-    G --> H[User completes scan and clicks "I have bound"]
+    G --> H[User completes scan and clicks 'I have bound']
     H --> I[Close 2FA binding dialog]
     I --> K
 
     D -- Yes --> J[Pop up verification code input dialog]
 
     J --> K[User enters verification code]
-    J --> L[User can click "Rebind Authenticator"]
+    J --> L[User can click 'Rebind Authenticator']
     L --> F
 
     K --> M[Call /api/deploy-center/auth/login with verification code, login succeeds, return token]
