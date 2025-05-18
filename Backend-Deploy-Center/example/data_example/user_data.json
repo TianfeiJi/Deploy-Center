@@ -1,0 +1,30 @@
+[
+    {
+        "id": 1,
+        "username": "admin",
+        "password": "admin",
+        "nickname": "管理员",
+        "email": null,
+        "avatar": "https://cdn.quasar.dev/img/boy-avatar.png",
+        "role": "superadmin",
+        "permissions": null,
+        "two_factor_secret": null,
+        "status": "ENABLED",
+        "created_at": "2025-05-18T10:00:00",
+        "updated_at": null
+    },
+    {
+        "id": 2,
+        "username": "user1",
+        "password": "user1",
+        "nickname": "用户1",
+        "email": null,
+        "avatar": "https://cdn.quasar.dev/img/boy-avatar.png",
+        "role": "user",
+        "permissions": ["test"],
+        "two_factor_secret": null,
+        "status": "ENABLED",
+        "created_at": "2025-05-18T10:00:00",
+        "updated_at": null
+    }
+]

@@ -1,0 +1,62 @@
+[
+    {
+        "id": 1,
+        "config_name": "Docker 路径",
+        "config_key": "docker_path",
+        "config_value": "/usr/bin/docker",
+        "config_remark": "用于构建容器的 docker 命令路径",
+        "config_group": "系统设置",
+        "created_at": "2025-04-08 16:00:00",
+        "updated_at": "2025-04-08 18:16:30.374978"
+    },
+    {
+        "id": 2,
+        "config_name": "启用默认项目路径",
+        "config_key": "enable_default_project_base_path",
+        "config_value": true,
+        "config_remark": "启用后，系统部署时会自动使用默认路径",
+        "config_group": "项目设置",
+        "created_at": "2025-04-08 16:00:00",
+        "updated_at": "2025-04-08 16:00:00"
+    },
+    {
+        "id": 3,
+        "config_name": "默认 Java 项目路径",
+        "config_key": "default_java_project_base_path",
+        "config_value": "/data/docker/digital-center-projects",
+        "config_remark": "用于 Java 容器化部署的项目根目录",
+        "config_group": "项目设置",
+        "created_at": "2025-04-08 16:00:00",
+        "updated_at": "2025-04-08 16:20:01.791088"
+    },
+    {
+        "id": 4,
+        "config_name": "默认 Web 项目路径",
+        "config_key": "default_web_project_base_path",
+        "config_value": "/data/docker/digital-center-web",
+        "config_remark": "用于 Web 部署的项目根目录",
+        "config_group": "项目设置",
+        "created_at": "2025-04-08 16:00:00",
+        "updated_at": "2025-04-08 16:20:01.791088"
+    },
+    {
+        "id": 5,
+        "config_name": "默认 java dockerfile 模版",
+        "config_key": "default_java_dockerfile_template",
+        "config_value": "48c0c97d",
+        "config_remark": "用于 构建 dockerfile",
+        "config_group": "项目设置",
+        "created_at": "2025-04-08 16:00:00",
+        "updated_at": "2025-04-08 16:20:01.791088"
+    },
+    {
+        "id": 6,
+        "config_name": "默认 java dockercommand 模版",
+        "config_key": "default_java_dockercommand_template",
+        "config_value": "154ff84f",
+        "config_remark": "用于 构建 dockercommand",
+        "config_group": "项目设置",
+        "created_at": "2025-04-08 16:00:00",
+        "updated_at": "2025-04-08 16:20:01.791088"
+    }
+]

@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pydantic
+python-multipart
+loguru
+bcrypt
+pyjwt
+psutil
+py-cpuinfo
+jinja2

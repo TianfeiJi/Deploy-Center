@@ -1,0 +1,42 @@
+[
+  {
+    "id": "48c0c97d",
+    "template_name": "template1",
+    "relative_path": "dockerfile/java_template1.j2",
+    "template_type": "dockerfile",
+    "project_type": "java",
+    "description": "",
+    "created_at": "2025-04-27T12:00:00",
+    "updated_at": "2025-04-27T12:00:00"
+  },
+  {
+    "id": "2fe4ebd2",
+    "template_name": "template2",
+    "relative_path": "dockerfile/java_template2.j2",
+    "template_type": "dockerfile",
+    "project_type": "java",
+    "description": "",
+    "created_at": "2025-04-27T12:00:00",
+    "updated_at": "2025-04-27T12:00:00"
+  },
+  {
+    "id": "154ff84f",
+    "template_name": "template1",
+    "relative_path": "dockercommand/java_template1.j2",
+    "template_type": "dockercommand",
+    "project_type": "java",
+    "description": "",
+    "created_at": "2025-04-27T12:00:00",
+    "updated_at": "2025-04-27T12:00:00"
+  },
+  {
+    "id": "c965cdc8",
+    "template_name": "template2",
+    "relative_path": "dockercommand/java_template2.j2",
+    "template_type": "dockercommand",
+    "project_type": "java",
+    "description": "",
+    "created_at": "2025-04-27T12:00:00",
+    "updated_at": "2025-04-27T12:00:00"
+  }
+]

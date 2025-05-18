@@ -1,0 +1,42 @@
+[
+    {
+        "id": 1,
+        "config_name": "启用全局水印",
+        "config_key": "enable_global_watermark",
+        "config_value": false,
+        "config_remark": "启用后，所有页面将展示用户信息水印。",
+        "config_group": "安全设置",
+        "created_at": "2025-04-08 16:00:00",
+        "updated_at": "2025-04-16 15:37:41.081917"
+    },
+    {
+        "id": 2,
+        "config_name": "Token 有效时间（秒）",
+        "config_key": "token_expiration_seconds",
+        "config_value": 86400,
+        "config_remark": "控制登录令牌的过期时间，单位为秒。",
+        "config_group": "安全设置",
+        "created_at": "2025-04-08 16:00:00",
+        "updated_at": "2025-04-08 16:00:00"
+    },
+    {
+        "id": 3,
+        "config_name": "是否启用2FA",
+        "config_key": "enable_2fa",
+        "config_value": false,
+        "config_remark": "启用后，用户登录时将需输入双因素验证码以完成身份验证。",
+        "config_group": "安全设置",
+        "created_at": "2025-04-08 16:00:00",
+        "updated_at": "2025-04-16 17:16:07.669925"
+    },
+    {
+        "id": 4,
+        "config_name": "白名单ip列表",
+        "config_key": "ip_whitelist",
+        "config_value": null,
+        "config_remark": "限制系统访问 IP，多个 IP 用逗号分隔，如：127.0.0.1, 192.168.0.1。",
+        "config_group": "安全设置",
+        "created_at": "2025-04-08 16:00:00",
+        "updated_at": "2025-04-08 16:00:00"
+    }
+]

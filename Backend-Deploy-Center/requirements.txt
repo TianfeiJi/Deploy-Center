@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+pydantic
+python-multipart
+loguru
+bcrypt
+pyjwt
+psutil
+httpx
+pyotp
+qrcode
+Pillow

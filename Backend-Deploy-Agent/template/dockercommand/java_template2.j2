@@ -1,0 +1,13 @@
+docker run -d \
+--name {{project_code}} \
+{% if network %}--network {{network}} \
+{% endif %}-p {{external_port}}:{{internal_port}} \
+-v {{host_project_path}}/jars:/app/jars \
+-v {{host_project_path}}/logs:/app/logs \
+-v /data/docker/shared/skywalking/java-agent:/skywalking-agent \
+-e JAVA_OPTS="\
+  -javaagent:/skywalking-agent/skywalking-agent.jar \
+  -Dskywalking.agent.service_name={{docker_image_name}} \
+  -Dskywalking.collector.backend_service=skywalking-oap:11800 \
+  -Dskywalking.logging.dir=/skywalking-agent/logs"
+{{docker_image_name}}:{{docker_image_tag}}

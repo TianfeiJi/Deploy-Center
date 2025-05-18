@@ -1,0 +1,14 @@
+# 使用 OpenJDK {{jdk_version}} 基础镜像
+FROM openjdk:{{jdk_version}}
+
+# 工作目录
+WORKDIR /app
+
+# 复制 JAR 包到容器中
+COPY jars/{{project_code}}.jar /app/jars/
+
+# 暴露端口
+EXPOSE {{external_port}}
+
+# 启动命令
+CMD ["java", "-jar", "-javaagent:/skywalking-agent/skywalking-agent.jar", "-Dskywalking.agent.service_name={{project_code}}", "-Dskywalking.collector.backend_service=skywalking-oap:11800", "/app/jars/{{project_code}}.jar"]

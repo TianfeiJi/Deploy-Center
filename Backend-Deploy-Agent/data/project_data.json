@@ -1,0 +1,39 @@
+[
+    {
+        "id": "a1b2c3d4",
+        "agent_id": 1,
+        "project_type": "Web",
+        "project_code": "test",
+        "project_name": "测试项目",
+        "project_group": "其他",
+        "host_project_path": "/data/docker/projects/webs/test",
+        "container_project_path": "/app/docker/projects/webs/test",
+        "access_url": "http://127.0.0.1/test/#/",
+        "git_repository": null,
+        "status": "pending",
+        "created_at": "2025-05-18T10:00:00",
+        "updated_at": "2025-05-18T10:00:00",
+        "last_deployed_at": "2025-05-18T10:00:00"
+    },
+    {
+        "id": "z1x2c3v4",
+        "agent_id": 1,
+        "project_type": "Java",
+        "project_code": "gateway-service",
+        "project_name": "网关微服务",
+        "project_group": "其他",
+        "docker_image_name": "xxx/gateway-service",
+        "docker_image_tag": "v1.0",
+        "external_port": 8080,
+        "internal_port": 8080,
+        "network": null,
+        "jdk_version": 17,
+        "host_project_path": "/data/docker/projects/java/gateway-service",
+        "container_project_path": "/app/docker/projects/java/gateway-service",
+        "git_repository": null,
+        "status": "running",
+        "created_at": "2025-05-18T10:00:00",
+        "updated_at": null,
+        "last_deployed_at": null
+    }
+]
