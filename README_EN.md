@@ -31,9 +31,10 @@
 
 - **Complete Deployment History**: It records detailed information of each deployment, including deployment time, version, operator, and results. Users can quickly trace the deployment process through deployment history, compare deployments of different versions, and support one-click rollback to historical versions, ensuring the traceability and stability of deployments.
 
-- **Advanced Security Features**: **Deploy Center** offers advanced security features, including user authentication, permission management, data encryption, and more, ensuring the security of enterprise data and deployment processes. The system supports multi-user login and provides role-based and permission management functions to meet enterprise-level security requirements.
-
 - **Real-Time Monitoring and Alerts**: It provides real-time monitoring capabilities, supporting real-time viewing and analysis of project runtime status. The system can configure alert rules to notify operations personnel of potential issues in a timely manner, ensuring the stable operation of projects.
+
+## Planned Features
+- **Automated Cloud-Based Build and Deployment**: Deploy Center is planned to support automated code fetching from repositories such as GitHub and GitLab. The system will allow code to be pulled, locally built using Maven, and deployed on business servers—all fully automated by the Deploy Agent. This upcoming feature aims to streamline the entire process from code to deployment, significantly improving efficiency and reducing the need for manual intervention.
 
 ## Architecture
 
