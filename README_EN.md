@@ -20,7 +20,7 @@
 **`Deploy Center`** is a lightweight project deployment management tool that supports front-end projects as well as various projects that can be deployed via Docker containers (such as Java, Python, etc.). By automating and standardizing operations, **Deploy Center** significantly improves operational efficiency, reduces manual intervention costs, and ensures the efficiency and stability of project deployments.
 
 ## Live Demo
-**Demo URL:** http://jitianfei.com/deploy-center  
+**Demo URL:** [http://jitianfei.com/deploy-center](http://jitianfei.com/deploy-center)
 
 **Username:** admin
 

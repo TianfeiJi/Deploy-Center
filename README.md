@@ -20,7 +20,7 @@
 **`部署中心 (Deploy Center)`** 是一款轻量级的项目部署管理工具，它支持前端项目以及各类可通过 Docker 容器化部署的项目（如 Java、Python 等）。通过自动化和标准化操作，`Deploy Center` 能显著提升运维效率，降低人工干预成本，确保项目部署的高效性和稳定性。
 
 ## 在线演示
-**演示地址：** http://jitianfei.com/deploy-center
+**演示地址：** [http://jitianfei.com/deploy-center](http://jitianfei.com/deploy-center)
 
 **用户名：** admin
 
