@@ -33,70 +33,76 @@ Backend-Deploy-Agent/
     └── dockerfile
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
-### Install Dependencies
 ```bash
 pip install -r requirements.txt
-```
-
-### Start the Service
-```bash
 python src/main.py
 ```
 
-### Or Start with Uvicorn (Recommended)
+Or use Uvicorn (recommended):
+
 ```bash
 uvicorn src.main:app --host 0.0.0.0 --port 2333 --reload
 ```
 
-## Docker Build and Run Guide
+## 🐳 Deploy with Docker
 
-Please make sure Docker is installed on your system.
+Make sure Docker is installed on your system.
 
-### Step 1: Prepare Project Directory
+## Method 1: Use the Official Image
 
-Create the project directory structure on your deployment server (adjust the path as needed):
+**1. Pull the Image**
+```bash
+docker pull tianfeiji/deploy-agent:v1.0
+```
 
+**2. Run the Container**
+```bash
+docker run -d \
+  -p 2333:2333 \
+  --name deploy-agent \
+  -v /data/docker/infrastructure/deploy-agent/data:/app/data \
+  -v /data/docker/infrastructure/deploy-agent/logs:/app/logs \
+  -v /data/docker/projects/java:/app/projects/java \
+  -v /data/docker/projects/webs:/app/projects/webs \
+  tianfeiji/deploy-agent:v1.0
+```
+
+> **Mount Notes:**  
+> - `/app/data`: Data directory for the deployment agent  
+> - `/app/logs`: Log directory  
+> - `/app/projects/java`: Java project directory  
+> - `/app/projects/webs`: Frontend project directory  
+> You can customize the host paths based on your actual server environment, just ensure read/write permissions.
+
+## Method 2: Build the Image Manually
+
+**1. Prepare the Project Directory**
 ```bash
 mkdir -p /data/docker/infrastructure/deploy-agent
 cd /data/docker/infrastructure/deploy-agent
 ```
 
-Upload the following folders from your project to the directory above:
-- Upload the `data/` folder to `/data/docker/infrastructure/deploy-agent/data`
-- Upload the `src/` folder to `/data/docker/infrastructure/deploy-agent/src`
+**2. Copy the Project Source Code into This Directory**
 
 Expected directory structure:
 
 ```
 /data/docker/infrastructure/deploy-agent
 ├── data
+├── template
 ├── Dockerfile
 ├── requirements.txt
 └── src
 ```
 
-Make sure that the `Dockerfile` and `requirements.txt` files are located in the root of the project (i.e., at the same level as `data` and `src`).
-
-### Step 2: Build Docker Image
-
-Run the following command in the project root directory to build the Docker image:
-
+**3. Build the Docker Image**
 ```bash
 docker build -t deploy-agent:v1.0 .
 ```
 
-Once the build is complete, you can verify the image with:
-
-```bash
-docker images
-```
-
-### Step 3: Run Docker Container
-
-When running the container, adjust the mounted paths (`-v` options) according to your environment. Example:
-
+**4. Run the Container**
 ```bash
 docker run -d \
   -p 2333:2333 \
@@ -108,4 +114,10 @@ docker run -d \
   deploy-agent:v1.0
 ```
 
-> Note: The volume mount paths above are for reference only. **You should adjust them based on the actual directory structure of your server.**
+> **Mount Notes:**  
+> - `/app/data`: Deployment agent's data directory  
+> - `/app/logs`: Log output directory  
+> - `/app/projects/java`: Java project deployment path  
+> - `/app/projects/webs`: Frontend project deployment path  
+
+> Be sure to adjust the host paths according to your actual environment to avoid issues caused by incorrect path settings.

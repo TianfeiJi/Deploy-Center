@@ -33,39 +33,60 @@ Backend-Deploy-Agent/
     └── dockerfile
 ```
 
-## 快速启动
+## 🚀 快速开始
 
-### 安装依赖
 ```bash
 pip install -r requirements.txt
-```
-
-### 启动服务
-```bash
 python src/main.py
 ```
 
-### 或使用 Uvicorn 启动（推荐）
+或使用 Uvicorn：
+
 ```bash
 uvicorn src.main:app --host 0.0.0.0 --port 2333 --reload
 ```
 
-## Docker 构建与运行
+## 🐳 使用 Docker 部署
+
 请确保您已经安装了 Docker 环境。
 
-### 第一步：准备项目目录
-在部署服务器上创建项目目录结构（可根据实际情况调整路径）：
+## 方式一：使用官方镜像
 
+**1. 拉取镜像**
+```bash
+docker pull tianfeiji/deploy-agent:v1.0
+```
+
+**2. 运行**
+```bash
+docker run -d \
+  -p 2333:2333 \
+  --name deploy-agent \
+  -v /data/docker/infrastructure/deploy-agent/data:/app/data \
+  -v /data/docker/infrastructure/deploy-agent/logs:/app/logs \
+  -v /data/docker/projects/java:/app/projects/java \
+  -v /data/docker/projects/webs:/app/projects/webs \
+  tianfeiji/deploy-agent:v1.0
+```
+
+> **挂载说明：**  
+> - `/app/data`：部署代理的数据目录  
+> - `/app/logs`：日志目录  
+> - `/app/projects/java`：Java 项目路径  
+> - `/app/projects/webs`：前端项目路径  
+> 宿主机路径请根据实际情况自定义，只需确保读写权限。
+
+## 方式二：自行构建镜像
+
+**1. 准备项目目录**
 ```bash
 mkdir -p /data/docker/infrastructure/deploy-agent
 cd /data/docker/infrastructure/deploy-agent
 ```
 
-将项目中的以下两个文件夹上传至上述目录：
-- 将 data/ 文件夹上传至 /data/docker/infrastructure/deploy-agent/data
-- 将 src/ 文件夹上传至 /data/docker/infrastructure/deploy-agent/src
+**2. 拷贝项目源码至该目录**
 
-期望的目录结构如下所示：
+期望目录结构如下：
 
 ```
 /data/docker/infrastructure/deploy-agent
@@ -76,21 +97,12 @@ cd /data/docker/infrastructure/deploy-agent
 └── src
 ```
 
-请确保 Dockerfile 和 requirements.txt 文件位于项目根目录中（即与 data 和 src 同级）。
-
-### 第二步：构建 Docker 镜像
-
-在项目根目录下执行以下命令构建镜像：
-
+**3. 构建镜像**
 ```bash
 docker build -t deploy-agent:v1.0 .
 ```
 
-构建成功后，可以通过 docker images 查看镜像是否创建成功。
-
-### 第三步：运行 Docker 容器
-运行容器时，请根据自身部署环境修改挂载路径（-v 参数）。以下为默认示例：
-
+**4. 运行容器**
 ```bash
 docker run -d \
   -p 2333:2333 \
@@ -102,22 +114,10 @@ docker run -d \
   deploy-agent:v1.0
 ```
 
-> 注意：上述挂载路径仅供参考。**您应根据实际服务器目录结构设置容器卷挂载路径。**
+> **挂载说明：**
+> - `/app/data`：部署代理的数据目录
+> - `/app/logs`：日志输出
+> - `/app/projects/java`：Java 项目部署路径
+> - `/app/projects/webs`：前端项目部署路径
 
-### 容器卷示例挂载说明
-
-1. **数据与日志目录挂载**
-
-   为实现Deploy Agent自身数据持久化和日志可追踪：
-
-   - `-v /data/docker/infrastructure/deploy-agent/data:/app/data`：挂载项目运行数据目录。
-   - `-v /data/docker/infrastructure/deploy-agent/logs:/app/logs`：挂载日志输出目录。
-
-2. **部署项目目录挂载**
-
-   用于容器访问和部署实际的业务项目源代码或构建产物：
-
-   - `-v /data/docker/projects/java:/app/projects/java`：映射Java项目路径。
-   - `-v /data/docker/projects/webs:/app/projects/webs`：映射前端项目路径。
-
->  **注意：上述挂载路径仅供参考，请根据实际部署环境合理配置容器卷挂载路径，否则系统可能无法访问关键数据目录或项目源文件，导致部署任务失败。**
+> 请根据实际部署环境合理调整宿主路径，避免路径错误导致部署失败。

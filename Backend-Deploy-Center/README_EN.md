@@ -53,35 +53,61 @@ Backend-Deploy-Center/
         └── jwt_util.py
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
+Run locally (development mode)
 ```bash
 pip install -r requirements.txt
 python src/main.py
 ```
 
-Or run with Uvicorn:
+Or use Uvicorn:
 
 ```bash
 uvicorn src.main:app --host 0.0.0.0 --port 1333 --reload
 ```
 
-## Docker Build and Run Guide
+## 🐳 Docker Deployment
 
-Please make sure Docker is installed on your system.
+Please make sure you have Docker installed.
 
-### Step 1: Prepare Project Directory
+## Method 1: Use Official Image
 
-Create the project directory structure on your deployment server (adjust the path as needed):
+No need to build the image, just pull and run:
+
+**1. Pull the image**
+```bash
+docker pull tianfeiji/deploy-center:v1.0
+```
+
+**2. Run the container**
+```bash
+docker run -d \
+  -p 1333:1333 \
+  --name deploy-center \
+  -v /data/docker/infrastructure/deploy-center/data:/app/data \
+  -v /data/docker/infrastructure/deploy-center/logs:/app/logs \
+  tianfeiji/deploy-center:v1.0
+```
+
+> **Volume Mounting Note:**  
+> To enable data persistence and log tracking, it is recommended to mount the following directories (host paths can be adjusted as needed):  
+> - `/app/data`: data directory inside the container  
+> - `/app/logs`: logs directory inside the container  
+>
+> For example, the host path can be `/data/docker/infrastructure/deploy-center/`, or customized to any location with proper read/write permissions.
+
+## Method 2: Build Image Locally
+
+**1. Prepare project directory**  
+Create the project directory structure on the deployment server (adjust paths as needed):
 
 ```bash
 mkdir -p /data/docker/infrastructure/deploy-center
 cd /data/docker/infrastructure/deploy-center
 ```
 
-Upload the following folders from your project to the directory above:
-- Upload the `data/` folder to `/data/docker/infrastructure/deploy-center/data`
-- Upload the `src/` folder to `/data/docker/infrastructure/deploy-center/src`
+**2. Copy the project source code to this directory**
 
 Expected directory structure:
 
@@ -93,25 +119,15 @@ Expected directory structure:
 └── src
 ```
 
-Make sure that the `Dockerfile` and `requirements.txt` are located in the root of the project (i.e., at the same level as `data` and `src`).
+> `Dockerfile` and `requirements.txt` should be in the root directory alongside `data` and `src`.
 
-### Step 2: Build Docker Image
-
-Run the following command in the project root directory to build the Docker image:
+**3. Build the Docker image**
 
 ```bash
 docker build -t deploy-center:v1.0 .
 ```
 
-Once the build is complete, you can verify the image with:
-
-```bash
-docker images
-```
-
-### Step 3: Run Docker Container
-
-When running the container, adjust the mounted paths (`-v` options) according to your environment. Example:
+**4. Run the Docker container**
 
 ```bash
 docker run -d \
@@ -122,11 +138,7 @@ docker run -d \
   deploy-center:v1.0
 ```
 
-### Container Volume Mount Explanation
-
-**Data and Log Directory Mounting**
-
-To ensure persistence of Deploy Center’s own data and traceability of logs:
-
-- `-v /data/docker/infrastructure/deploy-center/data:/app/data` : Mount runtime data directory.
-- `-v /data/docker/infrastructure/deploy-center/logs:/app/logs` : Mount log output directory.
+> **Volume Mounting Note:**  
+> To enable data persistence and log tracking, it is recommended to mount the following directories (host paths can be adjusted as needed):  
+> - `/app/data`: data directory inside the container  
+> - `/app/logs`: logs directory inside the container  

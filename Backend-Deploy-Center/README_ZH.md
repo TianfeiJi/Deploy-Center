@@ -53,7 +53,7 @@ Backend-Deploy-Center/
         └── jwt_util.py
 ```
 
-## 本地快速启动
+## 🚀 快速开始
 
 ```bash
 pip install -r requirements.txt
@@ -66,10 +66,38 @@ python src/main.py
 uvicorn src.main:app --host 0.0.0.0 --port 1333 --reload
 ```
 
-## Docker 构建与运行
+## 🐳 使用 Docker 部署
+
 请确保您已经安装了 Docker 环境。
 
-### 第一步：准备项目目录
+## 方式一：使用官方镜像
+
+无需构建镜像，直接拉取并运行：
+
+**1. 拉取镜像**
+```bash
+docker pull tianfeiji/deploy-center:v1.0
+```
+
+**2. 运行**
+```bash
+docker run -d \
+  -p 1333:1333 \
+  --name deploy-center \
+  -v /data/docker/infrastructure/deploy-center/data:/app/data \
+  -v /data/docker/infrastructure/deploy-center/logs:/app/logs \
+  tianfeiji/deploy-center:v1.0
+```
+
+> **挂载说明:** 为了实现数据持久化和日志记录，建议挂载以下目录（宿主路径可根据实际情况调整）：
+> - /app/data：部署中心的数据目录
+> - /app/logs：日志输出目录
+
+例如，宿主机路径可设为 /data/docker/infrastructure/deploy-center/，也可以自定义为其他位置，只要确保具备读写权限即可。。
+
+## 方式二：自行构建镜像
+
+**1. 准备项目目录**
 在部署服务器上创建项目目录结构（可根据实际情况调整路径）：
 
 ```bash
@@ -77,9 +105,7 @@ mkdir -p /data/docker/infrastructure/deploy-center
 cd /data/docker/infrastructure/deploy-center
 ```
 
-将项目中的以下两个文件夹上传至上述目录：
-- 将 data/ 文件夹上传至 /data/docker/infrastructure/deploy-center/data
-- 将 src/ 文件夹上传至 /data/docker/infrastructure/deploy-center/src
+**2. 拷贝项目源码至该目录**
 
 期望的目录结构如下所示：
 
@@ -91,21 +117,15 @@ cd /data/docker/infrastructure/deploy-center
 └── src
 ```
 
-请确保 Dockerfile 和 requirements.txt 文件位于项目根目录中（即与 data 和 src 同级）。
+> `Dockerfile` 与 `requirements.txt` 应位于根目录，与 `data`、`src` 同级。
 
-### 第二步：构建 Docker 镜像
-
-在项目根目录下执行以下命令构建镜像：
+**3. 构建 Docker 镜像**
 
 ```bash
 docker build -t deploy-center:v1.0 .
 ```
 
-构建成功后，可以通过 docker images 查看镜像是否创建成功。
-
-### 第三步：运行 Docker 容器
-运行容器时，请根据自身部署环境修改挂载路径（-v 参数）。以下为默认示例：
-
+**4：运行 Docker 容器**
 ```bash
 docker run -d \
   -p 1333:1333 \
@@ -115,11 +135,6 @@ docker run -d \
   deploy-center:v1.0
 ```
 
-### 容器卷挂载说明
-
-**数据与日志目录挂载**
-
-   为实现Deploy Center自身数据持久化和日志可追踪：
-
-   - `-v /data/docker/infrastructure/deploy-center/data:/app/data`：挂载项目运行数据目录。
-   - `-v /data/docker/infrastructure/deploy-center/logs:/app/logs`：挂载日志输出目录。
+> **挂载说明:** 为了实现数据持久化和日志记录，建议挂载以下目录（宿主路径可根据实际情况调整）：
+> - /app/data：部署中心的数据目录
+> - /app/logs：日志输出目录
