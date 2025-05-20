@@ -106,24 +106,29 @@ flowchart TD
     DA3 --> Service6[Business Service 6]
 ```
 
-## Technology Stack
+## 🛠️ Technology Stack
 
-### Deploy Center
+The project consists of two main modules: the Deployment Management Platform (Deploy Center) and the Deployment Execution Agent (Deploy Agent).
+
+### 📦 Deploy Center
+
+> Management side, providing Web UI, deployment task dispatching, and log viewing features.
 
 #### Frontend
 - **Framework**: Quasar Framework 2 (v2.16.0)
-- **Languages**: Vue 3, TypeScript, JavaScript
-- **UI Component Library**: Quasar UI, Element Plus
+- **Languages**: Vue 3 + TypeScript
+- **UI Components**: Quasar UI, Element Plus
 - **Build Tool**: Vite
 - **State Management**: Pinia
-- **Routing Management**: Vue Router
 
 #### Backend
 - **Framework**: FastAPI
 - **Language**: Python 3.9+
 - **Containerization**: Docker
 
-### Deploy Agent
+### ⚙️ Deploy Agent
+
+> Deployment agent running on business servers, responsible for executing actual project deployments.
 
 #### Backend
 - **Framework**: FastAPI

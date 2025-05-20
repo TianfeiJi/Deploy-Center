@@ -113,7 +113,6 @@ flowchart TD
 - **UI 组件**：Quasar UI, Element Plus
 - **构建工具**：Vite
 - **状态管理**：Pinia
-- **路由管理**：Vue Router
 
 #### 后端
 - **框架**：FastAPI
