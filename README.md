@@ -24,9 +24,9 @@
 **`部署中心 (Deploy Center)`** 是一款轻量级的项目部署管理工具，它支持前端项目以及各类可通过 Docker 容器化部署的项目（如 Java、Python 等）。通过自动化和标准化操作，`Deploy Center` 能显著提升运维效率，降低人工干预成本，确保项目部署的高效性和稳定性。
 
 ## 文档导航
-- [Frontend-Deploy-Center](./Frontend-Deploy-Center/README.md)：部署中心前端项目（Quasar + Vue3）  
-- [Backend-Deploy-Center](./Backend-Deploy-Center/README_ZH.md)：部署中心服务端核心模块（FastAPI）  
-- [Backend-Deploy-Agent](./Backend-Deploy-Agent/README_ZH.md)：部署代理服务，负责实际部署任务的执行  
+- [Frontend-Deploy-Center](./Frontend-Deploy-Center/README.md)：部署中心前端，提供部署任务配置与操作界面
+- [Backend-Deploy-Center](./Backend-Deploy-Center/README_ZH.md)：部署中心服务端，负责部署任务的调度与分发
+- [Backend-Deploy-Agent](./Backend-Deploy-Agent/README_ZH.md)：部署代理服务端，负责实际部署任务的执行  
 > 更多说明文档请见 [A-docs/](./A-docs/) 目录  
 
 ## 在线演示
