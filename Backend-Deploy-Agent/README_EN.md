@@ -1,67 +1,111 @@
 # Backend - Deploy Agent
 
-The Deploy Agent is a backend service built with FastAPI. It is responsible for executing deployment tasks on business servers, such as running `docker build`, `docker run`, and other commands. The service is orchestrated by the Deploy Center and supports multi-language project deployments (e.g., Java, Python, frontend).
+The Deploy Agent is a backend service built with FastAPI. It is responsible for executing concrete deployment tasks on business servers, such as running `docker build`, `docker run`, and other related commands. This service is centrally orchestrated by the Deploy Center and supports deployment scheduling for multi-language projects (e.g., Java, Python, frontend, etc.).
 
 ## Project Structure
 ```bash
 Backend-Deploy-Agent/
-├── Dockerfile                     # Build the deploy agent image
-├── README.md                      # This documentation file
-├── logs/                          # Runtime log directory (recommended to mount)
-├── requirements.txt               # Python dependencies list
-└── src/                           # Main source directory
-    ├── config/                    # Logging and base configuration
-    │   └── log_config.py
-    ├── data/                      # Runtime data
-    │   ├── cached_data.json
-    │   ├── deploy_history.json
-    │   ├── project_data.json
-    │   └── user.json
-    ├── deployers/                 # Deployment logic for different project types
-    │   ├── java_project_deployer.py
-    │   ├── python_project_deploy.py
-    │   └── web_project_deploy.py
-    ├── main.py                    # FastAPI entry point
-    ├── manager/                   # Core data managers
-    │   ├── project_data_manager.py
-    │   └── user_manager.py
-    ├── middleware/                # Middleware (e.g., auth verification)
-    │   └── verify_token_middleware.py
-    ├── models/                    # Data models
-    │   ├── dto/
-    │   │   ├── add_java_project_request_dto.py
-    │   │   ├── add_web_project_request_dto.py
-    │   │   └── user_login_request_dto.py
-    │   └── entity/
-    │       ├── http_result.py
-    │       ├── java_project.py
-    │       ├── log.py
-    │       ├── project_base.py
-    │       └── user.py
-    ├── routes/                    # API routes
-    │   ├── deploy_route.py
-    │   └── user_route.py
-    └── services/                  # Business logic services
-        ├── deploy_service.py
-        └── user_service.py
+├── Dockerfile
+├── data
+├── example
+│   ├── README.md
+│   ├── data_example
+│   └── template_example
+│       ├── dockercommand
+│       └── dockerfile
+├── requirements.txt
+├── src
+│   ├── config
+│   ├── deployers
+│   ├── main.py
+│   ├── manager
+│   ├── middleware
+│   ├── models
+│   │   ├── common
+│   │   ├── dto
+│   │   ├── entity
+│   │   ├── enum
+│   │   └── vo
+│   ├── routes
+│   └── utils
+└── template
+    ├── dockercommand
+    └── dockerfile
 ```
-
-## Key Features
-
-- **Multi-language Support**: Supports deployment of Java, Python, and frontend projects.
-- **Token-Based Authentication**: Secured using token verification middleware.
-- **Centralized Orchestration**: Designed to be controlled and scheduled by a central Deploy Center.
-- **Modular Architecture**: Clear separation of concerns between config, data, deployers, routes, and services.
-- **Logging and History Tracking**: Logs and deployment history are persistently recorded for auditing and troubleshooting.
 
 ## Quick Start
 
+### Install Dependencies
 ```bash
-# Install dependencies
 pip install -r requirements.txt
+```
 
-# Run the service
+### Start the Service
+```bash
 python src/main.py
 ```
 
-> Note: For production deployment, it's recommended to use a proper ASGI server such as Uvicorn or Gunicorn.
+### Or Start with Uvicorn (Recommended)
+```bash
+uvicorn src.main:app --host 0.0.0.0 --port 2333 --reload
+```
+
+## Docker Build and Run Guide
+
+Please make sure Docker is installed on your system.
+
+### Step 1: Prepare Project Directory
+
+Create the project directory structure on your deployment server (adjust the path as needed):
+
+```bash
+mkdir -p /data/docker/infrastructure/deploy-agent
+cd /data/docker/infrastructure/deploy-agent
+```
+
+Upload the following folders from your project to the directory above:
+- Upload the `data/` folder to `/data/docker/infrastructure/deploy-agent/data`
+- Upload the `src/` folder to `/data/docker/infrastructure/deploy-agent/src`
+
+Expected directory structure:
+
+```
+/data/docker/infrastructure/deploy-agent
+├── data
+├── Dockerfile
+├── requirements.txt
+└── src
+```
+
+Make sure that the `Dockerfile` and `requirements.txt` files are located in the root of the project (i.e., at the same level as `data` and `src`).
+
+### Step 2: Build Docker Image
+
+Run the following command in the project root directory to build the Docker image:
+
+```bash
+docker build -t deploy-agent:v1.0 .
+```
+
+Once the build is complete, you can verify the image with:
+
+```bash
+docker images
+```
+
+### Step 3: Run Docker Container
+
+When running the container, adjust the mounted paths (`-v` options) according to your environment. Example:
+
+```bash
+docker run -d \
+  -p 2333:2333 \
+  --name deploy-agent \
+  -v /data/docker/infrastructure/deploy-agent/data:/app/data \
+  -v /data/docker/infrastructure/deploy-agent/logs:/app/logs \
+  -v /data/docker/projects/java:/app/projects/java \
+  -v /data/docker/projects/webs:/app/projects/webs \
+  deploy-agent:v1.0
+```
+
+> Note: The volume mount paths above are for reference only. **You should adjust them based on the actual directory structure of your server.**

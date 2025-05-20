@@ -5,77 +5,91 @@
 ## 项目结构
 ```bash
 Backend-Deploy-Agent/
-├── Dockerfile                     # 构建部署代理镜像
-├── README.md                      # 本说明文件
-├── logs/                          # 运行日志目录（建议挂载）
-├── requirements.txt               # Python 依赖列表
-└── src/                           # 主程序目录
-    ├── config/                    # 日志与基础配置
-    │   └── log_config.py
-    ├── data/                      # 系统运行数据
-    │   ├── cached_data.json
-    │   ├── deploy_history.json
-    │   ├── project_data.json
-    │   └── user.json
-    ├── deployers/                 # 不同类型项目的部署实现类
-    │   ├── java_project_deployer.py
-    │   ├── python_project_deploy.py
-    │   └── web_project_deploy.py
-    ├── main.py                    # FastAPI 启动入口
-    ├── manager/                   # 核心数据管理器
-    │   ├── project_data_manager.py
-    │   └── user_manager.py
-    ├── middleware/                # 中间件（如权限验证）
-    │   └── verify_token_middleware.py
-    ├── models/                    # 数据模型
-    │   ├── dto/
-    │   │   ├── add_java_project_request_dto.py
-    │   │   ├── add_web_project_request_dto.py
-    │   │   └── user_login_request_dto.py
-    │   └── entity/
-    │       ├── http_result.py
-    │       ├── java_project.py
-    │       ├── log.py
-    │       ├── user.py
-    │       └── web_project.py
-    ├── routes/                    # 接口路由
-    │   ├── auth_routes.py
-    │   ├── docker_routes.py
-    │   ├── log_routes.py
-    │   ├── project_routes.py
-    │   └── server_routes.py
-    ├── security/                  # 安全机制（Token 验证等）
-    │   └── verify_token.py
-    └── utils/                     # 工具类
-        └── jwt_util.py
-```bash
+├── Dockerfile
+├── data
+├── example
+│   ├── README.md
+│   ├── data_example
+│   └── template_example
+│       ├── dockercommand
+│       └── dockerfile
+├── requirements.txt
+├── src
+│   ├── config
+│   ├── deployers
+│   ├── main.py
+│   ├── manager
+│   ├── middleware
+│   ├── models
+│   │   ├── common
+│   │   ├── dto
+│   │   ├── entity
+│   │   ├── enum
+│   │   └── vo
+│   ├── routes
+│   └── utils
+└── template
+    ├── dockercommand
+    └── dockerfile
+```
 
 ## 快速启动
 
-# 安装依赖
+### 安装依赖
 ```bash
 pip install -r requirements.txt
 ```
 
-# 启动服务
+### 启动服务
 ```bash
 python src/main.py
 ```
 
-# 或使用 Uvicorn 启动（推荐）
+### 或使用 Uvicorn 启动（推荐）
 ```bash
 uvicorn src.main:app --host 0.0.0.0 --port 2333 --reload
 ```
 
 ## Docker 构建与运行
+请确保您已经安装了 Docker 环境。
 
-构建镜像：
+### 第一步：准备项目目录
+在部署服务器上创建项目目录结构（可根据实际情况调整路径）：
+
+```bash
+mkdir -p /data/docker/infrastructure/deploy-agent
+cd /data/docker/infrastructure/deploy-agent
+```
+
+将项目中的以下两个文件夹上传至上述目录：
+- 将 data/ 文件夹上传至 /data/docker/infrastructure/deploy-agent/data
+- 将 src/ 文件夹上传至 /data/docker/infrastructure/deploy-agent/src
+
+期望的目录结构如下所示：
+
+```
+/data/docker/infrastructure/deploy-agent
+├── data
+├── template
+├── Dockerfile
+├── requirements.txt
+└── src
+```
+
+请确保 Dockerfile 和 requirements.txt 文件位于项目根目录中（即与 data 和 src 同级）。
+
+### 第二步：构建 Docker 镜像
+
+在项目根目录下执行以下命令构建镜像：
 
 ```bash
 docker build -t deploy-agent:v1.0 .
 ```
 
-运行容器（请务必根据自身部署环境调整挂载路径）：
+构建成功后，可以通过 docker images 查看镜像是否创建成功。
+
+### 第三步：运行 Docker 容器
+运行容器时，请根据自身部署环境修改挂载路径（-v 参数）。以下为默认示例：
 
 ```bash
 docker run -d \
@@ -89,7 +103,6 @@ docker run -d \
 ```
 
 > 注意：上述挂载路径仅供参考。**您应根据实际服务器目录结构设置容器卷挂载路径。**
-
 
 ### 容器卷示例挂载说明
 
