@@ -19,12 +19,16 @@
 
 **`部署中心 (Deploy Center)`** 是一款轻量级的项目部署管理工具，它支持前端项目以及各类可通过 Docker 容器化部署的项目（如 Java、Python 等）。通过自动化和标准化操作，`Deploy Center` 能显著提升运维效率，降低人工干预成本，确保项目部署的高效性和稳定性。
 
+## 文档导航
+- [Frontend-Deploy-Center](./Frontend-Deploy-Center/README.md)：部署中心前端项目（Quasar + Vue3）  
+- [Backend-Deploy-Center](./Backend-Deploy-Center/README_ZH.md)：部署中心服务端核心模块（FastAPI）  
+- [Backend-Deploy-Agent](./Backend-Deploy-Agent/README_ZH.md)：部署代理服务，负责实际部署任务的执行  
+> 更多说明文档请见 [A-docs/](./A-docs/) 目录  
+
 ## 在线演示
-**演示地址：** [http://jitianfei.com/deploy-center](http://jitianfei.com/deploy-center)
-
-**用户名：** admin
-
-**密码：** admin
+**演示地址：** [http://jitianfei.com/deploy-center](http://jitianfei.com/deploy-center)  
+**用户名：** admin  
+**密码：** admin  
 
 ## 功能特点
 - **轻量级与高性能**：单个 `Deploy Agent` 在运行时仅占用不到 150MB 的内存，确保对业务服务器资源的占用极低，同时提供高性能的部署能力，适合从中小企业到大型企业的各种规模部署场景。
@@ -91,14 +95,18 @@ flowchart TD
     DA3 --> Service6[业务服务 6]
 ```
 
-## 项目技术栈
+## 🛠️ 项目技术栈
 
-### Deploy Center
+项目由两个主要模块组成：部署管理平台（Deploy Center）与部署执行代理（Deploy Agent）。
+
+### 📦 Deploy Center
+
+> 管理端，提供 Web UI、部署任务下发与日志查看等功能。
 
 #### 前端
 - **框架**：Quasar Framework 2 (v2.16.0)
-- **语言**：Vue 3, TypeScript, JavaScript
-- **UI 组件库**：Quasar UI 组件库, Element Plus
+- **语言**：Vue 3 + TypeScript
+- **UI 组件**：Quasar UI, Element Plus
 - **构建工具**：Vite
 - **状态管理**：Pinia
 - **路由管理**：Vue Router
@@ -106,11 +114,13 @@ flowchart TD
 #### 后端
 - **框架**：FastAPI
 - **语言**：Python 3.9+
-- **容器化**：Docker
+- **容器化部署**：Docker
 
-### Deploy Agent
+### ⚙️ Deploy Agent
+
+> 运行在业务服务器上的部署代理，负责实际的项目部署执行。
 
 #### 后端
 - **框架**：FastAPI
 - **语言**：Python 3.9+
-- **容器化**：Docker
+- **容器化部署**：Docker

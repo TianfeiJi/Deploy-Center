@@ -19,12 +19,16 @@
 
 **`Deploy Center`** is a lightweight project deployment management tool that supports front-end projects as well as various projects that can be deployed via Docker containers (such as Java, Python, etc.). By automating and standardizing operations, **Deploy Center** significantly improves operational efficiency, reduces manual intervention costs, and ensures the efficiency and stability of project deployments.
 
+## Documentation Navigation
+- [Frontend-Deploy-Center](./Frontend-Deploy-Center/README.md): Frontend project of Deploy Center (Quasar + Vue3)  
+- [Backend-Deploy-Center](./Backend-Deploy-Center/README_EN.md): Core backend module of Deploy Center (FastAPI)  
+- [Backend-Deploy-Agent](./Backend-Deploy-Agent/README_EN.md): Deployment agent service responsible for executing deployment tasks  
+> For more documentation, please refer to the [A-docs/](./A-docs/) directory.
+
 ## Live Demo
-**Demo URL:** [http://jitianfei.com/deploy-center](http://jitianfei.com/deploy-center)
-
-**Username:** admin
-
-**Password:** admin
+**Demo URL:** [http://jitianfei.com/deploy-center](http://jitianfei.com/deploy-center)  
+**Username:** admin  
+**Password:** admin  
 
 ## Features
 
