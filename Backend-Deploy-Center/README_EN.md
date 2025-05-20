@@ -66,15 +66,52 @@ Or run with Uvicorn:
 uvicorn src.main:app --host 0.0.0.0 --port 1333 --reload
 ```
 
-## Docker Build and Run
+## Docker Build and Run Guide
 
-Build image:
+Please make sure Docker is installed on your system.
+
+### Step 1: Prepare Project Directory
+
+Create the project directory structure on your deployment server (adjust the path as needed):
+
+```bash
+mkdir -p /data/docker/infrastructure/deploy-center
+cd /data/docker/infrastructure/deploy-center
+```
+
+Upload the following folders from your project to the directory above:
+- Upload the `data/` folder to `/data/docker/infrastructure/deploy-center/data`
+- Upload the `src/` folder to `/data/docker/infrastructure/deploy-center/src`
+
+Expected directory structure:
+
+```
+/data/docker/infrastructure/deploy-center
+├── data
+├── Dockerfile
+├── requirements.txt
+└── src
+```
+
+Make sure that the `Dockerfile` and `requirements.txt` are located in the root of the project (i.e., at the same level as `data` and `src`).
+
+### Step 2: Build Docker Image
+
+Run the following command in the project root directory to build the Docker image:
 
 ```bash
 docker build -t deploy-center:v1.0 .
 ```
 
-Run container (please adjust volume mounts according to your deployment environment):
+Once the build is complete, you can verify the image with:
+
+```bash
+docker images
+```
+
+### Step 3: Run Docker Container
+
+When running the container, adjust the mounted paths (`-v` options) according to your environment. Example:
 
 ```bash
 docker run -d \
