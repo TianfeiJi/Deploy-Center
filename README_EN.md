@@ -19,6 +19,12 @@
 
 **`Deploy Center`** is a lightweight project deployment management tool that supports front-end projects as well as various projects that can be deployed via Docker containers (such as Java, Python, etc.). By automating and standardizing operations, **Deploy Center** significantly improves operational efficiency, reduces manual intervention costs, and ensures the efficiency and stability of project deployments.
 
+## Live Demo
+
+**Demo URL:** http://jitianfei.com/deploy-center  
+**Username:** admin  
+**Password:** admin
+
 ## Features
 
 - **Lightweight and High-Performance**: A single **Deploy Agent** consumes less than 150MB of memory at runtime, ensuring minimal resource usage on business servers while providing high-performance deployment capabilities. It is suitable for deployment scenarios of all sizes, ranging from small and medium-sized enterprises to large enterprises.
