@@ -36,10 +36,14 @@ async def get_agent(agent_id: int):
 
 
 @agent_router.post("/api/deploy-center/agent/register", summary="注册Agent")
-async def agent_register(agent_info: dict):
+async def agent_register(agent_data: dict):
     try:
+        # To enhance security, call an Agent-side API
+        # TODO：为提升注册安全性，应在注册前调用 Agent 自身的验证接口，确认其允许被当前 Center 注册
+        # 若验证通过 -> 执行注册逻辑
+        # 若验证失败 -> 中止注册并返回失败信息
         agent_data_manager = AgentDataManager.get_instance()
-        agent = agent_data_manager.create_agent(agent_info)
+        agent = agent_data_manager.create_agent(agent_data)
         return HttpResult[dict](code=200, status="success", msg=None, data=agent)
     except Exception as e:
         return HttpResult[dict](code=500, status="failed", msg=str(e), data=None)

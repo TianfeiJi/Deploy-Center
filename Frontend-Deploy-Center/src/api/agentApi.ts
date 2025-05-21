@@ -24,11 +24,11 @@ export function getAgent(agentId: number): Promise<HttpResult<Agent>> {
 }
 
 // 注册 Agent
-export function createAgent(agentInfo: any): Promise<HttpResult<Agent>> {
+export function createAgent(agentData: any): Promise<HttpResult<Agent>> {
   return request({
     url: '/api/deploy-center/agent/register',
     method: 'post',
-    data: agentInfo,
+    data: agentData,
   });
 }
 

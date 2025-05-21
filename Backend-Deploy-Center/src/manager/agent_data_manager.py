@@ -32,9 +32,13 @@ class AgentDataManager:
         now = datetime.now().isoformat()
         agent = Agent(
             id=new_id,
-            ip=agent_data.get("ip"),
             name=agent_data.get("name"),
-            status="offline",  # 默认离线
+            ip=agent_data.get("ip"),
+            port=agent_data.get("port"),
+            service_url=agent_data.get("service_url"),
+            os=agent_data.get("os"),
+            type=agent_data.get("type"),
+            status="online",
             created_at=now,
             updated_at=now
         )
@@ -57,6 +61,12 @@ class AgentDataManager:
                     agent.name = updated_data["name"]
                 if "ip" in updated_data:
                     agent.ip = updated_data["ip"]
+                if "port" in updated_data:
+                    agent.port = updated_data["port"]
+                if "os" in updated_data:
+                    agent.os = updated_data["os"]
+                if "type" in updated_data:
+                    agent.type = updated_data["type"]
                 if "status" in updated_data:
                     agent.status = updated_data["status"]
                 agent.updated_at = datetime.now().isoformat()

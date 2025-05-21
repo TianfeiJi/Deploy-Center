@@ -62,9 +62,9 @@ export const useAgentStore = defineStore('agentStore', {
     },
 
     // 注册 Agent
-    async createAgent(agentInfo: Agent) {
+    async createAgent(agentData: Agent) {
       try {
-        const response = await createAgent(agentInfo);
+        const response = await createAgent(agentData);
         if (response.code === 200 && response.data) {
           this.agentList.push(response.data);
         } else {
