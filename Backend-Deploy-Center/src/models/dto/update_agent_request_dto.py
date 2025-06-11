@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 class UpdateAgentRequestDto(BaseModel):
-    id: str
+    id: int
     name: Optional[str]
     ip: Optional[str]
     port: Optional[int]
