@@ -14,7 +14,7 @@
           to="/topology"
         >
           <q-toolbar-title shrink class="text-weight-bold">
-            Deploy Center
+            Deploy Center UI
           </q-toolbar-title>
         </q-btn>
 

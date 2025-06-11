@@ -1,8 +1,8 @@
 {
-  "name": "deploycenter",
+  "name": "deploycenterui",
   "version": "1.0.6",
-  "description": "Deploy Center Project",
-  "productName": "Deploy Center",
+  "description": "Deploy Center UI",
+  "productName": "Deploy Center UI",
   "author": "纪田飞 <iteacoder@foxmail.com>",
   "private": true,
   "scripts": {

@@ -24,7 +24,7 @@
 **`Deploy Center`** is a lightweight project deployment management tool that supports front-end projects as well as various projects that can be deployed via Docker containers (such as Java, Python, etc.). By automating and standardizing operations, **Deploy Center** significantly improves operational efficiency, reduces manual intervention costs, and ensures the efficiency and stability of project deployments.
 
 ## Documentation Navigation
-- [Frontend-Deploy-Center](./Frontend-Deploy-Center/README.md): Frontend of the Deploy Center, provides UI for task configuration and operations
+- [Frontend-Deploy-Center-UI](./Frontend-Deploy-Center-UI/README.md): Frontend of the Deploy Center, provides UI for task configuration and operations
 - [Backend-Deploy-Center](./Backend-Deploy-Center/README_EN.md): Backend of the Deploy Center, responsible for scheduling and distributing deployment tasks
 - Core backend module of Deploy Center (FastAPI)  
 - [Backend-Deploy-Agent](./Backend-Deploy-Agent/README_EN.md): Deployment Agent backend, responsible for executing deployment tasks

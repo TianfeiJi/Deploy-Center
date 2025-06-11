@@ -3,7 +3,7 @@
     <div class="background-image"></div>
     <q-card class="login-card" flat>
       <q-card-section>
-        <h2 class="text-h5 text-center">Deploy Center</h2>
+        <h2 class="text-h5 text-center">Deploy Center UI</h2>
         <q-form @submit.prevent="handleLogin">
           <q-input filled v-model="userLoginRequestDto.identifier" label="用户名" required />
           <q-input filled v-model="userLoginRequestDto.credential" label="密码" type="password" required />
