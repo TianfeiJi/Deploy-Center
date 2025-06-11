@@ -206,7 +206,6 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Notify } from 'quasar';
-import { Agent } from 'src/types/Agent';
 import { useAgentStore } from 'src/stores/useAgentStore';
 import { AgentCommandApi } from 'src/api/AgentCommandApi';
 import { AddWebProjectRequestDto } from 'src/types/dto/AddWebProjectRequestDto';
@@ -311,7 +310,8 @@ const handleCreateNewProject = async () => {
         project_group: currentProject.value.project_group,
         git_repository: currentProject.value.git_repository,
         host_project_path: currentProject.value.host_project_path,
-        container_project_path: currentProject.value.container_project_path
+        container_project_path: currentProject.value.container_project_path,
+        access_url: currentProject.value.access_url,
       };
 
       await agentCommandApi.value!.addWebProject(addWebProjectRequestDto);

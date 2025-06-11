@@ -1,10 +1,11 @@
+from typing import Optional
 from pydantic import BaseModel
 
 class AddJavaProjectRequestDto(BaseModel):
     project_code: str
     project_name: str
     project_group: str
-    git_repository: str
+    git_repository: Optional[str] = None
     docker_image_name: str
     docker_image_tag: str
     external_port: int
