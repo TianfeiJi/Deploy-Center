@@ -1,8 +1,7 @@
 import json
 import os
-from typing import List, Optional
+from typing import Dict, List, Optional
 from datetime import datetime
-from models.entity.agent import Agent
 
 
 class AgentDataManager:
@@ -14,69 +13,59 @@ class AgentDataManager:
             cls._instance = super(AgentDataManager, cls).__new__(cls)
         return cls._instance
 
-    def _load_agents(self) -> List[Agent]:
+    def _load_agents(self) -> List[Dict]:
         try:
             with open(self._data_file_path, "r", encoding="utf-8") as file:
-                raw_data = json.load(file)
-                return [Agent(**item) for item in raw_data]
+                return json.load(file)
         except FileNotFoundError:
             return []
 
-    def _save_agents(self, agents: List[Agent]):
+    def _save_agents(self, agents: List[Dict]):
         with open(self._data_file_path, "w", encoding="utf-8") as file:
-            json.dump([agent.model_dump() for agent in agents], file, indent=4, ensure_ascii=False)
-
-    def create_agent(self, agent_data: dict) -> Agent:
+            json.dump(agents, file, indent=4, ensure_ascii=False)
+         
+    def create_agent(self, agent_data: Dict) -> Dict:
         agents = self._load_agents()
         new_id = 1 if not agents else max(agent.id for agent in agents) + 1
         now = datetime.now().isoformat()
-        agent = Agent(
-            id=new_id,
-            name=agent_data.get("name"),
-            ip=agent_data.get("ip"),
-            port=agent_data.get("port"),
-            service_url=agent_data.get("service_url"),
-            os=agent_data.get("os"),
-            type=agent_data.get("type"),
-            status="online",
-            created_at=now,
-            updated_at=now
-        )
-        agents.append(agent)
+        new_agent = {
+            "id": new_id,
+            "name": agent_data.get("name"),
+            "ip": agent_data.get("ip"),
+            "port": agent_data.get("port"),
+            "service_url": agent_data.get("service_url"),
+            "os": agent_data.get("os"),
+            "type": agent_data.get("type"),
+            "status": agent_data.get("status"),
+            "created_at": now,
+            "updated_at": None
+        }
+        agents.append(new_agent)
         self._save_agents(agents)
-        return agent
 
-    def get_agent(self, agent_id: int) -> Optional[Agent]:
+    def get_agent(self, agent_id: int) -> Optional[Dict]:
         agents = self._load_agents()
         for agent in agents:
-            if agent.id == agent_id:
+            if agent["id"] == agent_id:
                 return agent
         return None
 
     def update_agent(self, agent_id: int, updated_data: dict):
-        agent = self.get_agent(agent_id)
-        if not agent:
-            raise ValueError(f"Agent with ID {agent_id} not found.")
-
-        # 获取 Agent 实例支持的字段
-        allowed_fields = agent.__dict__.keys()
-
-        for key, value in updated_data.items():
-            if key in allowed_fields and value not in [None, '']:
-                setattr(agent, key, value)
-
-        agent.updated_at = datetime.now().isoformat()
-
-        # 因为对象是引用，这里重新保存整个 agents 列表
         agents = self._load_agents()
-        self._save_agents(agents)
+        for agent in agents:
+            if agent["id"] == agent_id:
+                agent.update(updated_data)
+                agent["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self._save_agents(agents)
+                return
+        raise ValueError(f"Agent with ID {agent_id} not found.")
 
     def delete_agent(self, agent_id: int):
         agents = self._load_agents()
-        agents = [agent for agent in agents if agent.id != agent_id]
+        agents = [agent for agent in agents if agent["id"] != agent_id]
         self._save_agents(agents)
 
-    def list_agents(self) -> List[Agent]:
+    def list_agents(self) -> List[Dict]:
         return self._load_agents()
 
     @classmethod

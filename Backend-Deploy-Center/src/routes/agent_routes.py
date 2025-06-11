@@ -3,6 +3,7 @@ from utils.jwt_util import JWTUtil
 from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
 import httpx
 from models.entity.agent import Agent
+from models.dto.update_agent_request_dto import UpdateAgentRequestDto
 from manager.user_data_manager import UserDataManager
 from manager.agent_data_manager import AgentDataManager
 from typing import Any, Dict, List, Optional
@@ -11,13 +12,13 @@ from config.log_config import get_logger
 
 agent_router = APIRouter()
 logger = get_logger()
+AGENT_DATA_MANAGER = AgentDataManager.get_instance()
 
 
 @agent_router.get("/api/deploy-center/agent/list", summary="获取Agent列表")
 async def get_agent_list():
     try:
-        agent_data_manager = AgentDataManager.get_instance()
-        agent_list: List[Agent] = agent_data_manager.list_agents()
+        agent_list: List[Agent] = AGENT_DATA_MANAGER.list_agents()
         return HttpResult[List[Agent]](code=200, status="success", msg=None, data=[agent for agent in agent_list])
     except Exception as e:
         return HttpResult[None](code=500, status="failed", msg=str(e), data=None)
@@ -26,8 +27,7 @@ async def get_agent_list():
 @agent_router.get("/api/deploy-center/agent/{agent_id}", summary="获取Agent详情")
 async def get_agent(agent_id: int):
     try:
-        agent_data_manager = AgentDataManager.get_instance()
-        agent = agent_data_manager.get_agent(agent_id)
+        agent = AGENT_DATA_MANAGER.get_agent(agent_id)
         if not agent:
             raise HTTPException(status_code=404, detail="Agent not found")
         return HttpResult(code=200, status="success", msg=None, data=agent)
@@ -42,18 +42,16 @@ async def agent_register(agent_data: dict):
         # TODO：为提升注册安全性，应在注册前调用 Agent 自身的验证接口，确认其允许被当前 Center 注册
         # 若验证通过 -> 执行注册逻辑
         # 若验证失败 -> 中止注册并返回失败信息
-        agent_data_manager = AgentDataManager.get_instance()
-        agent = agent_data_manager.create_agent(agent_data)
-        return HttpResult[dict](code=200, status="success", msg=None, data=agent)
+        AGENT_DATA_MANAGER.create_agent(agent_data)
+        return HttpResult[dict](code=200, status="success", msg=None, data=None)
     except Exception as e:
         return HttpResult[dict](code=500, status="failed", msg=str(e), data=None)
 
 
 @agent_router.put("/api/deploy-center/agent/{agent_id}", summary="更新Agent信息")
-async def update_agent(agent_id: int, updated_info: dict):
+async def update_agent(update_dto: UpdateAgentRequestDto):
     try:
-        agent_data_manager = AgentDataManager.get_instance()
-        agent_data_manager.update_agent(agent_id, updated_info)
+        AGENT_DATA_MANAGER.update_agent(update_dto.id, update_dto.model_dump(exclude={"id"}))
         return HttpResult[dict](code=200, status="success", msg=None, data=None)
     except ValueError as ve:
         return HttpResult[dict](code=404, status="failed", msg=str(ve), data=None)
@@ -64,8 +62,7 @@ async def update_agent(agent_id: int, updated_info: dict):
 @agent_router.delete("/api/deploy-center/agent/{agent_id}", summary="删除Agent")
 async def delete_agent(agent_id: int):
     try:
-        agent_data_manager = AgentDataManager.get_instance()
-        agent_data_manager.delete_agent(agent_id)
+        AGENT_DATA_MANAGER.delete_agent(agent_id)
         return HttpResult[dict](code=200, status="success", msg=None, data=None)
     except Exception as e:
         return HttpResult[dict](code=500, status="failed", msg=str(e), data=None)
@@ -111,8 +108,7 @@ async def call_agent_api(agent_id: int, api_path: str, method: str, request: Req
         - 简单实现 API 网关/反向代理模式。
     """
     try:
-        agent_data_manager = AgentDataManager.get_instance()
-        agent = agent_data_manager.get_agent(agent_id)
+        agent = AGENT_DATA_MANAGER.get_agent(agent_id)
         if not agent:
             raise HTTPException(status_code=404, detail="Agent not found")
 
