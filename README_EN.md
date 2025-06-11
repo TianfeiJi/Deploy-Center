@@ -138,7 +138,7 @@ The project consists of two main modules: the Deployment Management Platform (De
 
 ---
 
-## 👨‍💻 About Auhor
+## 👨‍💻 About the Auhor
 
 > This project is designed and maintained by **[Tianfei Ji](https://github.com/TianfeiJi)**.
 
