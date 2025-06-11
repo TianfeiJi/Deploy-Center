@@ -139,7 +139,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted , watch} from 'vue';
 import { Notify } from 'quasar';
 import { getAgent } from 'src/api/agentApi';
 import { AgentCommandApi } from 'src/api/AgentCommandApi';
@@ -151,6 +151,17 @@ const props = defineProps({
 
 // 创建 AgentCommandApi 实例
 const agentCommandApi = new AgentCommandApi(props.agentId);
+
+// 监听 agentId 变化，以重建 AgentCommandApi 实例
+watch(
+  () => props.agentId,
+  async (newVal, oldVal) => {
+    if (newVal && newVal !== oldVal) {
+      agentCommandApi = new AgentCommandApi(newVal);
+    }
+  }
+);
+
 const agent = ref({});
 
 // Docker 可执行路径
