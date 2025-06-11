@@ -165,12 +165,12 @@ const serverInfoItems = computed(() => [
   { label: '系统架构', value: systemInfo.value?.architecture || '-', icon: 'memory' },
   { label: '主机名', value: systemInfo.value?.hostname || '-', icon: 'dns' },
   { label: '开机时间', value: systemInfo.value?.boot_time || '-', icon: 'schedule' },
-  { label: 'IP地址', value: systemInfo.value?.ip_address || '-', icon: 'public' },
   { label: 'CPU型号', value: systemInfo.value?.cpu_brand ?? '-', icon: 'memory' },
   { label: 'CPU指令集架构', value: systemInfo.value?.cpu_arch ?? '-', icon: 'developer_board' },
-  { label: 'CPU逻辑核数', value: systemInfo.value?.cpu_cores_logical ?? '-', icon: 'scatter_plot' },
-  { label: 'CPU物理核数', value: systemInfo.value?.cpu_cores_physical ?? '-', icon: 'grid_on' },
-  { label: 'CPU主频GHz', value: systemInfo.value?.cpu_freq_ghz ?? '-', icon: 'speed' },
+  { label: 'CPU核心数', value: systemInfo.value?.cpu_cores_physical
+    ? `${systemInfo.value.cpu_cores_physical} 核（物理） / ${systemInfo.value.cpu_cores_logical} 核（逻辑）`
+    : '-',
+    icon: 'grid_on' },
   {
     label: '总内存', value: systemInfo.value?.total_memory
       ? `${(systemInfo.value.total_memory / 1024).toFixed(2)} GB`
