@@ -199,13 +199,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { Notify } from 'quasar';
 import { formatDate } from 'src/utils/dateFormatter';
 import { useAgentStore } from 'src/stores/useAgentStore';
 import { AgentCommandApi } from 'src/api/AgentCommandApi';
 import { WebProject } from 'src/types/Project.types';
-import type { AxiosProgressEvent } from 'axios';
 import { UpdateWebProjectRequestDto } from "src/types/dto/UpdateWebProjectRequestDto";
 
 const agentStore = useAgentStore();
