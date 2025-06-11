@@ -42,10 +42,18 @@ onMounted(async () => {
 
     await nextTick()
 
+    const frontendUrl = window.location.origin 
+
+    const centerUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:2000'
+
     const elements = {
         nodes: [
             {
-                data: { id: 'deploy-center', label: 'Deploy Center\n部署中心' },
+                data: { id: 'deploy-center-ui', label: `Deploy Center UI\n${frontendUrl}` },
+                position: { x: 500, y: 0 }
+            },
+            {
+                data: { id: 'deploy-center', label: `Deploy Center\n${centerUrl}` },
                 position: { x: 500, y: 100 }
             },
             ...agents.map((a, i) => ({
@@ -60,9 +68,12 @@ onMounted(async () => {
                 position: { x: 200 + i * 320, y: 350 }
             }))
         ],
-        edges: agents.map(a => ({
+        edges: [
+            { data: { source: 'deploy-center-ui', target: 'deploy-center' } },
+            ...agents.map(a => ({
             data: { source: 'deploy-center', target: `agent-${a.id}` }
-        }))
+            }))
+        ]
     }
 
     const cy = cytoscape({
