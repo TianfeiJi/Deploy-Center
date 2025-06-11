@@ -210,7 +210,6 @@ import { getUser } from 'src/api/userApi';
 import UserProfileDialog from 'src/components/UserProfileDialog.vue';
 import { useLoginUserStore } from 'src/stores/useLoginUserStore';
 import { useAgentStore } from 'src/stores/useAgentStore';
-import { useAuthStore } from 'src/stores/useAuthStore';
 import { useSystemConfigStore } from 'stores/useSystemConfigStore';
 import { observeWatermark } from 'src/utils/watermark';
 import { resetAllStores } from 'src/utils/resetAllStores';
@@ -291,16 +290,33 @@ watch(
 
 const isSuperAdminUser = ref(false);
 onMounted(async () => {
-  if (!Object.keys(systemConfigStore.configMap).length) {
-    await systemConfigStore.loadConfig();
+  // ✅ 判断登录用户是否存在
+  if (!loginUser.value) {
+    console.warn('未获取到登录用户，跳转登录页');
+    router.replace('/login');
+    return;
   }
-  console.log('MainLayout - 当前登录的用户：', loginUser.value);
 
-  // 通过用户id再次发起请求获取用户信息，如果用户角色是superadmin就显示设置菜单 否则不显示
-  const response = await getUser(loginUser.value!.id)
-  const user = response.data
-  if(user.role === 'superadmin'){
-    isSuperAdminUser.value = true
+  try {
+    // ✅ 加载系统配置（如果未加载过）
+    if (!Object.keys(systemConfigStore.configMap).length) {
+      await systemConfigStore.loadConfig();
+    }
+
+    console.log('MainLayout - 当前登录的用户：', loginUser.value);
+
+    // ✅ 请求后端确认角色
+    const response = await getUser(loginUser.value.id);
+    const user = response.data;
+
+    if (user.role === 'superadmin') {
+      isSuperAdminUser.value = true;
+    }
+  } catch (error) {
+    console.error('获取用户信息或系统配置失败', error);
+
+    // 如果是 401 或 token 无效，也跳转登录（防止中间 token 失效）
+    router.replace('/login');
   }
 });
 

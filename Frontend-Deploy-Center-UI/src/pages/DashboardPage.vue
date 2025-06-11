@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-md">
-    <div class="dashboard-cards-container">
+    <div class="dashboard-cards-container" v-if="currentAgent">
       <AgentDashboardCard :key="currentAgent.id" :agentId="currentAgent.id" />
     </div>
   </q-page>
