@@ -108,11 +108,16 @@ async def call_agent_api(agent_id: int, api_path: str, method: str, request: Req
         - 简单实现 API 网关/反向代理模式。
     """
     try:
-        agent = AGENT_DATA_MANAGER.get_agent(agent_id)
+        agent: Dict = AGENT_DATA_MANAGER.get_agent(agent_id)
         if not agent:
             raise HTTPException(status_code=404, detail="Agent not found")
 
-        url = f"{agent.service_url}{api_path}"
+        service_url = agent.get("service_url")
+        if not service_url:
+            raise HTTPException(status_code=400, detail="Agent 缺少 service_url")
+
+        # 防止双斜杠或拼错路径
+        url = f"{service_url.rstrip('/')}/{api_path.lstrip('/')}"
         logger.info(f"调用Agent API: {url}, 方法: {method}")
 
         # 获取原始 body 和 headers
