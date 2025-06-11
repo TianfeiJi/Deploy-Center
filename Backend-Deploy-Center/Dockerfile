@@ -1,12 +1,8 @@
 # 使用 Python 3.9 作为基础镜像
 FROM python:3.9-slim
 
-# 设置时区
-RUN apt-get update && \
-    apt-get install -y tzdata && \
-    ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
-    echo "Asia/Shanghai" > /etc/timezone && \
-    apt-get clean
+# 设置容器的时区为上海，确保日志时间与中国本地时间一致
+ENV TZ=Asia/Shanghai
 
 # 设置工作目录为 /app/src
 WORKDIR /app/src
