@@ -2,7 +2,7 @@
 import json
 import os
 from typing import List, Optional
-from models.entity.cached_data import CachedData
+from models.common.cached_data import CachedData
 
 
 class CachedDataManager:

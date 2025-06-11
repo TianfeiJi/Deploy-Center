@@ -54,25 +54,22 @@ class AgentDataManager:
         return None
 
     def update_agent(self, agent_id: int, updated_data: dict):
+        agent = self.get_agent(agent_id)
+        if not agent:
+            raise ValueError(f"Agent with ID {agent_id} not found.")
+
+        # 获取 Agent 实例支持的字段
+        allowed_fields = agent.__dict__.keys()
+
+        for key, value in updated_data.items():
+            if key in allowed_fields and value not in [None, '']:
+                setattr(agent, key, value)
+
+        agent.updated_at = datetime.now().isoformat()
+
+        # 因为对象是引用，这里重新保存整个 agents 列表
         agents = self._load_agents()
-        for agent in agents:
-            if agent.id == agent_id:
-                if "name" in updated_data:
-                    agent.name = updated_data["name"]
-                if "ip" in updated_data:
-                    agent.ip = updated_data["ip"]
-                if "port" in updated_data:
-                    agent.port = updated_data["port"]
-                if "os" in updated_data:
-                    agent.os = updated_data["os"]
-                if "type" in updated_data:
-                    agent.type = updated_data["type"]
-                if "status" in updated_data:
-                    agent.status = updated_data["status"]
-                agent.updated_at = datetime.now().isoformat()
-                self._save_agents(agents)
-                return
-        raise ValueError(f"Agent with ID {agent_id} not found.")
+        self._save_agents(agents)
 
     def delete_agent(self, agent_id: int):
         agents = self._load_agents()

@@ -129,8 +129,8 @@ const newAgent = ref<Partial<Agent>>({
   port: 2333,
   service_url: '',
   os: '',
-  type: '',
-  status: 'offline'
+  type: 'ECS',
+  status: 'online'
 })
 
 const onAddAgent = async () => {
