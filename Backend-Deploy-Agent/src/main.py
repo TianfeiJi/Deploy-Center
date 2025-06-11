@@ -38,7 +38,7 @@ app = FastAPI(
 async def custom_swagger_ui_html():
     return get_swagger_ui_html(
         openapi_url=app.openapi_url,
-        title="Deploy Center API Docs",
+        title="Deploy Agent API Docs",
         swagger_js_url="https://cdn.bootcdn.net/ajax/libs/swagger-ui/5.3.2/swagger-ui-bundle.min.js",
         swagger_css_url="https://cdn.bootcdn.net/ajax/libs/swagger-ui/5.3.2/swagger-ui.min.css"
     )
@@ -77,4 +77,4 @@ app.include_router(template_router)
 
 
 if __name__ == "__main__":
-   uvicorn.run(app, host="0.0.0.0", port=5000)
+   uvicorn.run(app, host="0.0.0.0", port=2333)
