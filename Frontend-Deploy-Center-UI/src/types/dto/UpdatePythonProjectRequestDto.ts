@@ -1,6 +1,6 @@
 // src/types/UpdatePythonProjectRequestDto.ts
 export interface UpdatePythonProjectRequestDto {
-  id: string; // 项目的唯一标识符
+  id: string;
   project_code?: string;
   project_name?: string;
   project_group?: string;
@@ -9,6 +9,7 @@ export interface UpdatePythonProjectRequestDto {
   external_port?: number;
   internal_port?: number;
   network?: string;
+  python_version?: string;    // Python版本
   host_project_path?: string; // 宿主机项目路径
   container_project_path?: string; // 容器项目路径
   git_repository?: string; // Git地址

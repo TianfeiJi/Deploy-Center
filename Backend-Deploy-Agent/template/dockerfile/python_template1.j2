@@ -1,0 +1,20 @@
+# 使用指定的 Python 基础镜像
+FROM python:{{python_version}}
+
+# 设置容器的时区为上海，确保日志时间与中国本地时间一致
+ENV TZ=Asia/Shanghai
+
+# 设置工作目录
+WORKDIR /app
+
+# 拷贝当前目录下所有文件到容器中
+COPY . /app
+
+# 安装依赖（如果存在 requirements.txt）
+RUN if [ -f "requirements.txt" ]; then pip install --no-cache-dir -r requirements.txt; fi
+
+# 暴露端口
+EXPOSE {{internal_port}}
+
+# 启动命令
+CMD ["python", "main.py"]

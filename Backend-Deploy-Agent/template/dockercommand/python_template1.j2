@@ -1,0 +1,6 @@
+docker run -d \
+--name {{project_code}} \
+{% if network %}--network {{network}} \
+{% endif %}-p {{external_port}}:{{internal_port}} \
+-v {{host_project_path}}:/app \
+{{docker_image_name}}:{{docker_image_tag}}

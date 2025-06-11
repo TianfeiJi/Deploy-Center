@@ -167,7 +167,13 @@ export class AgentCommandApi {
     const httpResult: HttpResult<any> = await callAgentApi(this.agentId, '/api/deploy-agent/project/python/deploy', 'POST', undefined, formData, requestConfig);
     return httpResult.data;
   }
- 
+
+  // 删除 Python 项目
+  async deletePythonProject(id: string): Promise<any> {
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(this.agentId, `/api/deploy-agent/project/python/delete/${id}`, 'DELETE');
+    return httpResult.data.data;
+  }
+
   // ========================== Template 管理 ==========================
   // 获取模板列表（可按类型筛选）
   async fetchTemplateList(templateType?: string): Promise<Template[]> {

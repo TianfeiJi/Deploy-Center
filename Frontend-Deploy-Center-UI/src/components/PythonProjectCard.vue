@@ -116,11 +116,14 @@
 
   <!-- 上传部署对话框 -->
   <q-dialog v-model="isUploadDeployDialogOpen">
-    <q-card style="width: 500px">
+    <q-card style="width: 100%; max-width: 70vw;">
       <q-card-section>
-        <div class="text-h6">上传部署文件</div>
+        <div class="text-h5">上传部署</div>
       </q-card-section>
+
+      <!-- 上传文件 -->
       <q-card-section>
+        <div class="text-h6">上传 .zip 文件</div>
         <el-upload
           ref="uploadRef"
           drag
@@ -142,12 +145,12 @@
               class="el-upload__tip"
               style="text-align: right; color: #909399"
             >
-              只能上传.zip文件
+              只能上传 .zip 文件
             </div>
           </template>
         </el-upload>
 
-        <!-- 进度条和进度百分比 -->
+        <!-- 上传进度条 -->
         <el-progress
           v-if="uploadProgress > 0"
           color="#67c23a"
@@ -155,6 +158,7 @@
           :text-inside="true"
           :stroke-width="13"
           status="success"
+          class="q-mt-md"
         />
 
         <div
@@ -165,14 +169,42 @@
           上传完成！
         </div>
       </q-card-section>
+
+      <!-- Dockerfile 输入 -->
+      <q-card-section>
+        <div class="text-h6">Dockerfile 内容（可选）</div>
+        <q-input
+          v-model="dockerfileContent"
+          type="textarea"
+          outlined
+          rows="14"
+          style="font-family: monospace"
+          :disable="isDeploying"
+        />
+      </q-card-section>
+
+      <!-- Docker 启动命令输入 -->
+      <q-card-section>
+        <div class="text-h6">Docker 命令（可选）</div>
+        <q-input
+          v-model="dockerCommand"
+          type="textarea"
+          outlined
+          rows="10"
+          style="font-family: monospace"
+          :disable="isDeploying"
+        />
+      </q-card-section>
+
+      <!-- 操作按钮 -->
       <q-card-actions align="right">
         <q-btn flat label="取消" v-close-popup />
         <q-btn
           flat
           label="开始部署"
           color="positive"
+          :disable="!fileList.length || uploadProgress > 0"
           @click="handleUploadDeploy"
-          :disabled="!fileList.length || uploadProgress > 0"
         />
       </q-card-actions>
     </q-card>
@@ -199,13 +231,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { Notify } from 'quasar';
 import { formatDate } from 'src/utils/dateFormatter';
 import { useAgentStore } from 'src/stores/useAgentStore';
 import { AgentCommandApi } from 'src/api/AgentCommandApi';
 import { PythonProject } from 'src/types/Project.types';
-import type { AxiosProgressEvent } from 'axios';
 import { UpdatePythonProjectRequestDto } from "src/types/dto/UpdatePythonProjectRequestDto";
 
 const props = defineProps<{
@@ -217,6 +248,16 @@ const agentStore = useAgentStore();
 const agentCommandApi = new AgentCommandApi(agentStore.currentAgent!.id);
 
 const isViewDetailDialogOpen = ref(false);
+const isUploadDeployDialogOpen = ref(false);
+const isCloudBuildDeployDialogOpen = ref(false);
+const isSecondConfirmDeleteDialogOpen = ref(false);
+
+const dockerfileContent = ref('');
+const dockerCommand = ref('');
+
+const confirmText = ref('');
+const uploadProgress = ref(0);
+const fileList = ref<any[]>([]);
 
 const tableData = ref<{ label: string; value: string; key: string , editable: boolean}[]>([]);
 
@@ -271,7 +312,7 @@ const saveEdit = async () => {
   console.log(updateData)
 
   try {
-    await agentCommandApi.updateJavaProject(updateData as UpdatePythonProjectRequestDto);
+    await agentCommandApi.updatePythonProject(updateData as UpdatePythonProjectRequestDto);
     Notify.create({
       type: 'positive',
       message: '保存成功',
@@ -287,8 +328,24 @@ const saveEdit = async () => {
 };
 
 // ==================== ↓↓↓↓↓ 部署相关 ↓↓↓↓↓ ====================
-// 云构建部署对话框开关
-const isCloudBuildDeployDialogOpen = ref(false);
+const isDeploying = ref(false)
+// 打开文件选择框
+const openUploadDeployDialog = async () => {
+  isUploadDeployDialogOpen.value = true;
+  // 初始化文件列表和进度
+  fileList.value = [];
+  uploadProgress.value = 0;
+
+
+  const systemConfig1 = await agentCommandApi.fetchSystemConfig("default_python_dockerfile_template")
+  const defaultPythonDockerfileTemplate = systemConfig1.config_value
+  dockerfileContent.value = await agentCommandApi.renderTemplateContent(props.pythonProject.id, defaultPythonDockerfileTemplate)
+
+  const systemConfig2 = await agentCommandApi.fetchSystemConfig("default_python_dockercommand_template")
+  const defaultPythonDockercommandTemplate = systemConfig2.config_value
+  dockerCommand.value = await agentCommandApi.renderTemplateContent(props.pythonProject.id, defaultPythonDockercommandTemplate)
+};
+
 const openCloudBuildDeployDialog = () => {
   isCloudBuildDeployDialogOpen.value = true;
   Notify.create({
@@ -297,18 +354,6 @@ const openCloudBuildDeployDialog = () => {
     position: 'top',
   });
 };
-
-// 上传部署对话框开关
-const isUploadDeployDialogOpen = ref(false);
-// 打开文件选择框
-const openUploadDeployDialog = async () => {
-  isUploadDeployDialogOpen.value = true;
-  // 初始化文件列表和进度
-  fileList.value = [];
-  uploadProgress.value = 0;
-};
-const uploadProgress = ref(0); // 上传进度
-const fileList = ref<any[]>([]); // 文件列表
 
 const handleBeforeUpload = (file: File): boolean => {
   const isZip = file.type === 'application/zip' || file.name.endsWith('.zip');
@@ -344,6 +389,8 @@ const handleUploadDeploy = async () => {
     const formData = new FormData();
     formData.append('id', props.pythonProject.id);
     formData.append('file', file);
+    formData.append('dockerfile_content', dockerfileContent.value);
+    formData.append('dockercommand_content', dockerCommand.value);
 
     // 调用 deployPythonProject API
     const response = await agentCommandApi.deployPythonProject(formData, {
@@ -388,12 +435,11 @@ const handleUploadDeploy = async () => {
   }
 };
 // ==================== ↑↑↑↑↑ 部署相关↑↑↑↑↑ ====================
-const isSecondConfirmDeleteDialogOpen = ref(false);
-const confirmText = ref('');
-function handleSecondConfirmDelete() {
+const handleSecondConfirmDelete = async () => {
   if (confirmText.value === '确定删除') {
     try {
-      // TODO: 调用 API 删除
+      await agentCommandApi.deletePythonProject(props.pythonProject.id)
+
       Notify.create({
         message: '删除成功',
         type: 'positive',

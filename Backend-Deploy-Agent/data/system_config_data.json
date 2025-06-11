@@ -58,5 +58,25 @@
         "config_group": "项目设置",
         "created_at": "2025-04-08 16:00:00",
         "updated_at": "2025-04-08 16:20:01.791088"
+    },
+    {
+        "id": 7,
+        "config_name": "默认 python dockerfile 模版",
+        "config_key": "default_python_dockerfile_template",
+        "config_value": "py00A001",
+        "config_remark": "用于 构建 dockerfile",
+        "config_group": "项目设置",
+        "created_at": "2025-06-11T20:00:00",
+        "updated_at": null
+    },
+    {
+        "id": 8,
+        "config_name": "默认 python dockercommand 模版",
+        "config_key": "default_python_dockercommand_template",
+        "config_value": "py00B001",
+        "config_remark": "用于 构建 dockercommand",
+        "config_group": "项目设置",
+        "created_at": "2025-06-11T20:00:00",
+        "updated_at": null
     }
 ]

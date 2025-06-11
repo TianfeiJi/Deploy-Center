@@ -8,4 +8,4 @@ class AddWebProjectRequestDto(BaseModel):
     git_repository: str
     host_project_path: str
     container_project_path: str
-    access_url: Optional[str] = None
+    access_url: Optional[str]

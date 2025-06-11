@@ -7,11 +7,14 @@ from manager.project_data_manager import ProjectDataManager
 from fastapi import File, Query, Request, UploadFile, Form, APIRouter
 from models.common.http_result import HttpResult
 from deployers.java_project_deployer import JavaProjectDeployer
+from deployers.python_project_deployer import PythonProjectDeployer
 from deployers.web_project_deploy import WebProjectDeployer
 from models.dto.add_web_project_request_dto import AddWebProjectRequestDto
 from models.dto.add_java_project_request_dto import AddJavaProjectRequestDto
-from models.dto.update_java_project_request_dto import UpdateJavaProjectRequestDto
+from models.dto.add_python_project_request_dto import AddPythonProjectRequestDto
 from models.dto.update_web_project_request_dto import UpdateWebProjectRequestDto
+from models.dto.update_java_project_request_dto import UpdateJavaProjectRequestDto
+from models.dto.update_python_project_request_dto import UpdatePythonProjectRequestDto
 
 
 project_router = APIRouter()
@@ -42,6 +45,53 @@ async def render_template_content(
     from utils.template_content_renderer import render_template_for_project
     content = render_template_for_project(project_id, template_id)
     return {"code": 200, "status": "success", "msg": None, "data": content}
+
+# ==================== 前端项目接口 ====================
+@project_router.get("/api/deploy-agent/project/web/get/{id}", summary="获取Web项目详情")
+async def get_web_project(id: str):
+    project = PROJECT_DATA_MANAGER.get_project(id)
+    if (project != None):
+        return HttpResult[dict](code=200, status="success", msg=None, data=project)
+    else:
+        return HttpResult[None](code=500, status="failed", msg=f"没有id为{id}的项目", data=None)
+
+@project_router.post("/api/deploy-agent/project/web/add", summary="创建 待部署的 Web 项目")
+async def add_web_project(dto: AddWebProjectRequestDto):
+    new_project_id = str(uuid.uuid4()).replace("-", "")[:8]
+    new_web_project = {
+        "id": new_project_id,
+        "project_type": "Web",
+        "project_code": dto.project_code,
+        "project_name": dto.project_name,
+        "project_group": dto.project_group,
+        "host_project_path": dto.host_project_path,
+        "container_project_path": dto.container_project_path,
+        "access_url": dto.access_url,
+        "git_repository": dto.git_repository,
+        "status": "created",
+        "created_at": datetime.now().isoformat(),
+        "updated_at": None,
+        "last_deployed_at": None
+    }
+    PROJECT_DATA_MANAGER.create_project(new_web_project)
+    return {"code": 200, "status": "success", "msg": new_project_id, "data": None}
+
+@project_router.put("/api/deploy-agent/project/web/update", summary="更新 Web 项目")
+async def update_web_project(update_dto: UpdateWebProjectRequestDto):
+    PROJECT_DATA_MANAGER.update_project(update_dto.id, update_dto.model_dump(exclude={"id"}))
+    return {"code": 200, "status": "success", "msg": None, "data": None}
+
+@project_router.post("/api/deploy-agent/project/web/deploy", summary="部署前端项目", description="上传前端项目的压缩包到指定路径，并完成解压。注意：只负责上传打包后到文件，需要额外手动处理nginx的配置")
+async def deploy_web_project(
+    id: str = Form(..., title="前端项目ID"),
+    file: UploadFile = File(..., title="前端项目压缩包")
+):
+    return WebProjectDeployer().deploy(id, file)
+
+@project_router.delete("/api/deploy-agent/project/web/delete/{id}", summary="删除 Web 项目")
+async def delete_web_project(id: str):
+    PROJECT_DATA_MANAGER.delete_project(id)
+    return {"code": 200, "status": "success", "msg": None, "data": None}
 
 # ==================== Java项目接口 ====================
 @project_router.get("/api/deploy-agent/project/java/get/{id}", summary="获取 Java 项目详情")
@@ -119,49 +169,57 @@ async def delete_java_project(id: str):
     PROJECT_DATA_MANAGER.delete_project(id)
     return {"code": 200, "status": "success", "msg": None, "data": None}
 
-# ==================== 前端项目接口 ====================
-@project_router.get("/api/deploy-agent/project/web/get/{id}", summary="获取Web项目详情")
-async def get_web_project(id: str):
+# ==================== Python 项目接口 ====================
+@project_router.get("/api/deploy-agent/project/python/get/{id}", summary="获取 Python 项目详情")
+async def get_python_project(id: str):
     project = PROJECT_DATA_MANAGER.get_project(id)
-    if (project != None):
+    if project is not None:
         return HttpResult[dict](code=200, status="success", msg=None, data=project)
     else:
         return HttpResult[None](code=500, status="failed", msg=f"没有id为{id}的项目", data=None)
 
-@project_router.post("/api/deploy-agent/project/web/add", summary="创建 待部署的 Web 项目")
-async def add_web_project(dto: AddWebProjectRequestDto):
+@project_router.post("/api/deploy-agent/project/python/add", summary="创建待部署的 Python 项目")
+async def add_python_project(dto: AddPythonProjectRequestDto):
     new_project_id = str(uuid.uuid4()).replace("-", "")[:8]
-    new_web_project = {
+    new_python_project = {
         "id": new_project_id,
-        "project_type": "Web",
+        "project_type": "Python",
         "project_code": dto.project_code,
         "project_name": dto.project_name,
         "project_group": dto.project_group,
+        "docker_image_name": dto.docker_image_name,
+        "docker_image_tag": dto.docker_image_tag,
+        "external_port": dto.external_port,
+        "internal_port": dto.internal_port,
+        "network": dto.network,
+        "python_version": dto.python_version,
         "host_project_path": dto.host_project_path,
         "container_project_path": dto.container_project_path,
-        "access_url": dto.access_url,
         "git_repository": dto.git_repository,
         "status": "created",
         "created_at": datetime.now().isoformat(),
         "updated_at": None,
         "last_deployed_at": None
     }
-    PROJECT_DATA_MANAGER.create_project(new_web_project)
-    return {"code": 200, "status": "success", "msg": new_project_id, "data": None}
+    PROJECT_DATA_MANAGER.create_project(new_python_project)
+    return HttpResult[None](code=200, status="success", msg=None, data=None)
 
-@project_router.put("/api/deploy-agent/project/web/update", summary="更新 Web 项目")
-async def update_web_project(update_dto: UpdateWebProjectRequestDto):
+@project_router.put("/api/deploy-agent/project/python/update", summary="更新 Python 项目")
+async def update_python_project(update_dto: UpdatePythonProjectRequestDto):
     PROJECT_DATA_MANAGER.update_project(update_dto.id, update_dto.model_dump(exclude={"id"}))
-    return {"code": 200, "status": "success", "msg": None, "data": None}
+    return HttpResult[None](code=200, status="success", msg=None, data=None)
 
-@project_router.post("/api/deploy-agent/project/web/deploy", summary="部署前端项目", description="上传前端项目的压缩包到指定路径，并完成解压。注意：只负责上传打包后到文件，需要额外手动处理nginx的配置")
-async def deploy_web_project(
-    id: str = Form(..., title="前端项目ID"),
-    file: UploadFile = File(..., title="前端项目压缩包")
+@project_router.post("/api/deploy-agent/project/python/deploy", summary="部署 Python 项目", description="上传 Python 项目的 ZIP 包并部署 Docker 容器。")
+async def deploy_python_project(
+    id: str = Form(..., title="项目ID"),
+    file: UploadFile = File(..., title="ZIP 文件", description="上传要部署的 Python 项目压缩包"),
+    dockerfile_content: str = Form(None, title="Dockerfile内容", description="可选，若解压包中无 Dockerfile 则使用该内容"),
+    dockercommand_content: str = Form(..., title="Docker命令")
 ):
-    return WebProjectDeployer().deploy(id, file)
+    msg = PythonProjectDeployer().deploy(id, file, dockerfile_content, dockercommand_content)
+    return HttpResult[None](code=200, status="success", msg=msg, data=None)
 
-@project_router.delete("/api/deploy-agent/project/web/delete/{id}", summary="删除 Web 项目")
-async def delete_web_project(id: str):
+@project_router.delete("/api/deploy-agent/project/python/delete/{id}", summary="删除 Python 项目")
+async def delete_python_project(id: str):
     PROJECT_DATA_MANAGER.delete_project(id)
-    return {"code": 200, "status": "success", "msg": None, "data": None}
+    return HttpResult[None](code=200, status="success", msg=None, data=None)

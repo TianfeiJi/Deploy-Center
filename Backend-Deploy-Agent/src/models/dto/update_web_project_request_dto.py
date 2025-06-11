@@ -3,11 +3,11 @@ from typing import Optional
 
 class UpdateWebProjectRequestDto(BaseModel):
     id: str
-    project_code: Optional[str] = None
-    project_name: Optional[str] = None
-    project_group: Optional[str] = None
-    host_project_path: Optional[str] = None
-    container_project_path: Optional[str] = None
-    git_repository: Optional[str] = None
-    access_url: Optional[str] = None
-    status: Optional[str] = None
+    project_code: Optional[str]
+    project_name: Optional[str]
+    project_group: Optional[str]
+    host_project_path: Optional[str]
+    container_project_path: Optional[str]
+    git_repository: Optional[str]
+    access_url: Optional[str]
+    status: Optional[str]
