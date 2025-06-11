@@ -8,7 +8,7 @@ class Agent(BaseModel):
     name: str
     ip: str
     port: int
-    service_url: str
+    service_url: Optional[str] = None
     os: str
     type: str
     status: str

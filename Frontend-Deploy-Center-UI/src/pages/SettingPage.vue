@@ -94,7 +94,7 @@ const goToPage = (page: string) => {
 
 <style scoped>
 .sidebar {
-  width: 240px;
+  width: 200px;
   background-color: #fafafa;
   border-right: 1px solid #e0e0e0;
   border-radius: 8px 0 0 8px;

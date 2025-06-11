@@ -14,12 +14,13 @@
         highlight-current-row
         row-key="id"
       >
-        <el-table-column label="ID" prop="id" width="60" />
+        <el-table-column label="ID" prop="id" width="40" />
         <el-table-column label="名称" prop="name" min-width="120" />
-        <el-table-column label="IP地址" prop="ip" min-width="120" />
-        <el-table-column label="端口" prop="port" min-width="120" />
-        <el-table-column label="系统" prop="os" min-width="100" />
-        <el-table-column label="类型" prop="type" min-width="80" />
+        <el-table-column label="IP地址" prop="ip" min-width="150" />
+        <el-table-column label="端口" prop="port" min-width="70" />
+        <el-table-column label="服务地址" prop="service_url" min-width="220" show-overflow-tooltip />
+        <el-table-column label="系统" prop="os" min-width="90" />
+        <el-table-column label="类型" prop="type" min-width="70" />
         <el-table-column label="状态" min-width="80">
           <template #default="{ row }">
             <el-tag :type="row.status === 'online' ? 'success' : 'info'" effect="light">
@@ -27,10 +28,10 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="最后更新" min-width="160">
+        <el-table-column label="最后更新" min-width="150" show-overflow-tooltip >
           <template #default="{ row }">{{ formatDate(row.updated_at) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="100">
+        <el-table-column label="操作" width="80">
           <template #default="{ row }">
             <el-button size="small" type="primary" @click="onEditAgent(row)">修改</el-button>
           </template>
@@ -44,6 +45,7 @@
         <el-form-item label="名称"><el-input v-model="editAgent.name" /></el-form-item>
         <el-form-item label="IP 地址"><el-input v-model="editAgent.ip" /></el-form-item>
         <el-form-item label="端口"><el-input v-model="editAgent.port" /></el-form-item>
+        <el-form-item label="服务地址"><el-input v-model="editAgent.service_url" /></el-form-item>
         <el-form-item label="系统"><el-input v-model="editAgent.os" /></el-form-item>
         <el-form-item label="类型"><el-input v-model="editAgent.type" /></el-form-item>
         <el-form-item label="状态">
@@ -65,6 +67,7 @@
         <el-form-item label="名称"><el-input v-model="newAgent.name" /></el-form-item>
         <el-form-item label="IP 地址"><el-input v-model="newAgent.ip" /></el-form-item>
         <el-form-item label="端口"><el-input v-model="newAgent.port" /></el-form-item>
+        <el-form-item label="服务地址"><el-input v-model="newAgent.service_url" /></el-form-item>
         <el-form-item label="系统"><el-input v-model="newAgent.os" /></el-form-item>
         <el-form-item label="类型"><el-input v-model="newAgent.type" /></el-form-item>
         <el-form-item label="状态">
@@ -124,6 +127,7 @@ const newAgent = ref<Partial<Agent>>({
   name: '',
   ip: '',
   port: 2333,
+  service_url: '',
   os: '',
   type: '',
   status: 'offline'
