@@ -135,3 +135,11 @@ The project consists of two main modules: the Deployment Management Platform (De
 - **Framework**: FastAPI
 - **Language**: Python 3.9+
 - **Containerization**: Docker
+
+---
+
+## 👨‍💻 About Auhor
+
+> This project is designed and maintained by **[Tianfei Ji](https://github.com/TianfeiJi)**.
+
+Feel free to follow, connect, or share your feedback.

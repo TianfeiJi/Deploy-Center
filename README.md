@@ -127,3 +127,11 @@ flowchart TD
 - **框架**：FastAPI
 - **语言**：Python 3.9+
 - **容器化部署**：Docker
+
+---
+
+## 👨‍💻 关于作者
+
+> This project is designed and maintained by **[Tianfei Ji](https://github.com/TianfeiJi)**.
+
+欢迎关注、交流与反馈。 
