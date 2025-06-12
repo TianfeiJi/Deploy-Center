@@ -19,15 +19,36 @@
         <el-table-column label="IP地址" prop="ip" min-width="150" />
         <el-table-column label="端口" prop="port" min-width="70" />
         <el-table-column label="服务地址" prop="service_url" min-width="220" show-overflow-tooltip />
-        <el-table-column label="系统" prop="os" min-width="90" />
-        <el-table-column label="类型" prop="type" min-width="70" />
-        <el-table-column label="状态" min-width="80">
+
+        <!-- 动态获取 版本、状态  -->
+        <el-table-column label="状态" min-width="90">
           <template #default="{ row }">
-            <el-tag :type="row.status === 'online' ? 'success' : 'info'" effect="light">
-              {{ row.status === 'online' ? '在线' : '离线' }}
-            </el-tag>
+            <template v-if="agentRuntimeInfoMap[row.id]">
+              <el-tag
+                :type="agentRuntimeInfoMap[row.id].health === 'healthy' ? 'success' : 'danger'"
+                effect="light"
+                style="font-style: italic"
+              >
+                {{ agentRuntimeInfoMap[row.id].health === 'healthy' ? '正常' : '异常' }}
+              </el-tag>
+            </template>
+            <template v-else>
+              <el-icon><Loading /></el-icon>
+            </template>
           </template>
         </el-table-column>
+
+        <el-table-column label="版本" min-width="90">
+          <template #default="{ row }">
+            <template v-if="agentRuntimeInfoMap[row.id]">
+              <span style="font-style: italic">{{ agentRuntimeInfoMap[row.id].agent_version }}</span>
+            </template>
+            <template v-else>
+              <el-icon><Loading /></el-icon>
+            </template>
+          </template>
+        </el-table-column>
+
         <el-table-column label="最后更新" min-width="150" show-overflow-tooltip >
           <template #default="{ row }">{{ formatDate(row.updated_at) }}</template>
         </el-table-column>
@@ -46,14 +67,6 @@
         <el-form-item label="IP 地址"><el-input v-model="editAgent.ip" /></el-form-item>
         <el-form-item label="端口"><el-input v-model="editAgent.port" /></el-form-item>
         <el-form-item label="服务地址"><el-input v-model="editAgent.service_url" /></el-form-item>
-        <el-form-item label="系统"><el-input v-model="editAgent.os" /></el-form-item>
-        <el-form-item label="类型"><el-input v-model="editAgent.type" /></el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="editAgent.status" placeholder="选择状态">
-            <el-option label="在线" value="online" />
-            <el-option label="离线" value="offline" />
-          </el-select>
-        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="showEditDialog = false">取消</el-button>
@@ -68,14 +81,6 @@
         <el-form-item label="IP 地址"><el-input v-model="newAgent.ip" /></el-form-item>
         <el-form-item label="端口"><el-input v-model="newAgent.port" /></el-form-item>
         <el-form-item label="服务地址"><el-input v-model="newAgent.service_url" /></el-form-item>
-        <el-form-item label="系统"><el-input v-model="newAgent.os" /></el-form-item>
-        <el-form-item label="类型"><el-input v-model="newAgent.type" /></el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="newAgent.status" placeholder="选择状态">
-            <el-option label="在线" value="online" />
-            <el-option label="离线" value="offline" />
-          </el-select>
-        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="showAddDialog = false">取消</el-button>
@@ -89,13 +94,37 @@
 import { ref, onMounted } from 'vue'
 import { Notify } from 'quasar'
 import { getAgentList, updateAgent, createAgent } from 'src/api/agentApi'
+import { AgentCommandApi } from 'src/api/AgentCommandApi';
 import type { Agent } from 'src/types/Agent'
+import type { AgentRuntimeInfo } from 'src/types/AgentRuntimeInfo'
 
 const agentList = ref<Agent[]>([])
+const agentRuntimeInfoMap = ref<Record<number, AgentRuntimeInfo>>({})
 
 const fetchAgents = async () => {
   const response = await getAgentList();
   agentList.value = response.data
+
+  // 加载每个 Agent 的运行状态和版本信息
+  for (const agent of response.data) {
+    const api = new AgentCommandApi(agent.id)
+    try {
+      const info = await api.fetchInspectInfo();
+
+      agentRuntimeInfoMap.value[agent.id] = {
+        health: info.status,
+        agent_version: info.agent_version,
+        // productName: info.product_name,
+        // sysVendor: info.sys_vendor
+      };
+
+    } catch (e) {
+      agentRuntimeInfoMap.value[agent.id] = {
+        health: 'error',
+        agent_version: '未知'
+      }
+    }
+  }
 }
 
 const formatDate = (date: string) => {
@@ -128,9 +157,6 @@ const newAgent = ref<Partial<Agent>>({
   ip: '',
   port: 2333,
   service_url: '',
-  os: '',
-  type: 'ECS',
-  status: 'online'
 })
 
 const onAddAgent = async () => {

@@ -8,16 +8,21 @@
                 节点详情
             </q-card-section>
             <q-card-section v-if="selectedAgent">
+                <!-- Agent静态信息 -->
                 <div class="text-body2">名称：{{ selectedAgent.name }}</div>
                 <div class="text-body2">IP：{{ selectedAgent.ip }}</div>
-                <div class="text-body2">类型：{{ selectedAgent.type }}</div>
-                <div class="text-body2">系统：{{ selectedAgent.os }}</div>
+                <div class="text-body2">端口：{{ selectedAgent.port }}</div>
+                <div class="text-body2 break-all">服务地址：{{ selectedAgent.service_url }}</div>
+
+                <!-- Agent运行时信息 -->
+                <div class="text-body2">系统：{{ agentRuntimeInfoMap[selectedAgent.id]?.os || '未知' }}</div>
+                <div class="text-body2">硬件平台：{{ agentRuntimeInfoMap[selectedAgent.id]?.product_name || '未知' }}</div>
                 <div class="text-body2">状态：
-                    <q-badge :color="selectedAgent.status === 'online' ? 'green' : 'red'">
-                        {{ selectedAgent.status }}
+                    <q-badge :color="getHealthColor(agentRuntimeInfoMap[selectedAgent.id]?.health)">
+                        {{ agentRuntimeInfoMap[selectedAgent.id]?.health || '未知' }}
                     </q-badge>
                 </div>
-                <div class="text-body2 break-all">服务地址：{{ selectedAgent.service_url }}</div>
+                <div class="text-body2">版本：{{ agentRuntimeInfoMap[selectedAgent.id]?.agent_version || '未知' }}</div>
             </q-card-section>
             <q-card-actions align="right">
                 <q-btn flat label="关闭" v-close-popup />
@@ -29,21 +34,55 @@
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue'
+import cytoscape from 'cytoscape'
 import { getAgentList } from 'src/api/agentApi'
 import type { Agent } from 'src/types/Agent'
-import cytoscape from 'cytoscape'
+import type { AgentRuntimeInfo } from 'src/types/AgentRuntimeInfo'
+import { AgentCommandApi } from 'src/api/AgentCommandApi'
 
 const dialogVisible = ref(false)
 const selectedAgent = ref<Agent | null>(null)
+
+const agentRuntimeInfoMap = ref<Record<number, AgentRuntimeInfo>>({})
+
+const getHealthColor = (health?: string) => {
+  switch (health) {
+    case 'healthy':
+      return 'green'
+    case 'error':
+      return 'red'
+    default:
+      return 'grey'
+  }
+}
 
 onMounted(async () => {
     const res = await getAgentList()
     const agents: Agent[] = res.data || []
 
+    // 获取每个 Agent 的运行时信息
+    for (const agent of agents) {
+        try {
+        const api = new AgentCommandApi(agent.id)
+        const info = await api.fetchInspectInfo();
+
+        agentRuntimeInfoMap.value[agent.id] = {
+            health: info.status,
+            agent_version: info.agent_version,
+            // productName: info.product_name,
+            // sysVendor: info.sys_vendor
+        };
+        } catch (e) {
+            agentRuntimeInfoMap.value[agent.id] = {
+                health: "未知",
+                agent_version: "未知",
+            }
+        }
+    }
+
     await nextTick()
 
     const frontendUrl = window.location.origin 
-
     const centerUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:2000'
 
     const elements = {
@@ -56,17 +95,20 @@ onMounted(async () => {
                 data: { id: 'deploy-center', label: `Deploy Center\n${centerUrl}` },
                 position: { x: 500, y: 100 }
             },
-            ...agents.map((a, i) => ({
-                data: {
-                    id: `agent-${a.id}`,
-                    label:
-                        `Deploy Agent ${i + 1} (${a.name})\n` +
-                        `IP: ${a.ip}\n` +
-                        `类型: ${a.type} | 系统: ${a.os}\n` +
-                        `状态: ${a.status === 'online' ? '在线' : '离线'}`
-                },
-                position: { x: 200 + i * 320, y: 350 }
-            }))
+            ...agents.map((a, i) => {
+                const rt = agentRuntimeInfoMap.value[a.id]
+                return {
+                    data: {
+                        id: `agent-${a.id}`,
+                        label:
+                            `Deploy Agent ${i + 1} (${a.name})\n` +
+                            `IP: ${a.ip}\n` +
+                            `硬件平台: ${rt?.product_name || '未知'} | 系统: ${rt.os || '未知'}\n` +
+                            `状态: ${rt?.health || '未知'} | 版本: ${rt?.agent_version || '未知'}`
+                    },
+                    position: { x: 200 + i * 320, y: 350 }
+                }
+            })
         ],
         edges: [
             { data: { source: 'deploy-center-ui', target: 'deploy-center' } },

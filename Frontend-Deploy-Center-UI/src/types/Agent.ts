@@ -5,9 +5,6 @@ export interface Agent {
   ip: string;
   port: number;
   service_url: string;
-  os: string;
-  type: string;
-  status: string;
   created_at?: string;
   updated_at?: string;
 }

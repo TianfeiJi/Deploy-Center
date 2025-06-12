@@ -9,8 +9,5 @@ class Agent(BaseModel):
     ip: str
     port: int
     service_url: Optional[str] = None
-    os: str
-    type: str
-    status: str
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None

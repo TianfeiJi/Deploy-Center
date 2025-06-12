@@ -17,6 +17,7 @@ from routes.docker_routes import docker_router
 from routes.server_routes import server_router
 from routes.system_config_routes import system_config_router
 from routes.template_routes import template_router
+from routes.inspect_routes import inspect_router
 from fastapi.openapi.docs import get_swagger_ui_html
 
 
@@ -74,6 +75,7 @@ app.include_router(docker_router)
 app.include_router(server_router)
 app.include_router(system_config_router)
 app.include_router(template_router)
+app.include_router(inspect_router)
 
 
 if __name__ == "__main__":

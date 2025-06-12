@@ -34,9 +34,6 @@ class AgentDataManager:
             "ip": agent_data.get("ip"),
             "port": agent_data.get("port"),
             "service_url": agent_data.get("service_url"),
-            "os": agent_data.get("os"),
-            "type": agent_data.get("type"),
-            "status": agent_data.get("status"),
             "created_at": now,
             "updated_at": None
         }

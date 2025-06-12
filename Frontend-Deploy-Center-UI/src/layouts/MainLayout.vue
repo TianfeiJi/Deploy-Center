@@ -29,7 +29,7 @@
         >
           <q-avatar
             size="26px"
-            :color="currentAgent?.status === 'online' ? 'green-5' : 'grey-5'"
+            :color="currentHealth === 'healthy' ? 'green-5' : 'grey-5'"
             text-color="white"
           >
             <q-icon name="dns" size="18px" />
@@ -62,7 +62,7 @@
                 >
                   <q-avatar
                     size="24px"
-                    :color="agent.status === 'online' ? 'green-5' : 'grey-5'"
+                    :color="agentRuntimeInfoMap[agent.id]?.health === 'healthy' ? 'green-5' : 'grey-5'"
                     text-color="white"
                   >
                     <q-icon name="dns" size="16px" />
@@ -202,7 +202,7 @@
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { Notify, Dialog } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import { logout } from 'src/api/authApi';
@@ -213,6 +213,10 @@ import { useAgentStore } from 'src/stores/useAgentStore';
 import { useSystemConfigStore } from 'stores/useSystemConfigStore';
 import { observeWatermark } from 'src/utils/watermark';
 import { resetAllStores } from 'src/utils/resetAllStores';
+import type { AgentRuntimeInfo } from 'src/types/AgentRuntimeInfo'
+import { AgentCommandApi } from 'src/api/AgentCommandApi';
+const agentRuntimeInfoMap = ref<Record<number, AgentRuntimeInfo>>({})
+
 const route = useRoute();
 const router = useRouter();
 
@@ -237,6 +241,12 @@ watch(
     }
   },
   { immediate: true }
+);
+
+const currentHealth = computed(() =>
+  currentAgent.value?.id !== undefined
+    ? agentRuntimeInfoMap.value[currentAgent.value.id]?.health
+    : undefined
 );
 
 // 初始化问候语
@@ -288,8 +298,32 @@ watch(
   { immediate: true, deep: true }
 );
 
+const fetchAllAgentRuntimeInfo = async () => {
+  // 获取每个 Agent 的运行时信息
+  for (const agent of agentList.value) {
+    try {
+      const api = new AgentCommandApi(agent.id)
+      
+      const info = await api.fetchInspectInfo();
+
+      agentRuntimeInfoMap.value[agent.id] = {
+          health: info.status,
+          agent_version: info.agent_version,
+          // productName: info.product_name,
+          // sysVendor: info.sys_vendor
+      };
+      } catch (e) {
+          agentRuntimeInfoMap.value[agent.id] = {
+              health: "未知",
+              agent_version: "未知",
+          }
+      }
+  }
+}
+
 const isSuperAdminUser = ref(false);
 onMounted(async () => {
+  fetchAllAgentRuntimeInfo()
   // ✅ 判断登录用户是否存在
   if (!loginUser.value) {
     console.warn('未获取到登录用户，跳转登录页');

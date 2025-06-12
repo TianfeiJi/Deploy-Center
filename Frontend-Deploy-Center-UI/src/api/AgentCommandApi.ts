@@ -15,6 +15,25 @@ export class AgentCommandApi {
   constructor(agentId: number) {
     this.agentId = agentId;
   }
+  
+  // ========================== Agent Inspect 信息 ==========================
+  // 获取 Agent 聚合信息（版本、Docker、主机等）
+  async fetchInspectInfo(): Promise<any> {
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(this.agentId, '/api/deploy-agent/inspect/info', 'GET');
+    return httpResult.data.data;
+  }
+
+  // 获取 Agent 版本信息
+  async fetchAgentVersion(): Promise<any> {
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(this.agentId, '/api/deploy-agent/inspect/agent-version', 'GET');
+    return httpResult.data.data;
+  }
+
+  // 获取健康检查状态
+  async fetchHealthStatus(): Promise<string> {
+    const httpResult: HttpResult<HttpResult<string>> = await callAgentApi(this.agentId, '/api/deploy-agent/health', 'GET');
+    return httpResult.data.data;
+  }
 
   // ========================== SystemConfig 管理 ==========================
   // 获取系统配置列表

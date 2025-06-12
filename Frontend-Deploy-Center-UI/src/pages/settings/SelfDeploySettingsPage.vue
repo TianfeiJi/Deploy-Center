@@ -67,21 +67,21 @@
         <q-card class="self-deploy-card">
           <q-card-section>
             <div class="text-h6">Deploy Agent - {{ agent.name }}</div>
-            <div class="text-subtitle2 q-mt-xs">{{ agent.ip }} · {{ agent.os }}</div>
+            <div class="text-subtitle2 q-mt-xs">{{ agent.ip }}</div>
           </q-card-section>
           <q-separator />
           <q-card-section>
             <p>上传内容：Deploy Agent 项目压缩包</p>
             <p>部署方式：自动执行 <code>docker build</code> 与 <code>docker run</code></p>
-            <p>
+            <!-- <p>
               状态：
               <q-badge
                 :color="agent.status === 'online' ? 'green' : 'grey'"
                 :label="agent.status === 'online' ? '在线' : '离线'"
               />
-            </p>
+            </p> -->
           </q-card-section>
-          <q-card-actions align="right">
+          <!-- <q-card-actions align="right">
             <q-btn
               flat
               color="primary"
@@ -90,7 +90,7 @@
               @click="deployAgent(agent)"
               :disable="agent.status !== 'online'"
             />
-          </q-card-actions>
+          </q-card-actions> -->
         </q-card>
       </div>
     </div>
