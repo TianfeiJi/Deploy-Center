@@ -1,6 +1,7 @@
 from enum import Enum
 
 class StatusEnum(str, Enum):
+    START = "start"               # 开始
     NOT_STARTED = "not_started"   # 初始状态
     IN_PROGRESS = "in_progress"   # 处理中
     COMPLETED = "completed"       # 完成（可能成功或失败）
@@ -10,6 +11,7 @@ class StatusEnum(str, Enum):
     @property
     def label(self) -> str:
         labels = {
+            self.START: "开始",
             self.NOT_STARTED: "未开始",
             self.IN_PROGRESS: "进行中",
             self.COMPLETED: "已完成",
