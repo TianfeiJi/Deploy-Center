@@ -136,6 +136,7 @@ class PythonProjectDeployer:
             err_msg = f"镜像构建失败: {e}"
             self.logger.error(err_msg)
             self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, "failed", err_msg)
+            raise RuntimeError(err_msg)  # 抛出异常，阻止继续执行
 
     def _start_container(self, id: str, dockercommand_content: str):
         container_name = self.python_project.get('project_code')
@@ -157,6 +158,7 @@ class PythonProjectDeployer:
             err_msg = f"容器启动失败: {e}"
             self.logger.error(err_msg)
             self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, "failed", err_msg)
+            raise RuntimeError(err_msg)  # 抛出异常，阻止继续执行
 
     def _update_python_project_data(self, id):
         updated_data = {

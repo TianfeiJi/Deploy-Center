@@ -113,6 +113,7 @@ class JavaProjectDeployer:
             self.logger.error(err_msg)
             # 更新部署历史
             self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, "failed", err_msg)
+            raise RuntimeError(err_msg)  # 抛出异常，阻止继续执行
 
     def _start_container(self, id: str, dockercommand_content: str):
         """启动容器"""
@@ -142,6 +143,7 @@ class JavaProjectDeployer:
             self.logger.error(err_msg)
             # 更新部署历史
             self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, self.deploy_status, err_msg)
+            raise RuntimeError(err_msg)  # 抛出异常，阻止继续执行
 
     def _update_java_project_data(self, id):
         """更新项目数据"""

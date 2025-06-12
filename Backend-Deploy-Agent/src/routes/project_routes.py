@@ -160,8 +160,14 @@ async def deploy_java_project(
     # time.sleep(5)
 
     # return {"code": 200, "status": "success", "msg": f"接口测试：项目{id}部署成功", "data": None}
-    msg = JavaProjectDeployer().deploy(id, file, dockerfile_content, dockercommand_content)
-    return {"code": 200, "status": "success", "msg": msg, "data": None}
+    
+    try:
+        msg = JavaProjectDeployer().deploy(id, file, dockerfile_content, dockercommand_content)
+        return {"code": 200, "status": "success", "msg": msg, "data": None}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"code": 500, "status": "failed", "msg": f"部署失败: {str(e)}", "data": None}
 
 # TODO: 设置一个参数判断是否删除服务器上的项目文件？
 @project_router.delete("/api/deploy-agent/project/java/delete/{id}", summary="删除 Web 项目")
@@ -216,8 +222,13 @@ async def deploy_python_project(
     dockerfile_content: str = Form(None, title="Dockerfile内容", description="可选，若解压包中无 Dockerfile 则使用该内容"),
     dockercommand_content: str = Form(..., title="Docker命令")
 ):
-    msg = PythonProjectDeployer().deploy(id, file, dockerfile_content, dockercommand_content)
-    return HttpResult[None](code=200, status="success", msg=msg, data=None)
+    try:
+        msg = PythonProjectDeployer().deploy(id, file, dockerfile_content, dockercommand_content)
+        return HttpResult[None](code=200, status="success", msg=msg, data=None)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return HttpResult[None](code=500, status="failed", msg=f"部署失败: {str(e)}", data=None)
 
 @project_router.delete("/api/deploy-agent/project/python/delete/{id}", summary="删除 Python 项目")
 async def delete_python_project(id: str):
