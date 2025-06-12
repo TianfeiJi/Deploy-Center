@@ -21,7 +21,7 @@
         <el-table-column label="服务地址" prop="service_url" min-width="220" show-overflow-tooltip />
 
         <!-- 动态获取 版本、状态  -->
-        <el-table-column label="状态" min-width="90">
+        <el-table-column label="状态" min-width="60">
           <template #default="{ row }">
             <template v-if="agentRuntimeInfoMap[row.id]">
               <el-tag
@@ -38,7 +38,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="版本" min-width="90">
+        <el-table-column label="版本" min-width="60">
           <template #default="{ row }">
             <template v-if="agentRuntimeInfoMap[row.id]">
               <span style="font-style: italic">{{ agentRuntimeInfoMap[row.id].agent_version }}</span>
