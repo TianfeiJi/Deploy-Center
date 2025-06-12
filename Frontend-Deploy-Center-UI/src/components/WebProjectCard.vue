@@ -209,7 +209,13 @@ import { UpdateWebProjectRequestDto } from "src/types/dto/UpdateWebProjectReques
 
 const agentStore = useAgentStore();
 
-const agentCommandApi = new AgentCommandApi(agentStore.currentAgent!.id);
+// 获取 AgentCommandApi 实例
+const getAgentCommandApi = () => {
+  if (!agentStore.currentAgent) {
+    throw new Error('未选择 Agent');
+  }
+  return new AgentCommandApi(agentStore.currentAgent.id);
+};
 
 const props = defineProps<{
   webProject: WebProject;
@@ -265,7 +271,7 @@ const saveEdit = async () => {
   console.log(updateData)
 
   try {
-    await agentCommandApi.updateWebProject(updateData as UpdateWebProjectRequestDto);
+    await getAgentCommandApi().updateWebProject(updateData as UpdateWebProjectRequestDto);
 
     Notify.create({
       type: 'positive',
@@ -341,7 +347,7 @@ const handleUploadDeploy = async () => {
     formData.append('file', file);
 
     // 调用 deployWebProject API
-    const response = await agentCommandApi.deployWebProject(formData, {
+    const response = await getAgentCommandApi().deployWebProject(formData, {
       onUploadProgress: (event) => {
         if (event.total) {
           const percentCompleted = Math.round(
@@ -388,7 +394,7 @@ const confirmText = ref('');
 const handleSecondConfirmDelete = async () => {
   if (confirmText.value === '确定删除') {
     try {
-      await agentCommandApi.deleteWebProject(props.webProject.id)
+      await getAgentCommandApi().deleteWebProject(props.webProject.id)
       Notify.create({
         message: '删除成功',
         type: 'positive',

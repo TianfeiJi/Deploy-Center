@@ -248,8 +248,13 @@ const props = defineProps<{
 }>();
 
 const agentStore = useAgentStore();
-
-const agentCommandApi = new AgentCommandApi(agentStore.currentAgent!.id);
+// 获取 AgentCommandApi 实例
+const getAgentCommandApi = () => {
+  if (!agentStore.currentAgent) {
+    throw new Error('未选择 Agent');
+  }
+  return new AgentCommandApi(agentStore.currentAgent.id);
+};
 
 const isViewDetailDialogOpen = ref(false);
 const isUploadDeployDialogOpen = ref(false);
@@ -314,7 +319,7 @@ const saveEdit = async () => {
   console.log(updateData)
 
   try {
-    await agentCommandApi.updateJavaProject(updateData as UpdateJavaProjectRequestDto);
+    await getAgentCommandApi().updateJavaProject(updateData as UpdateJavaProjectRequestDto);
     Notify.create({
       type: 'positive',
       message: '保存成功',
@@ -336,16 +341,16 @@ const openUploadDeployDialog = async () => {
   fileList.value = [];
   uploadProgress.value = 0;
 
-  const systemConfig1 = await agentCommandApi.fetchSystemConfig("default_java_dockerfile_template")
+  const systemConfig1 = await getAgentCommandApi().fetchSystemConfig("default_java_dockerfile_template")
   const defaultJavaDockerfileTemplate = systemConfig1.config_value
-  dockerfileContent.value = await agentCommandApi.renderTemplateContent(props.javaProject.id, defaultJavaDockerfileTemplate)
+  dockerfileContent.value = await getAgentCommandApi().renderTemplateContent(props.javaProject.id, defaultJavaDockerfileTemplate)
 
-  const systemConfig2 = await agentCommandApi.fetchSystemConfig("default_java_dockercommand_template")
+  const systemConfig2 = await getAgentCommandApi().fetchSystemConfig("default_java_dockercommand_template")
   const defaultJavaDockercommandTemplate = systemConfig2.config_value
-  dockerCommand.value = await agentCommandApi.renderTemplateContent(props.javaProject.id, defaultJavaDockercommandTemplate)
+  dockerCommand.value = await getAgentCommandApi().renderTemplateContent(props.javaProject.id, defaultJavaDockercommandTemplate)
 
-  // const dockerfileTemplates = await agentCommandApi.fetchTemplateList("dockerfile");
-  // const dockercommandTemplates = await agentCommandApi.fetchTemplateList("dockercommand");
+  // const dockerfileTemplates = await getAgentCommandApi().fetchTemplateList("dockerfile");
+  // const dockercommandTemplates = await getAgentCommandApi().fetchTemplateList("dockercommand");
 
 };
 
@@ -396,7 +401,7 @@ const handleUploadDeploy = async () => {
     formData.append('dockerfile_content', dockerfileContent.value);
     formData.append('dockercommand_content', dockerCommand.value);
 
-    const response = await agentCommandApi.deployJavaProject(formData, {
+    const response = await getAgentCommandApi().deployJavaProject(formData, {
       onUploadProgress: (event: AxiosProgressEvent) => {
         if (event.total) {
           const percentCompleted = Math.round(
@@ -439,7 +444,7 @@ const handleUploadDeploy = async () => {
 const handleSecondConfirmDelete = async () => {
   if (confirmText.value === '确定删除') {
     try {
-      await agentCommandApi.deleteJavaProject(props.javaProject.id)
+      await getAgentCommandApi().deleteJavaProject(props.javaProject.id)
       Notify.create({
         message: '删除成功',
         type: 'positive',
