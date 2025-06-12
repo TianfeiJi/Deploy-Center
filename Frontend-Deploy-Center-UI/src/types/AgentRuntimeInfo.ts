@@ -9,5 +9,5 @@ export interface AgentRuntimeInfo {
   arch?: string;
   docker_version?: string;
   python_version?: string;
-  last_updated?: string;
+  fetched_at?: string;
 }

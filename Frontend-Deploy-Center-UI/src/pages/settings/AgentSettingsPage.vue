@@ -15,10 +15,18 @@
         row-key="id"
       >
         <el-table-column label="ID" prop="id" width="40" />
-        <el-table-column label="名称" prop="name" min-width="120" />
+        <el-table-column label="名称" prop="name" min-width="120"/>
         <el-table-column label="IP地址" prop="ip" min-width="150" />
         <el-table-column label="端口" prop="port" min-width="70" />
         <el-table-column label="服务地址" prop="service_url" min-width="220" show-overflow-tooltip />
+        <el-table-column label="最后更新" min-width="150" show-overflow-tooltip >
+          <template #default="{ row }">{{ formatDate(row.updated_at) }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="80">
+          <template #default="{ row }">
+            <el-button size="small" type="primary" @click="onEditAgent(row)">修改</el-button>
+          </template>
+        </el-table-column>
 
         <!-- 动态获取 版本、状态  -->
         <el-table-column label="状态" min-width="60">
@@ -33,7 +41,9 @@
               </el-tag>
             </template>
             <template v-else>
-              <el-icon><Loading /></el-icon>
+              <div class="q-pa-xs row justify-center items-center" style="height: 100%;">
+                <q-spinner color="grey-5" size="16px" />
+              </div>
             </template>
           </template>
         </el-table-column>
@@ -44,19 +54,27 @@
               <span style="font-style: italic">{{ agentRuntimeInfoMap[row.id].agent_version }}</span>
             </template>
             <template v-else>
-              <el-icon><Loading /></el-icon>
+              <div class="q-pa-xs row justify-center items-center" style="height: 100%;">
+                <q-spinner color="grey-5" size="16px" />
+              </div>
             </template>
           </template>
         </el-table-column>
 
-        <el-table-column label="最后更新" min-width="150" show-overflow-tooltip >
-          <template #default="{ row }">{{ formatDate(row.updated_at) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="80">
+        <el-table-column label="采集时间" min-width="150" show-overflow-tooltip>
           <template #default="{ row }">
-            <el-button size="small" type="primary" @click="onEditAgent(row)">修改</el-button>
+            <template v-if="agentRuntimeInfoMap[row.id]?.fetched_at">
+              {{ formatDate(agentRuntimeInfoMap[row.id].fetched_at) }}
+            </template>
+            <template v-else>
+              <div class="q-pa-xs row justify-center items-center" style="height: 100%;">
+                <q-spinner color="grey-5" size="16px" />
+              </div>
+            </template>
           </template>
         </el-table-column>
+
+       
       </el-table>
     </q-card>
 
@@ -114,23 +132,21 @@ const fetchAgents = async () => {
       agentRuntimeInfoMap.value[agent.id] = {
         health: info.status,
         agent_version: info.agent_version,
+        fetched_at: info.fetched_at,
         // productName: info.product_name,
         // sysVendor: info.sys_vendor
       };
 
     } catch (e) {
-      agentRuntimeInfoMap.value[agent.id] = {
-        health: 'error',
-        agent_version: '未知'
-      }
+      
     }
   }
 }
 
-const formatDate = (date: string) => {
-  const d = new Date(date)
-  return d.toLocaleString()
-}
+const formatDate = (date?: string): string => {
+  if (!date) return '-';
+  return new Date(date).toLocaleString();
+};
 
 const showEditDialog = ref(false)
 const editAgent = ref<Partial<Agent>>({})
