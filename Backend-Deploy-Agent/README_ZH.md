@@ -107,6 +107,7 @@ docker build -t deploy-agent:v1.0 .
 docker run -d \
   -p 2333:2333 \
   --name deploy-agent \
+  -v /data/docker/infrastructure/deploy-agent/template:/app/template \
   -v /data/docker/infrastructure/deploy-agent/data:/app/data \
   -v /data/docker/infrastructure/deploy-agent/logs:/app/logs \
   -v /data/docker/projects/java:/app/projects/java \
@@ -115,6 +116,7 @@ docker run -d \
 ```
 
 > **挂载说明：**
+> - `/app/template`：模板目录
 > - `/app/data`：部署代理的数据目录
 > - `/app/logs`：日志输出
 > - `/app/projects/java`：Java 项目部署路径

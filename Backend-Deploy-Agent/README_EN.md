@@ -107,6 +107,7 @@ docker build -t deploy-agent:v1.0 .
 docker run -d \
   -p 2333:2333 \
   --name deploy-agent \
+  -v /data/docker/infrastructure/deploy-agent/template:/app/template \
   -v /data/docker/infrastructure/deploy-agent/data:/app/data \
   -v /data/docker/infrastructure/deploy-agent/logs:/app/logs \
   -v /data/docker/projects/java:/app/projects/java \
@@ -115,6 +116,7 @@ docker run -d \
 ```
 
 > **Mount Notes:**  
+> - `/app/template`: Template directory for the deployment agent
 > - `/app/data`: Deployment agent's data directory  
 > - `/app/logs`: Log output directory  
 > - `/app/projects/java`: Java project deployment path  
