@@ -24,10 +24,9 @@
 **`Deploy Center`** is a lightweight project deployment management tool that supports front-end projects as well as various projects that can be deployed via Docker containers (such as Java, Python, etc.). By automating and standardizing operations, **Deploy Center** significantly improves operational efficiency, reduces manual intervention costs, and ensures the efficiency and stability of project deployments.
 
 ## Documentation Navigation
-- [Frontend-Deploy-Center-UI](./Frontend-Deploy-Center-UI/README.md): Frontend of the Deploy Center, provides UI for task configuration and operations
-- [Backend-Deploy-Center](./Backend-Deploy-Center/README_EN.md): Backend of the Deploy Center, responsible for scheduling and distributing deployment tasks
-- Core backend module of Deploy Center (FastAPI)  
-- [Backend-Deploy-Agent](./Backend-Deploy-Agent/README_EN.md): Deployment Agent backend, responsible for executing deployment tasks
+- [Deploy-Center-UI](./Deploy-Center-UI/README.md): Frontend of the Deploy Center, provides UI for task configuration and operations
+- [Deploy-Center](./Deploy-Center/README_EN.md): Backend of the Deploy Center, responsible for scheduling and distributing deployment tasks
+- [Deploy-Agent](./Deploy-Agent/README_EN.md): Deployment Agent backend, responsible for executing deployment tasks
 > For more documentation, please refer to the [A-docs/](./A-docs/) directory.
 
 ## Live Demo
@@ -58,7 +57,7 @@
 
 #### Deploy Center
 - **Deploy Center UI**: Provides a graphical interface for users to send deployment instructions and manage tasks.
-- **Deploy Center Backend**: Receives requests from the front end, schedules deployment instructions, and sends commands to each **Deploy Agent**. It is also responsible for security checks across the system.
+- **Deploy Center**: Receives requests from the front end, schedules deployment instructions, and sends commands to each **Deploy Agent**. It is also responsible for security checks across the system.
 
 **Deploy Center** is deployed on a middle server that supports external network access and can receive requests from the external network. It is the management and control center of the entire deployment system, responsible for receiving user instructions, scheduling deployment tasks, and communicating with each **Deploy Agent**.
 
@@ -76,7 +75,7 @@
 flowchart TD
     subgraph Management_Server[Management Server]
         FE[Deploy Center UI]
-        BE[Deploy Center Backend]
+        BE[Deploy Center]
         FE --> BE
     end
 

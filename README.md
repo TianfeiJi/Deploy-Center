@@ -24,9 +24,9 @@
 **`部署中心 (Deploy Center)`** 是一款轻量级的项目部署管理工具，它支持前端项目以及各类可通过 Docker 容器化部署的项目（如 Java、Python 等）。通过自动化和标准化操作，`Deploy Center` 能显著提升运维效率，降低人工干预成本，确保项目部署的高效性和稳定性。
 
 ## 文档导航
-- [Frontend-Deploy-Center](./Frontend-Deploy-Center/README.md)：部署中心前端，提供部署任务配置与操作界面
-- [Backend-Deploy-Center](./Backend-Deploy-Center/README_ZH.md)：部署中心服务端，负责部署任务的调度与分发
-- [Backend-Deploy-Agent](./Backend-Deploy-Agent/README_ZH.md)：部署代理服务端，负责实际部署任务的执行  
+- [Deploy-Center-UI](./Deploy-Center-UI/README.md)：部署中心前端，提供部署任务配置与操作界面
+- [Deploy-Center](./Deploy-Center/README_ZH.md)：部署中心服务端，负责部署任务的调度与分发
+- [Deploy-Agent](./Deploy-Agent/README_ZH.md)：部署代理服务端，负责实际部署任务的执行  
 > 更多说明文档请见 [A-docs/](./A-docs/) 目录  
 
 ## 在线演示
@@ -50,7 +50,7 @@
 
 #### Deploy Center
 - **Deploy Center UI (部署中心前端)**：提供图形化界面，供用户进行操作，发送部署指令和管理任务。
-- **Deploy Center Backend (部署中心后端)**：接收来自管理前端的请求，负责调度部署指令，并将指令下发到各个 **Deploy Agent**。同时负责整个系统的安全校验。
+- **Deploy Center (部署中心后端)**：接收来自管理前端的请求，负责调度部署指令，并将指令下发到各个 **Deploy Agent**。同时负责整个系统的安全校验。
 
 **Deploy Center** 部署在支持外网访问的中间服务器中，可以接收来自外部网络的请求。它是整个部署系统的管理和控制中心，负责接收用户指令、调度部署任务，并与各个 **Deploy Agent** 进行通信。
 
@@ -68,7 +68,7 @@
 flowchart TD
     subgraph Management_Server[中间服务器 - Management Server]
         FE[部署中心前端<br>Deploy Center UI]
-        BE[部署中心后端<br>Deploy Center Backend]
+        BE[部署中心后端<br>Deploy Center]
         FE --> BE
     end
 
