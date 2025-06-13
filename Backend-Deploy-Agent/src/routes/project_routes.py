@@ -165,8 +165,6 @@ async def deploy_java_project(
         msg = JavaProjectDeployer().deploy(id, file, dockerfile_content, dockercommand_content)
         return {"code": 200, "status": "success", "msg": msg, "data": None}
     except Exception as e:
-        import traceback
-        traceback.print_exc()
         return {"code": 500, "status": "failed", "msg": f"部署失败: {str(e)}", "data": None}
 
 # TODO: 设置一个参数判断是否删除服务器上的项目文件？
