@@ -47,7 +47,7 @@
           <q-card-section>
             <p>上传内容：后端项目压缩包（包含 Dockerfile）</p>
             <p>部署方式：自动执行 <code>docker build</code> 与 <code>docker run</code></p>
-            <p>部署路径：<code>/data/digital-center-projects/deploy-center</code></p>
+            <p>部署路径：<code>/data/docker/projects/deploy-center</code></p>
           </q-card-section>
           <q-card-actions align="right">
             <q-btn flat color="primary" icon="cloud_upload" label="上传部署" @click="deployCenterBackend" />
