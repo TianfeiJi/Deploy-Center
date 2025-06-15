@@ -115,11 +115,13 @@ docker run -d \
   deploy-agent:v1.0
 ```
 
-> **Mount Notes:**  
-> - `/app/template`: Template directory for the deployment agent
-> - `/app/data`: Deployment agent's data directory  
-> - `/app/logs`: Log output directory  
-> - `/app/projects/java`: Java project deployment path  
-> - `/app/projects/webs`: Frontend project deployment path  
+**Mount Notes:**  
+> - `/var/run/docker.sock`: **Must be mounted**. This is the critical socket for the container to access the Docker daemon on the host. Without this, container-related operations will fail.
+> - `/usr/bin/docker`: **Must be mounted**. Maps the Docker CLI from the host into the container. The Agent depends on this command to execute deployment processes.
+> - `/app/template`: Agent template directory.
+> - `/app/data`: Agent data directory.
+> - `/app/logs`: Agent log output directory.
+> - `/app/projects/java`: Your Java project deployment path.
+> - `/app/projects/webs`: Your frontend project deployment path.
 
 > Be sure to adjust the host paths according to your actual environment to avoid issues caused by incorrect path settings.

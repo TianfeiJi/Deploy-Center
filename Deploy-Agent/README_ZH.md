@@ -107,6 +107,8 @@ docker build -t deploy-agent:v1.0 .
 docker run -d \
   -p 2333:2333 \
   --name deploy-agent \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /usr/bin/docker:/usr/bin/docker \
   -v /data/docker/infrastructure/deploy-agent/template:/app/template \
   -v /data/docker/infrastructure/deploy-agent/data:/app/data \
   -v /data/docker/infrastructure/deploy-agent/logs:/app/logs \
@@ -115,11 +117,13 @@ docker run -d \
   deploy-agent:v1.0
 ```
 
-> **挂载说明：**
-> - `/app/template`：模板目录
-> - `/app/data`：部署代理的数据目录
-> - `/app/logs`：日志输出
-> - `/app/projects/java`：Java 项目部署路径
-> - `/app/projects/webs`：前端项目部署路径
+**挂载说明：**
+> - `/var/run/docker.sock`：**必须挂载**，容器访问宿主机 Docker 守护进程的关键通道，否则无法执行容器相关操作。
+> - `/usr/bin/docker`: **必须挂载**，将宿主机 Docker CLI 映射进容器，Agent 内部依赖该命令执行部署流程。
+> - `/app/template`：Agent 模板目录
+> - `/app/data`：Agent 数据目录
+> - `/app/logs`：Agent 日志输出目录
+> - `/app/projects/java`：你的Java项目部署路径
+> - `/app/projects/webs`：你的前端项目部署路径
 
 > 请根据实际部署环境合理调整宿主路径，避免路径错误导致部署失败。
