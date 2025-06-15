@@ -39,7 +39,7 @@
       </p>
       <p>外部端口: {{ javaProject.external_port }}</p>
       <p>内部端口: {{ javaProject.internal_port }}</p>
-      <p>Docker网络: {{ javaProject.network }}</p>
+      <p v-if="javaProject.network">Docker网络: {{ javaProject.network }}</p>
       <p>宿主机路径: {{ javaProject.host_project_path }}</p>
       <p>容器内路径: {{ javaProject.container_project_path }}</p>
     </q-card-section>
