@@ -1,2 +1,2 @@
 # config/version.py
-AGENT_VERSION = "1.0.8"
+AGENT_VERSION = "v1.0.8"

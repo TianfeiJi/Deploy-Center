@@ -6,7 +6,12 @@
       <!-- Header -->
       <div class="column items-center q-mb-lg">
         <div class="title">Deploy Center</div>
-        <div class="version">v{{ version }}</div>
+        <div class="version">
+          <a :href="`https://github.com/TianfeiJi/Deploy-Center/tags`" target="_blank" class="text-grey-7"
+            style="text-decoration: none; cursor: pointer">
+            {{ version }}
+          </a>
+        </div>
       </div>
 
       <!-- 语言切换 -->
@@ -75,7 +80,7 @@
 import { ref, onMounted } from 'vue'
 import { version } from '../../../package.json'
 
-const githubUrl = 'https://github.com/TianfeiJi/deploy-center'
+const githubUrl = 'https://github.com/TianfeiJi/Deploy-Center'
 const starLabel = ref('Star')
 
 const goToGithub = () => {
@@ -84,7 +89,7 @@ const goToGithub = () => {
 
 onMounted(async () => {
   try {
-    const res = await fetch('https://api.github.com/repos/TianfeiJi/deploy-center')
+    const res = await fetch('https://api.github.com/repos/TianfeiJi/Deploy-Center')
     const data = await res.json()
     starLabel.value = `Star ${data.stargazers_count}`
   } catch {

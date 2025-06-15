@@ -4,34 +4,24 @@
     <!-- Header区域 -->
     <q-header elevated class="bg-white text-grey-8 q-py-xs" height-hint="58">
       <q-toolbar>
-        <!-- 项目标题 -->
-        <q-btn
-          flat
-          no-caps
-          no-wrap
-          class="q-ml-xs"
-          style="padding: 0"
-          to="/topology"
-        >
-          <q-toolbar-title shrink class="text-weight-bold">
-            Deploy Center UI
-          </q-toolbar-title>
-        </q-btn>
+        <div class="row items-center q-ml-xs q-mr-md">
+          <q-btn flat no-caps no-wrap style="padding: 0; margin-right: 0.5rem;" to="/topology">
+            <q-toolbar-title shrink class="text-weight-bold">
+              Deploy Center UI
+            </q-toolbar-title>
+          </q-btn>
+
+          <div class="text-caption text-grey-7">
+            <a :href="`https://github.com/TianfeiJi/Deploy-Center/tags`" target="_blank" class="text-grey-7"
+              style="text-decoration: none; cursor: pointer">
+              {{ version }}
+            </a>
+          </div>
+        </div>
 
         <!-- Agent 筛选 -->
-        <q-btn
-          flat
-          dense
-          no-caps
-          no-wrap
-          class="agent-switcher q-ml-md q-pa-xs"
-          :ripple="false"
-        >
-          <q-avatar
-            size="26px"
-            :color="currentHealth === 'healthy' ? 'green-5' : 'grey-5'"
-            text-color="white"
-          >
+        <q-btn flat dense no-caps no-wrap class="agent-switcher q-ml-md q-pa-xs" :ripple="false">
+          <q-avatar size="26px" :color="currentHealth === 'healthy' ? 'green-5' : 'grey-5'" text-color="white">
             <q-icon name="dns" size="18px" />
           </q-avatar>
 
@@ -49,29 +39,17 @@
 
           <q-menu transition-show="jump-down">
             <q-list>
-              <q-item
-                v-for="agent in agentList"
-                :key="agent.id"
-                clickable
-                v-close-popup
-                @click="selectedAgentId = agent.id"
-              >
-                <q-item-section
-                  avatar
-                  style="min-width: 16px; padding-right: 8px"
-                >
-                  <q-avatar
-                    size="24px"
+              <q-item v-for="agent in agentList" :key="agent.id" clickable v-close-popup
+                @click="selectedAgentId = agent.id">
+                <q-item-section avatar style="min-width: 16px; padding-right: 8px">
+                  <q-avatar size="24px"
                     :color="agentRuntimeInfoMap[agent.id]?.health === 'healthy' ? 'green-5' : 'grey-5'"
-                    text-color="white"
-                  >
+                    text-color="white">
                     <q-icon name="dns" size="16px" />
                   </q-avatar>
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label class="text-body2"
-                    >{{ agent.name }} ({{ agent.ip }})</q-item-label
-                  >
+                  <q-item-label class="text-body2">{{ agent.name }} ({{ agent.ip }})</q-item-label>
                 </q-item-section>
               </q-item>
             </q-list>
@@ -82,51 +60,23 @@
 
         <!-- 导航区域 -->
         <div class="nav-btns">
-          <q-btn
-            flat
-            no-caps
-            no-wrap
-            :ripple="false"
-            to="/dashboard"
-            class="nav-btn"
-            :class="{ 'active-nav': route.path === '/dashboard' }"
-          >
+          <q-btn flat no-caps no-wrap :ripple="false" to="/dashboard" class="nav-btn"
+            :class="{ 'active-nav': route.path === '/dashboard' }">
             <q-icon name="dashboard" size="20px" />
             <span class="q-ml-sm">仪表盘</span>
           </q-btn>
-          <q-btn
-            flat
-            no-caps
-            no-wrap
-            :ripple="false"
-            to="/project"
-            class="nav-btn"
-            :class="{ 'active-nav': route.path === '/project' }"
-          >
+          <q-btn flat no-caps no-wrap :ripple="false" to="/project" class="nav-btn"
+            :class="{ 'active-nav': route.path === '/project' }">
             <q-icon name="build" size="20px" />
             <span class="q-ml-sm">项目部署</span>
           </q-btn>
-          <q-btn
-            flat
-            no-caps
-            no-wrap
-            :ripple="false"
-            to="/deployHistory"
-            class="nav-btn"
-            :class="{ 'active-nav': route.path === '/deployHistory' }"
-          >
+          <q-btn flat no-caps no-wrap :ripple="false" to="/deployHistory" class="nav-btn"
+            :class="{ 'active-nav': route.path === '/deployHistory' }">
             <q-icon name="history" size="20px" />
             <span class="q-ml-sm">部署历史</span>
           </q-btn>
-          <q-btn
-            flat
-            no-caps
-            no-wrap
-            :ripple="false"
-            to="/deployLog"
-            class="nav-btn"
-            :class="{ 'active-nav': route.path === '/deployLog' }"
-          >
+          <q-btn flat no-caps no-wrap :ripple="false" to="/deployLog" class="nav-btn"
+            :class="{ 'active-nav': route.path === '/deployLog' }">
             <q-icon name="description" size="20px" />
             <span class="q-ml-sm">部署日志</span>
           </q-btn>
@@ -166,25 +116,14 @@
           </q-menu>
         </q-btn>
 
-        <div
-          class="q-gutter-sm row items-center no-wrap"
-          style="margin-left: 0.2rem"
-        >
+        <div class="q-gutter-sm row items-center no-wrap" style="margin-left: 0.2rem">
           <q-btn round dense flat color="grey-8" icon="article" to="/document">
             <q-tooltip>文档</q-tooltip>
           </q-btn>
         </div>
 
-        <div v-if="isSuperAdminUser"
-          class="q-gutter-sm row items-center no-wrap">
-          <q-btn
-            round
-            dense
-            flat
-            color="grey-8"
-            icon="settings"
-            to="/setting/systemConfig"
-          >
+        <div v-if="isSuperAdminUser" class="q-gutter-sm row items-center no-wrap">
+          <q-btn round dense flat color="grey-8" icon="settings" to="/setting/systemConfig">
             <q-tooltip>设置</q-tooltip>
           </q-btn>
         </div>
@@ -212,6 +151,7 @@ import { useLoginUserStore } from 'src/stores/useLoginUserStore';
 import { useAgentStore } from 'src/stores/useAgentStore';
 import { useSystemConfigStore } from 'stores/useSystemConfigStore';
 import { observeWatermark } from 'src/utils/watermark';
+import { version } from '../../package.json'
 import { resetAllStores } from 'src/utils/resetAllStores';
 import type { AgentRuntimeInfo } from 'src/types/AgentRuntimeInfo'
 import { AgentCommandApi } from 'src/api/AgentCommandApi';
@@ -303,21 +243,21 @@ const fetchAllAgentRuntimeInfo = async () => {
   for (const agent of agentList.value) {
     try {
       const api = new AgentCommandApi(agent.id)
-      
+
       const info = await api.fetchInspectInfo();
 
       agentRuntimeInfoMap.value[agent.id] = {
-          health: info.status,
-          agent_version: info.agent_version,
-          // productName: info.product_name,
-          // sysVendor: info.sys_vendor
+        health: info.status,
+        agent_version: info.agent_version,
+        // productName: info.product_name,
+        // sysVendor: info.sys_vendor
       };
-      } catch (e) {
-          agentRuntimeInfoMap.value[agent.id] = {
-              health: "未知",
-              agent_version: "未知",
-          }
+    } catch (e) {
+      agentRuntimeInfoMap.value[agent.id] = {
+        health: "未知",
+        agent_version: "未知",
       }
+    }
   }
 }
 
