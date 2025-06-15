@@ -23,6 +23,7 @@ export interface JavaProject {
   project_group: string; // 项目组别
   docker_image_name: string; // Docker 镜像名称
   docker_image_tag: string; // Docker 镜像标签
+  container_name: string; // 容器名称
   external_port: number; // 外部端口
   internal_port: number; // 内部端口
   network?: string;
@@ -30,7 +31,6 @@ export interface JavaProject {
   host_project_path: string; // 宿主机项目路径
   container_project_path: string; // 容器项目路径
   git_repository: string; // Git地址
-  status: 'running' | 'exited' | 'paused' | 'restarting'; // 项目状态
   created_at: string;
   updated_at: string;
   last_deployed_at: string;
@@ -45,6 +45,7 @@ export interface PythonProject {
   project_group: string; // 项目组别
   docker_image_name: string; // Docker 镜像名称
   docker_image_tag: string; // Docker 镜像标签
+  container_name: string; // 容器名称
   external_port: number; // 外部端口
   internal_port: number; // 内部端口
   network: string;
@@ -53,7 +54,6 @@ export interface PythonProject {
   host_project_path: string; // 宿主机项目路径
   container_project_path: string; // 容器项目路径
   git_repository: string; // Git地址
-  status: 'running' | 'exited' | 'paused' | 'restarting'; // 项目状态
   created_at: string;
   updated_at: string;
   last_deployed_at: string;

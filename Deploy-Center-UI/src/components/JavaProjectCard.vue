@@ -37,6 +37,7 @@
           javaProject.docker_image_tag
         }}
       </p>
+      <p>容器名称: {{ javaProject.container_name }}</p>
       <p>外部端口: {{ javaProject.external_port }}</p>
       <p>内部端口: {{ javaProject.internal_port }}</p>
       <p v-if="javaProject.network">Docker网络: {{ javaProject.network }}</p>
@@ -205,6 +206,7 @@ const viewJavaProjectDetail = () => {
     { label: '项目分组', key: 'project_group', value: props.javaProject.project_group, editable: true },
     { label: 'Docker 镜像名称', key: 'docker_image_name', value: props.javaProject.docker_image_name, editable: true },
     { label: 'Docker 镜像标签', key: 'docker_image_tag', value: props.javaProject.docker_image_tag, editable: true },
+    { label: '容器名称', key: 'container_name', value: props.javaProject.container_name, editable: true },
     { label: '外部端口', key: 'external_port', value: String(props.javaProject.external_port), editable: true },  // 转字符串
     { label: '内部端口', key: 'internal_port', value: String(props.javaProject.internal_port), editable: true },    // 转字符串
     { label: '宿主机路径', key: 'host_project_path', value: props.javaProject.host_project_path, editable: true },

@@ -28,6 +28,7 @@
       <p>项目代号: {{ pythonProject.project_code }}</p>
       <p>Python版本: {{ pythonProject.python_version }}</p>
       <p>框架: {{ pythonProject.framework }}</p>
+      <p>容器名称: {{ pythonProject.container_name }}</p>
       <p v-if="pythonProject.network">Docker网络: {{ pythonProject.network }}</p>
       <p>宿主机路径: {{ pythonProject.host_project_path }}</p>
       <p>容器内路径: {{ pythonProject.container_project_path }}</p>
@@ -201,6 +202,7 @@ const viewPythonProjectDetail = () => {
     { label: '项目分组', key: 'project_group', value: props.pythonProject.project_group, editable: true },
     { label: 'Docker 镜像名称', key: 'docker_image_name', value: props.pythonProject.docker_image_name, editable: true },
     { label: 'Docker 镜像标签', key: 'docker_image_tag', value: props.pythonProject.docker_image_tag, editable: true },
+    { label: '容器名称', key: 'container_name', value: props.pythonProject.container_name, editable: true },
     { label: '外部端口', key: 'external_port', value: String(props.pythonProject.external_port), editable: true },  // 转字符串
     { label: '内部端口', key: 'internal_port', value: String(props.pythonProject.internal_port), editable: true },    // 转字符串
     { label: 'Docker 网络', key: 'network', value: props.pythonProject.network, editable: false },
