@@ -4,7 +4,7 @@
     <!-- Header区域 -->
     <q-header elevated class="bg-white text-grey-8 q-py-xs" height-hint="58">
       <q-toolbar>
-        <div class="row items-center q-ml-xs q-mr-md">
+        <div class="row items-center" style="margin-right: 0.5rem;">
           <q-btn flat no-caps no-wrap style="padding: 0; margin-right: 0.5rem;" to="/topology">
             <q-toolbar-title shrink class="text-weight-bold">
               Deploy Center UI
@@ -20,7 +20,7 @@
         </div>
 
         <!-- Agent 筛选 -->
-        <q-btn flat dense no-caps no-wrap class="agent-switcher q-ml-md q-pa-xs" :ripple="false">
+        <q-btn flat dense no-caps no-wrap class="agent-switcher" :ripple="false">
           <q-avatar size="26px" :color="currentHealth === 'healthy' ? 'green-5' : 'grey-5'" text-color="white">
             <q-icon name="dns" size="18px" />
           </q-avatar>
