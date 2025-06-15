@@ -3,10 +3,10 @@ import { HttpResult } from "src/types/HttpResult";
 import { Template } from "src/types/Template";
 import { AddWebProjectRequestDto } from 'src/types/dto/AddWebProjectRequestDto';
 import { AddJavaProjectRequestDto } from 'src/types/dto/AddJavaProjectRequestDto';
-import { callAgentApi } from "./agentApi";
 import { UpdateJavaProjectRequestDto } from "src/types/dto/UpdateJavaProjectRequestDto";
 import { UpdateWebProjectRequestDto } from "src/types/dto/UpdateWebProjectRequestDto";
 import { UpdatePythonProjectRequestDto } from "src/types/dto/UpdatePythonProjectRequestDto";
+import { callAgentApi } from "./agentApi";
 
 
 export class AgentCommandApi {
@@ -16,6 +16,13 @@ export class AgentCommandApi {
     this.agentId = agentId;
   }
   
+  // ========================== Agent 统计接口 ==========================
+  // 获取 Agent 项目状态统计信息
+  async fetchProjectStatusStatistics(): Promise<any> {
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(this.agentId, '/api/deploy-agent/statistics/project-status', 'GET');
+    return httpResult.data.data;
+  }
+
   // ========================== Agent Inspect 信息 ==========================
   // 获取 Agent 聚合信息（版本、Docker、主机等）
   async fetchInspectInfo(): Promise<any> {
@@ -51,31 +58,40 @@ export class AgentCommandApi {
   // ========================== Server 管理 ==========================
   // 获取服务器系统信息
   async fetchServerSystemInfo(): Promise<any> {
-    const httpResult: HttpResult<HttpResult<any>> =  await callAgentApi(this.agentId, '/api/deploy-agent/server/system_info', 'GET');
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(this.agentId, '/api/deploy-agent/server/system_info', 'GET');
     return httpResult.data.data;
   }
 
   // 获取服务器CPU使用率
   async fetchServerCpuUsage(): Promise<any> {
-    const httpResult: HttpResult<HttpResult<any>> =  await callAgentApi(this.agentId, '/api/deploy-agent/server/cpu_usage', 'GET');
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(this.agentId, '/api/deploy-agent/server/cpu_usage', 'GET');
     return httpResult.data.data;
   }
 
   // 获取服务器内存信息
   async fetchServerMemoryInfo(): Promise<any> {
-    const httpResult: HttpResult<HttpResult<any>> =  await callAgentApi(this.agentId, '/api/deploy-agent/server/memory_info', 'GET');
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(this.agentId, '/api/deploy-agent/server/memory_info', 'GET');
     return httpResult.data.data;
   }
 
   // 获取服务器磁盘信息
   async fetchServerDiskInfo(): Promise<any> {
-    const httpResult: HttpResult<HttpResult<any>> =  await callAgentApi(this.agentId, '/api/deploy-agent/server/disk_info', 'GET');
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(this.agentId, '/api/deploy-agent/server/disk_info', 'GET');
     return httpResult.data.data;
   }
 
   // 获取服务器网速信息
   async fetchServerNetworkSpeed(): Promise<any> {
-    const httpResult: HttpResult<HttpResult<any>> =  await callAgentApi(this.agentId, '/api/deploy-agent/server/network_speed', 'GET');
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(this.agentId, '/api/deploy-agent/server/network_speed', 'GET'
+    );
+    return httpResult.data.data;
+  }
+
+  // ========================== Docker 管理 ==========================
+  
+  // 获取容器状态
+  async fetchDockerContainerStatus(container_name: string): Promise<any> {
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(this.agentId, `/api/deploy-agent/docker/container-status?container_name=${container_name}`, 'GET');
     return httpResult.data.data;
   }
 
@@ -115,6 +131,15 @@ export class AgentCommandApi {
   // 获取项目列表
   async fetchProjectList(): Promise<any[]> {
     const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(this.agentId, '/api/deploy-agent/project/list', 'GET');
+    return httpResult.data.data;
+  }
+
+  // 检查前端项目可及性
+  async checkWebProjectAccessibility(url: string): Promise<any> {
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(
+      this.agentId, 
+      encodeURIComponent(`/api/deploy-agent/project/check-web-project-accessibility?url=${url}`),
+      'GET');
     return httpResult.data.data;
   }
 

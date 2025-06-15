@@ -8,3 +8,4 @@ pyjwt
 psutil
 py-cpuinfo
 jinja2
+httpx

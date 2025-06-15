@@ -15,10 +15,11 @@
 
       <!-- 版本历史列表 -->
       <q-timeline color="primary">
-        <q-timeline-entry title="v1.2.0" subtitle="2025-06-01">
+        <q-timeline-entry title="v1.0.8" subtitle="2025-06-15">
           <ul>
-            <li>支持定时部署</li>
-            <li>支持部署历史记录，并支持一键回滚</li>
+            <li>实现实时获取项目的真实运行状态</li>
+            <li>移除静态 status 字段，状态改为动态计算</li>
+            <li>新增container_name字段</li>
           </ul>
         </q-timeline-entry>
         <q-timeline-entry title="v1.0.6" subtitle="2025-05-15">

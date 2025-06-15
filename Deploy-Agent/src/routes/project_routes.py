@@ -1,7 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import os
 import time
+import httpx
+from httpx import RequestError
+from urllib.parse import urlparse
 import uuid
 from manager.project_data_manager import ProjectDataManager
 from fastapi import File, Query, Request, UploadFile, Form, APIRouter
@@ -47,6 +50,41 @@ async def render_template_content(
     return {"code": 200, "status": "success", "msg": None, "data": content}
 
 # ==================== 前端项目接口 ====================
+@project_router.get("/api/deploy-agent/project/check-web-project-accessibility", summary="检测前端项目是否可访问", description="根据项目 access_url 判断是否可达")
+async def check_web_project_accessibility(url: str = Query(..., description="前端项目的访问地址")):
+    # 补全前缀（如果没有）
+    if not url.startswith(("http://", "https://")):
+        url = "http://" + url
+
+    check_time = datetime.now(timezone.utc).isoformat()
+    parsed = urlparse(url)
+    target = parsed.geturl()
+    try:
+        # 限制请求超时3s，防止阻塞
+        async with httpx.AsyncClient(timeout=3.0, follow_redirects=True) as client:
+            response = await client.get(target, headers={"User-Agent": "Mozilla/5.0"})
+            
+            runtime_status = "Accessible" if 200 <= response.status_code < 400 else "Inaccessible"
+            return HttpResult(code=200, status="success", msg=None, data={
+                "runtime_status": runtime_status,
+                "check_time": check_time,
+                "status_code": response.status_code,
+                "reason_phrase": response.reason_phrase
+            })
+    except RequestError as e:
+        # 请求失败，网络或连接问题
+        return HttpResult(code=200, status="success", msg=None, data={
+            "runtime_status": "Inaccessible",
+            "check_time": check_time,
+            "error": str(e)
+        })
+    except Exception as e:
+        return HttpResult(code=200, status="success", msg=None, data={
+            "runtime_status": "Unknown",
+            "check_time": check_time,
+            "error": str(e)
+        })
+
 @project_router.get("/api/deploy-agent/project/web/get/{id}", summary="获取Web项目详情")
 async def get_web_project(id: str):
     project = PROJECT_DATA_MANAGER.get_project(id)
@@ -68,7 +106,6 @@ async def add_web_project(dto: AddWebProjectRequestDto):
         "container_project_path": dto.container_project_path,
         "access_url": dto.access_url,
         "git_repository": dto.git_repository,
-        "status": "created",
         "created_at": datetime.now().isoformat(),
         "updated_at": None,
         "last_deployed_at": None
@@ -120,7 +157,6 @@ async def add_java_project(dto: AddJavaProjectRequestDto):
         "host_project_path": dto.host_project_path,
         "container_project_path":  dto.container_project_path,
         "git_repository": dto.git_repository,
-        "status": "created",
         "created_at": datetime.now().isoformat(),
         "updated_at": None,
         "last_deployed_at": None
@@ -200,7 +236,6 @@ async def add_python_project(dto: AddPythonProjectRequestDto):
         "host_project_path": dto.host_project_path,
         "container_project_path": dto.container_project_path,
         "git_repository": dto.git_repository,
-        "status": "created",
         "created_at": datetime.now().isoformat(),
         "updated_at": None,
         "last_deployed_at": None

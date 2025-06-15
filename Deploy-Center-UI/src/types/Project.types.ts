@@ -9,7 +9,6 @@ export interface WebProject {
   container_project_path: string; // 容器项目路径
   git_repository: string; // Git地址
   access_url: string; // 访问地址
-  status: 'running' | 'failed' | 'pending'; // 项目状态
   created_at: string;
   updated_at: string;
   last_deployed_at: string;

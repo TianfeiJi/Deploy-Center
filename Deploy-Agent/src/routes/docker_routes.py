@@ -1,26 +1,50 @@
+from datetime import datetime, timezone
 import subprocess
 import json
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from models.common.http_result import HttpResult
+from utils.docker_util import run_docker_command
 from config.log_config import get_logger
-
-# Docker命令执行路径，需根据宿主机挂载配置一致
-DOCKER_PATH = "/usr/bin/docker"
 
 # 初始化Router和Logger
 docker_router = APIRouter()
 logger = get_logger()
 
 
-# 安全执行Docker命令的辅助函数
-def run_docker_command(args: list) -> str:
-    command = [DOCKER_PATH] + args
-    logger.info(f"执行Docker命令：{' '.join(command)}")
-    output = subprocess.check_output(command, encoding="utf-8")
-    return output
+@docker_router.get("/api/deploy-agent/docker/container-status", summary="获取指定容器原始运行状态", description="根据容器名称（支持模糊匹配）返回 Docker 原生状态描述")
+async def get_container_status(
+    container_name: str = Query(..., description="容器名称（支持部分匹配）")
+):
+    check_time = datetime.now(timezone.utc).isoformat()
 
+    try:
+        result = run_docker_command(["ps", "-a", "--format", "json"])
 
-@docker_router.get("/api/deploy-agent/docker/container_summary", summary="获取Docker容器状态汇总")
+        for line in result.strip().split("\n"):
+            info = json.loads(line)
+            name = info.get("Names", "")
+            status_str = info.get("Status", "")
+
+            if container_name in name:
+                return HttpResult(code=200, status="success", msg=None, data={
+                    "container_name": name,
+                    "container_status": status_str,
+                    "check_time": check_time
+                })
+
+        return HttpResult(code=200, status="success", msg="容器未找到", data={
+            "container_name": name,
+            "container_status": "Awaiting Deployment",  # 待部署
+            "check_time": check_time
+        })
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Docker命令执行失败: {e}")
+        return HttpResult(code=500, status="failed", msg=str(e), data=None)
+    except Exception as e:
+        logger.error(f"异常: {e}")
+        return HttpResult(code=500, status="failed", msg=str(e), data=None)
+
+@docker_router.get("/api/deploy-agent/docker/container-summary", summary="获取Docker容器状态汇总")
 async def get_docker_container_summary():
     """
     获取Docker容器状态概览（运行中、已停止、异常）

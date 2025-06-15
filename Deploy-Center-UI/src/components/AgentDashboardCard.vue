@@ -56,12 +56,14 @@
     <q-card-section>
       <div class="text-h6 text-bold" style="margin-bottom: 1rem">项目统计</div>
       <div class="row q-col-gutter-md" style="margin-bottom: 0.1rem">
-        <div class="col-12 col-sm-6 col-md-3" v-for="(item, index) in infoCards" :key="index">
+        <div class="col-auto" style="width: 20%;" v-for="(item, index) in projectStats" :key="index">
           <q-card class="info-card">
             <q-card-section>
-              <div class="text-h6">{{ item.title }}</div>
-              <div class="text-h5" :class="item.class">
-                {{ item.value }}
+              <div :class="item.class">
+                <div class="text-h6">{{ item.title }}</div>
+                <div class="text-h5">
+                  {{ item.value }}
+                </div>
               </div>
             </q-card-section>
           </q-card>
@@ -139,7 +141,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted , watch} from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { Notify } from 'quasar';
 import { getAgent } from 'src/api/agentApi';
 import { AgentCommandApi } from 'src/api/AgentCommandApi';
@@ -178,10 +180,12 @@ const serverInfoItems = computed(() => [
   { label: '开机时间', value: systemInfo.value?.boot_time || '-', icon: 'schedule' },
   { label: 'CPU型号', value: systemInfo.value?.cpu_brand ?? '-', icon: 'memory' },
   { label: 'CPU指令集架构', value: systemInfo.value?.cpu_arch ?? '-', icon: 'developer_board' },
-  { label: 'CPU核心数', value: systemInfo.value?.cpu_cores_physical
-    ? `${systemInfo.value.cpu_cores_physical} 核（物理） / ${systemInfo.value.cpu_cores_logical} 核（逻辑）`
-    : '-',
-    icon: 'grid_on' },
+  {
+    label: 'CPU核心数', value: systemInfo.value?.cpu_cores_physical
+      ? `${systemInfo.value.cpu_cores_physical} 核（物理） / ${systemInfo.value.cpu_cores_logical} 核（逻辑）`
+      : '-',
+    icon: 'grid_on'
+  },
   {
     label: '总内存', value: systemInfo.value?.total_memory
       ? `${(systemInfo.value.total_memory / 1024).toFixed(2)} GB`
@@ -263,6 +267,13 @@ const updateSystemDataAndCharts = async () => {
   }
 };
 
+// 项目状态统计数据
+const totalProjectCount = ref(0);
+const runningProjectCount = ref(0);
+const exitedProjectCount = ref(0);
+const restartingProjectCount = ref(0);
+const awaitingDeploymentProjectCount = ref(0);
+
 onMounted(async () => {
   const response = await getAgent(props.agentId);
   agent.value = response.data;
@@ -273,6 +284,14 @@ onMounted(async () => {
   projects.value = await agentCommandApi.fetchProjectList();
   // 获取部署历史数据
   deployHistorys.value = await agentCommandApi.fetchDeployHistoryList();
+
+  // 获取容器状态统计
+  const statistics = await agentCommandApi.fetchProjectStatusStatistics();
+  totalProjectCount.value = statistics.total;
+  runningProjectCount.value = statistics.running;
+  exitedProjectCount.value = statistics.exited;
+  restartingProjectCount.value = statistics.restarting;
+  awaitingDeploymentProjectCount.value = statistics.awaiting_deployment;
 
   // 初始化图表
   initCharts();
@@ -290,22 +309,6 @@ onUnmounted(() => {
   }
 });
 
-const totalProjectCount = computed(() => projects.value.length); // 总项目数
-const runningProjectCount = computed(
-  () =>
-    // 运行中项目数
-    projects.value.filter((p) => p.status === 'running').length
-);
-const pendingProjectCount = computed(
-  () =>
-    // 待部署项目数
-    projects.value.filter((p) => p.status === 'pending').length
-);
-const failedProjectCount = computed(
-  () =>
-    // 失败部署项目数
-    projects.value.filter((p) => p.status === 'failed').length
-);
 const webProjectCount = computed(
   () =>
     // Web 项目数
@@ -321,27 +324,14 @@ const pythonProjectCount = computed(
     // Python 项目数
     projects.value.filter((p) => p.project_type === 'Python').length
 );
-const successRate = computed(() => {
-  // 部署成功率
-  const successCount = projects.value.filter(
-    (p) => p.status === 'success'
-  ).length;
-  const failCount = failedProjectCount.value;
-  return successCount + failCount > 0
-    ? ((successCount / (successCount + failCount)) * 100).toFixed(1)
-    : 100;
-});
 
-// 信息卡片数据
-const infoCards = computed(() => [
+// 项目统计数据
+const projectStats = computed(() => [
   { title: '总项目数', value: totalProjectCount.value, class: '' },
-  { title: '运行中', value: runningProjectCount.value, class: '' },
-  { title: '待部署', value: pendingProjectCount.value, class: '' },
-  {
-    title: '失败部署',
-    value: failedProjectCount.value,
-    class: 'text-negative',
-  },
+  { title: '待部署', value: awaitingDeploymentProjectCount.value, class: 'text-grey-6' }, // 灰色
+  { title: '运行中', value: runningProjectCount.value, class: 'text-green-6' },      // 绿色
+  { title: '已退出', value: exitedProjectCount.value, class: 'text-red-5' },   // 红色
+  { title: '重启中', value: restartingProjectCount.value, class: 'text-orange-6' },  // 橙色
 ]);
 
 const initCharts = () => {

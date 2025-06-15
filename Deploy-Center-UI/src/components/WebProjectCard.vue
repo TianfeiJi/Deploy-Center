@@ -4,15 +4,24 @@
       <div class="text-h6">{{ webProject.project_name }}</div>
       <div class="row items-center q-mt-sm">
         <div class="col text-subtitle2">{{ webProject.project_type }}</div>
-        <div class="col-auto flex items-center justify-end">
-          <el-tag
-            :closable="false"
-            :type="webProject.status === 'running' ? 'success' : 'danger'"
-            effect="light"
-          >
-            {{ webProject.status === 'running' ? '运行中' : '待部署' }}
-          </el-tag>
-        </div>
+
+        <div class="q-ml-sm">
+        <q-spinner
+          v-if="runtimeStatus === 'Checking'"
+          color="grey-5"
+          size="16px"
+        />
+        <el-tag
+          v-else
+          :type="{
+            Accessible: 'success',
+            Inaccessible: 'error',
+            Unknown: 'info'
+          }[runtimeStatus]"
+        >
+          {{ runtimeStatus }}
+        </el-tag>
+      </div>
       </div>
     </q-card-section>
 
@@ -28,23 +37,9 @@
     <q-card-actions align="right">
       <q-btn flat color="primary" label="详情" @click="viewWebProjectDetail" />
 
-      <q-btn
-        flat
-        dense
-        color="info"
-        icon="cloud"
-        label="云构建部署"
-        @click="openCloudBuildDeployDialog"
-      />
+      <q-btn flat dense color="info" icon="cloud" label="云构建部署" @click="openCloudBuildDeployDialog" />
 
-      <q-btn
-        flat
-        dense
-        color="positive"
-        icon="cloud_upload"
-        label="上传部署"
-        @click="openUploadDeployDialog"
-      />
+      <q-btn flat dense color="positive" icon="cloud_upload" label="上传部署" @click="openUploadDeployDialog" />
     </q-card-actions>
   </q-card>
 
@@ -53,14 +48,7 @@
     <q-card style="width: 80%">
       <q-card-section>
         <!-- 右上角关闭按钮 -->
-        <q-btn
-          icon="close"
-          flat
-          round
-          dense
-          class="float-right"
-          v-close-popup
-        />
+        <q-btn icon="close" flat round dense class="float-right" v-close-popup />
         <div class="text-h6">项目详情</div>
       </q-card-section>
       <q-separator />
@@ -71,14 +59,9 @@
           <el-table-column prop="key" label="字段" width="170" />
           <el-table-column prop="label" label="注释" width="130" />
           <el-table-column label="值">
-          <template v-slot="scope">
-            <div v-if="!isEditing || !scope.row.editable">{{ scope.row.value }}</div>
-              <el-input
-                v-else
-                  v-model="scope.row.value"
-                  placeholder="请输入内容"
-                  clearable
-                />
+            <template v-slot="scope">
+              <div v-if="!isEditing || !scope.row.editable">{{ scope.row.value }}</div>
+              <el-input v-else v-model="scope.row.value" placeholder="请输入内容" clearable />
             </template>
           </el-table-column>
         </el-table>
@@ -88,27 +71,10 @@
 
       <!-- 控制按钮 -->
       <q-card-actions>
-        <q-btn
-          flat
-          color="negative"
-          label="删除"
-          @click="isSecondConfirmDeleteDialogOpen = true"
-        />
+        <q-btn flat color="negative" label="删除" @click="isSecondConfirmDeleteDialogOpen = true" />
         <q-space />
-        <q-btn
-          v-if="isEditing"
-          flat
-          color="negative"
-          label="取消"
-          @click="cancelEdit"
-        />
-        <q-btn
-          v-if="isEditing"
-          flat
-          color="positive"
-          label="保存"
-          @click="saveEdit"
-        />
+        <q-btn v-if="isEditing" flat color="negative" label="取消" @click="cancelEdit" />
+        <q-btn v-if="isEditing" flat color="positive" label="保存" @click="saveEdit" />
         <q-btn v-else flat color="secondary" label="编辑" @click="startEdit" />
       </q-card-actions>
     </q-card>
@@ -121,16 +87,8 @@
         <div class="text-h6">上传部署文件</div>
       </q-card-section>
       <q-card-section>
-        <el-upload
-          ref="uploadRef"
-          drag
-          :auto-upload="false"
-          accept=".zip"
-          :before-upload="handleBeforeUpload"
-          :on-change="handleFileChange"
-          :file-list="fileList"
-          :disabled="uploadProgress > 0"
-        >
+        <el-upload ref="uploadRef" drag :auto-upload="false" accept=".zip" :before-upload="handleBeforeUpload"
+          :on-change="handleFileChange" :file-list="fileList" :disabled="uploadProgress > 0">
           <div class="el-upload__text">
             <i class="el-icon-upload"></i>
             <div class="el-upload__text">
@@ -138,42 +96,24 @@
             </div>
           </div>
           <template #tip>
-            <div
-              class="el-upload__tip"
-              style="text-align: right; color: #909399"
-            >
+            <div class="el-upload__tip" style="text-align: right; color: #909399">
               只能上传.zip文件
             </div>
           </template>
         </el-upload>
 
         <!-- 进度条和进度百分比 -->
-        <el-progress
-          v-if="uploadProgress > 0"
-          color="#67c23a"
-          :percentage="uploadProgress"
-          :text-inside="true"
-          :stroke-width="13"
-          status="success"
-        />
+        <el-progress v-if="uploadProgress > 0" color="#67c23a" :percentage="uploadProgress" :text-inside="true"
+          :stroke-width="13" status="success" />
 
-        <div
-          v-if="uploadProgress === 100"
-          class="text-positive"
-          style="margin-top: 10px"
-        >
+        <div v-if="uploadProgress === 100" class="text-positive" style="margin-top: 10px">
           上传完成！
         </div>
       </q-card-section>
       <q-card-actions align="right">
         <q-btn flat label="取消" v-close-popup />
-        <q-btn
-          flat
-          label="开始部署"
-          color="positive"
-          @click="handleUploadDeploy"
-          :disabled="!fileList.length || uploadProgress > 0"
-        />
+        <q-btn flat label="开始部署" color="positive" @click="handleUploadDeploy"
+          :disabled="!fileList.length || uploadProgress > 0" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -199,7 +139,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { Notify } from 'quasar';
 import { formatDate } from 'src/utils/dateFormatter';
 import { useAgentStore } from 'src/stores/useAgentStore';
@@ -223,12 +163,12 @@ const props = defineProps<{
 
 const isViewDetailDialogOpen = ref(false);
 
-const tableData = ref<{ label: string; value: string; key: string , editable: boolean}[]>([]);
+const tableData = ref<{ label: string; value: string; key: string, editable: boolean }[]>([]);
 
 // 打开详情对话框
 const viewWebProjectDetail = () => {
   tableData.value = [
-    { label: '项目Id', key: 'id', value: props.webProject.id, editable: false},
+    { label: '项目Id', key: 'id', value: props.webProject.id, editable: false },
     { label: '项目代号', key: 'project_code', value: props.webProject.project_code, editable: true },
     { label: '项目名称', key: 'project_name', value: props.webProject.project_name, editable: true },
     { label: '项目分组', key: 'project_group', value: props.webProject.project_group, editable: true },
@@ -236,13 +176,24 @@ const viewWebProjectDetail = () => {
     { label: '容器内路径', key: 'container_project_path', value: props.webProject.container_project_path, editable: true },
     { label: 'Git地址', key: 'git_repository', value: props.webProject.git_repository, editable: true },
     { label: '访问地址', key: 'access_url', value: props.webProject.access_url, editable: true },
-    { label: '状态', key: 'status', value: props.webProject.status, editable: true },
     { label: '创建时间', key: 'created_at', value: formatDate(props.webProject.created_at), editable: false },
     { label: '更新时间', key: 'updated_at', value: formatDate(props.webProject.updated_at), editable: false },
     { label: '最近部署时间', key: 'last_deployed_at', value: formatDate(props.webProject.last_deployed_at), editable: false },
+    { label: '运行状态', key: 'runtime_status', value: runtimeStatus.value, editable: false },
   ];
   isViewDetailDialogOpen.value = true;
 };
+
+const runtimeStatus = ref<'Checking' | 'Accessible' | 'Inaccessible' | 'Unknown'>('Checking');
+
+onMounted(async () => {
+  try {
+    const response = await getAgentCommandApi().checkWebProjectAccessibility(props.webProject.access_url);
+    runtimeStatus.value = response.runtime_status;
+  } catch (error) {
+    runtimeStatus.value = 'Unknown';
+  }
+});
 
 const isEditing = ref(false);
 
@@ -266,7 +217,7 @@ const saveEdit = async () => {
   });
 
   // 确保包含 ID
-  updateData['id'] = props.webProject.id; 
+  updateData['id'] = props.webProject.id;
 
   console.log(updateData)
 
