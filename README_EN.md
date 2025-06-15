@@ -32,7 +32,7 @@
 > For more documentation, please refer to the [A-docs/](./A-docs/) directory.
 
 ## Live Demo
-**Demo URL:** [http://jitianfei.com/deploy-center](http://jitianfei.com/deploy-center)  
+**Demo URL:** [http://jitianfei.com/deploy-center-ui](http://jitianfei.com/deploy-center-ui)  
 **Username:** admin  
 **Password:** admin  
 
