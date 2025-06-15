@@ -35,5 +35,27 @@
         "created_at": "2025-05-18T10:00:00",
         "updated_at": null,
         "last_deployed_at": null
+    },
+    {
+        "id": "qwer1234",
+        "agent_id": 1,
+        "project_type": "Python",
+        "project_code": "ai-llm-service",
+        "project_name": "大语言模型微服务",
+        "project_group": "其他",
+        "docker_image_name": "xxx/ai-llm-service",
+        "docker_image_tag": "v1.0",
+        "external_port": 3456,
+        "internal_port": 3456,
+        "network": null,
+        "python_version": "3.10",
+        "framework": "FastAPI",
+        "host_project_path": "/data/docker/projects/python/ai-llm-service",
+        "container_project_path": "/app/docker/projects/python/ai-llm-service",
+        "git_repository": null,
+        "status": "running",
+        "created_at": "2025-06-15T10:00:00",
+        "updated_at": null,
+        "last_deployed_at": null
     }
 ]

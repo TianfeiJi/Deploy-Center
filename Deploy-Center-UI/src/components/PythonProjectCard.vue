@@ -21,6 +21,7 @@
     <q-card-section>
       <p>项目代号: {{ pythonProject.project_code }}</p>
       <p>Python版本: {{ pythonProject.python_version }}</p>
+      <p>框架: {{ pythonProject.framework }}</p>
       <p>宿主机路径: {{ pythonProject.host_project_path }}</p>
       <p>容器内路径: {{ pythonProject.container_project_path }}</p>
     </q-card-section>

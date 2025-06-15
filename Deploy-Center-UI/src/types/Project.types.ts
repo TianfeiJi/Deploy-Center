@@ -50,6 +50,7 @@ export interface PythonProject {
   internal_port: number; // 内部端口
   network: string;
   python_version: string;
+  framework: string;
   host_project_path: string; // 宿主机项目路径
   container_project_path: string; // 容器项目路径
   git_repository: string; // Git地址
