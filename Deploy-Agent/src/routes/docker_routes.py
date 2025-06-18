@@ -18,7 +18,7 @@ async def get_container_status(
     check_time = datetime.now(timezone.utc).isoformat()
 
     try:
-        result = run_docker_command(["ps", "-a", "--format", "json"])
+        result = run_docker_command(["ps", "-a", "--format", "{{json .}}"])
 
         for line in result.strip().split("\n"):
             info = json.loads(line)
@@ -33,8 +33,8 @@ async def get_container_status(
                 })
 
         return HttpResult(code=200, status="success", msg="容器未找到", data={
-            "container_name": name,
-            "container_status": "Awaiting Deployment",  # 待部署
+            "container_name": container_name,
+            "container_status": "Awaiting Deployment",
             "check_time": check_time
         })
     except subprocess.CalledProcessError as e:
@@ -50,7 +50,7 @@ async def get_docker_container_summary():
     获取Docker容器状态概览（运行中、已停止、异常）
     """
     try:
-        result = run_docker_command(["ps", "-a", "--format", "json"])
+        result = run_docker_command(["ps", "-a", "--format", "{{json .}}"])
 
         running = 0
         exited = 0
@@ -89,7 +89,7 @@ async def list_all_containers():
     获取所有容器的详细信息列表（简化版）
     """
     try:
-        result = run_docker_command(["ps", "-a", "--format", "json"])
+        result = run_docker_command(["ps", "-a", "--format", "{{json .}}"])
 
         containers = [json.loads(line) for line in result.strip().split("\n") if line]
 
@@ -105,7 +105,7 @@ async def list_docker_images():
     获取本地所有Docker镜像信息
     """
     try:
-        result = run_docker_command(["images", "--format", "json"])
+        result = run_docker_command(["images", "--format", "{{json .}}"])
         images = [json.loads(line) for line in result.strip().split("\n") if line]
 
         return HttpResult[list](code=200, status="success", msg=None, data=images)
@@ -120,7 +120,7 @@ async def get_docker_info():
     获取Docker基本信息
     """
     try:
-        result = run_docker_command(["info", "--format", "json"])
+        result = run_docker_command(["info", "--format", "{{json .}}"])
         info = json.loads(result)
 
         return HttpResult[dict](code=200, status="success", msg=None, data=info)

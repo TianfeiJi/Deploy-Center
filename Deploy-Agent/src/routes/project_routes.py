@@ -52,6 +52,12 @@ async def render_template_content(
 # ==================== 前端项目接口 ====================
 @project_router.get("/api/deploy-agent/project/check-web-project-accessibility", summary="检测前端项目是否可访问", description="根据项目 access_url 判断是否可达")
 async def check_web_project_accessibility(url: str = Query(..., description="前端项目的访问地址")):
+    # 判空 & 去除空格
+    if not url or not url.strip():
+        return HttpResult(code=400, status="failed", msg="url不能为空", data=None)
+
+    url = url.strip()
+
     # 补全前缀（如果没有）
     if not url.startswith(("http://", "https://")):
         url = "http://" + url
@@ -59,12 +65,24 @@ async def check_web_project_accessibility(url: str = Query(..., description="前
     check_time = datetime.now(timezone.utc).isoformat()
     parsed = urlparse(url)
     target = parsed.geturl()
+    print(f"[Web项目可及性检测] 开始检测 URL：{target}")
     try:
         # 限制请求超时3s，防止阻塞
         async with httpx.AsyncClient(timeout=3.0, follow_redirects=True) as client:
-            response = await client.get(target, headers={"User-Agent": "Mozilla/5.0"})
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+                "Accept-Language": "zh-CN,zh;q=0.9",
+                "Cache-Control": "no-cache",
+                "Pragma": "no-cache",
+                "Connection": "keep-alive"
+            }
+            response = await client.get(target, headers=headers)
             
             runtime_status = "Accessible" if 200 <= response.status_code < 400 else "Inaccessible"
+            
+            print(f"[Web项目可及性检测] URL: {target} 状态码: {response.status_code}, 判定为: {runtime_status}")
+            
             return HttpResult(code=200, status="success", msg=None, data={
                 "runtime_status": runtime_status,
                 "check_time": check_time,
@@ -72,6 +90,7 @@ async def check_web_project_accessibility(url: str = Query(..., description="前
                 "reason_phrase": response.reason_phrase
             })
     except RequestError as e:
+        print(f"[Web项目可及性检测] 网络异常：{target}，错误类型：{e.__class__.__name__}，详情：{repr(e)}")
         # 请求失败，网络或连接问题
         return HttpResult(code=200, status="success", msg=None, data={
             "runtime_status": "Inaccessible",
@@ -79,6 +98,7 @@ async def check_web_project_accessibility(url: str = Query(..., description="前
             "error": str(e)
         })
     except Exception as e:
+        print(f"[Web项目可及性检测] 未知异常：{target}，错误：{e}")
         return HttpResult(code=200, status="success", msg=None, data={
             "runtime_status": "Unknown",
             "check_time": check_time,

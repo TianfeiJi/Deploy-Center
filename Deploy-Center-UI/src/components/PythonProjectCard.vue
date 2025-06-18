@@ -221,7 +221,7 @@ const containerStatus = ref('Checking');
 
 onMounted(async () => {
   try {
-    const response = await getAgentCommandApi().fetchDockerContainerStatus(`${props.pythonProject.docker_image_name}:${props.pythonProject.docker_image_tag}`);
+    const response = await getAgentCommandApi().fetchDockerContainerStatus(`${props.pythonProject.container_name}`);
     containerStatus.value = response.container_status;
   } catch (error) {
     containerStatus.value = 'Unknown';
