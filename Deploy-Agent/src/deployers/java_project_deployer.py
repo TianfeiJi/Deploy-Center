@@ -74,7 +74,7 @@ class JavaProjectDeployer:
         self.logger.info("==================== Java 项目部署：完成 ====================")
         success_msg = (
             f"项目 {self.java_project.get('project_code')}（{self.java_project.get('project_name')}）部署成功，"
-            f"镜像 {self.java_project.get('docker_image_name')}:{self.java_project.get('docker_image_tag')} 已启动"
+            f"容器 {self.java_project.get('container_name')} 已启动（基于镜像 {self.java_project.get('docker_image_name')}:{self.java_project.get('docker_image_tag')}）"
         )
         return success_msg
 

@@ -139,20 +139,30 @@ async def call_agent_api(agent_id: int, api_path: str, method: str, request: Req
         # 将user_json添加到 headers 中
         headers["X-User"] = user_json
 
-        async with httpx.AsyncClient(timeout=30) as client:
+        async with httpx.AsyncClient(timeout=None) as client:
             response = await client.request(
                 method=method.upper(),
                 url=url,
-                content=body,
-                headers=headers
+                headers=headers,
+                content=body
             )
 
             logger.info(f"Agent API返回: {response.status_code}, {response.text}")
             response.raise_for_status()
-            return {"code": 200, "status": "success", "msg": "Agent API调用成功", "data": response.json()}
+            content_type = response.headers.get("Content-Type", "")
+            data = response.json() if "application/json" in content_type else response.text
+
+            return {
+                "code": 200,
+                "status": "success",
+                "msg": "Agent API调用成功",
+                "data": data
+            }
     except httpx.RequestError as e:
-        logger.error(f"请求Agent失败: {e}")
-        return {"code": 500, "status": "failed", "msg": f"Request error: {e}", "data": None}
+        error_msg = f"[Center转发失败] 无法请求 Agent（id={agent_id}）的接口: {url}, 方法: {method.upper()}，异常类型：{e.__class__.__name__}，详情：{str(e)}"
+        logger.error(error_msg)
+        return {"code": 500, "status": "failed", "msg": error_msg, "data": None}
     except Exception as e:
-        logger.error(f"调用Agent API: {url} 出错: {e}")
-        return {"code": 500, "status": "failed", "msg": str(e), "data": None}
+        error_msg = f"[Center异常] 调用 Agent（id={agent_id}）的接口: {url}, 方法: {method.upper()} 出现未知错误，异常类型：{e.__class__.__name__}，详情：{str(e)}"
+        logger.error(error_msg)
+        return {"code": 500, "status": "failed", "msg": error_msg, "data": None}
