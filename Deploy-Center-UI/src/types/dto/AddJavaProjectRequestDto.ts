@@ -5,6 +5,7 @@ export interface AddJavaProjectRequestDto {
   git_repository?: string | null;
   docker_image_name: string;
   docker_image_tag: string;
+  container_name: string;
   external_port: number;
   internal_port: number;
   network: string;
