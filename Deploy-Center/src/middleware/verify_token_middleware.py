@@ -1,9 +1,9 @@
 # middleware/verify_token_middleware.py
+import re
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from utils.jwt_util import JWTUtil
-import re
 
 # 定义静态路径白名单（完全匹配或前缀匹配）
 STATIC_SKIP_AUTH_PATHS = [

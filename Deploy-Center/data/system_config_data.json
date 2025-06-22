@@ -11,10 +11,10 @@
     },
     {
         "id": 2,
-        "config_name": "Token 有效时间（秒）",
-        "config_key": "token_expiration_seconds",
-        "config_value": 86400,
-        "config_remark": "控制登录令牌的过期时间，单位为秒。",
+        "config_name": "Token 有效时间（小时）",
+        "config_key": "token_expiration_hours",
+        "config_value": 24,
+        "config_remark": "控制登录令牌的过期时间，单位为小时。",
         "config_group": "安全设置",
         "created_at": "2025-04-08 16:00:00",
         "updated_at": "2025-04-08 16:00:00"

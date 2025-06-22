@@ -1,11 +1,19 @@
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict
+from manager.system_config_data_manager import SystemConfigManager
+SYSTEM_CONFIG_MANAGER = SystemConfigManager.get_instance()
+
+raw_config = SYSTEM_CONFIG_MANAGER.get_config("token_expiration_hours")
+if raw_config is None:
+    token_expiration_hours = 24
+else:
+    token_expiration_hours = int(raw_config.config_value)
 
 # JWT 配置
 JWT_SECRET = "9f86d081884c7d659a2feaa0c55ad0f17a2c01997a033b48d1f4b42d69f2475b"  # 密钥
 JWT_ALGORITHM = "HS256"
-JWT_EXPIRATION_DELTA = timedelta(hours=24)  # Token 有效期
+JWT_EXPIRATION_DELTA = timedelta(hours=token_expiration_hours)  # Token 有效期
 
 class JWTUtil:
     @staticmethod
@@ -23,7 +31,7 @@ class JWTUtil:
         """
         if expires_delta is None:
             expires_delta = JWT_EXPIRATION_DELTA
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
 
         payload = {
             "user_id": user_id,
