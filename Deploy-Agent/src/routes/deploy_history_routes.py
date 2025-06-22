@@ -24,15 +24,9 @@ async def get_deploy_history_list():
             continue
         # 创建 DeployHistoryVo 并复制属性
         vo = DeployHistoryVo(
-            id=deploy_history.id,
-            project_id = deploy_history.project_id,
+            **deploy_history.model_dump(),
             project_code = project.get('project_code'),
             project_name = project.get('project_name'),
-            status = deploy_history.status,
-            created_at = deploy_history.created_at,
-            created_by = deploy_history.created_by,
-            updated_at = deploy_history.updated_at,
-            updated_by = deploy_history.updated_by
         )
         vo_list.append(vo)
         

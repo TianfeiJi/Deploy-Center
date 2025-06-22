@@ -145,6 +145,9 @@
         <el-form-item label="容器内路径" prop="container_project_path">
           <el-input v-model="currentProject.container_project_path" />
         </el-form-item>
+         <el-form-item label="容器名称" prop="container_name">
+          <el-input v-model="currentProject.container_name" />
+        </el-form-item>
          <!-- Java 独有字段 -->
         <div
           v-if="
@@ -262,6 +265,7 @@ const currentProject = ref({
   git_repository: '',
   docker_image_name: '',
   docker_image_tag: '',
+  container_name: '',
   external_port: 18080,
   internal_port: 18080,
   access_url: '',
@@ -324,6 +328,7 @@ const handleCreateNewProject = async () => {
         git_repository: currentProject.value.git_repository,
         docker_image_name: currentProject.value.docker_image_name,
         docker_image_tag: currentProject.value.docker_image_tag,
+        container_name: currentProject.value.container_name,
         external_port: currentProject.value.external_port,
         internal_port: currentProject.value.internal_port,
         network: currentProject.value.network,

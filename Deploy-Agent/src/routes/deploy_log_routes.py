@@ -1,7 +1,7 @@
 from datetime import datetime
 import os
 from fastapi import APIRouter
-from models.entity.log import Log
+from models.entity.deploy_log import DeployLog
 from models.common.http_result import HttpResult
 
 
@@ -25,7 +25,7 @@ async def get_deploy_log_list():
     if not os.path.exists(log_directory):
         return HttpResult(code=404, status="failed", msg="日志目录不存在", data=None)
     
-    log_objects = []
+    deploy_logs = []
     for log_file in os.listdir(log_directory):
         # print(log_file)
         file_path = os.path.join(log_directory, log_file)
@@ -41,17 +41,17 @@ async def get_deploy_log_list():
                 with open(file_path, "r", encoding="utf-8") as f:
                     line_count = sum(1 for line in f)  # 计算文件的行数
                 # 创建 Log 对象
-                log = Log(
+                deploy_log = DeployLog(
                     filename=log_file,
                     filesize=filesize,
                     line_count=line_count,
                     created_at=created_at,
                     updated_at=updated_at
                 )
-                log_objects.append(log)
+                deploy_logs.append(deploy_log)
             except Exception as e:
                 return HttpResult(code=500, status="error", msg=f"处理日志文件 {log_file} 时出错: {e}", data=None)
-    return HttpResult(code=200, status="success", msg=None, data=log_objects)
+    return HttpResult(code=200, status="success", msg=None, data=deploy_logs)
 
 # 获取指定日志文件的内容
 @deploy_log_router.get("/api/deploy-agent/deploy-log/{filename}", summary="获取指定日志内容", description="根据日志文件名返回对应日志文件的内容。")

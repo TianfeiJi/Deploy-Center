@@ -62,19 +62,25 @@ docker pull tianfeiji/deploy-agent:v1.0
 docker run -d \
   -p 2333:2333 \
   --name deploy-agent \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /usr/bin/docker:/usr/bin/docker \
+  -v /data/docker/infrastructure/deploy-agent/template:/app/template \
   -v /data/docker/infrastructure/deploy-agent/data:/app/data \
   -v /data/docker/infrastructure/deploy-agent/logs:/app/logs \
   -v /data/docker/projects/java:/app/projects/java \
   -v /data/docker/projects/webs:/app/projects/webs \
-  tianfeiji/deploy-agent:v1.0
+  tianfeiji/deploy-agent:latest
 ```
 
 > **挂载说明：**  
-> - `/app/data`：部署代理的数据目录  
-> - `/app/logs`：日志目录  
-> - `/app/projects/java`：Java 项目路径  
-> - `/app/projects/webs`：前端项目路径  
-> 宿主机路径请根据实际情况自定义，只需确保读写权限。
+> - `/var/run/docker.sock`：**必须挂载**，容器访问宿主机 Docker 守护进程的关键通道，否则无法执行容器相关操作。
+> - `/usr/bin/docker`: **必须挂载**，将宿主机 Docker CLI 映射进容器，Agent 内部依赖该命令执行部署流程。
+> - `/app/template`：Agent 模板目录
+> - `/app/data`：Agent 数据目录
+> - `/app/logs`：Agent 日志输出目录
+> - `/app/projects/java`：你的Java项目部署路径
+> - `/app/projects/webs`：你的前端项目部署路径
+
 
 ## 方式二：自行构建镜像
 

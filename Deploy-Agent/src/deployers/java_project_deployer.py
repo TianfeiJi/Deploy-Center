@@ -16,6 +16,7 @@ from manager.project_data_manager import ProjectDataManager
 from manager.deploy_history_data_manager import DeployHistoryDataManager
 from manager.template_manager import TemplateManager
 from config.log_config import get_logger
+from utils.user_context import get_current_user
 
 
 class JavaProjectDeployer:
@@ -55,12 +56,16 @@ class JavaProjectDeployer:
         部署 Java 项目主流程。
         """
         self.logger.info("==================== Java 项目部署：开始 ====================")
+        self.user = get_current_user()
+        self.logger.info(f"当前用户：{self.user}")
+        
         self.deploy_status = StatusEnum.START
         self.java_project = self.project_data_manager.get_project(id)
         if self.java_project is None:
             return HttpResult[None](code=400, status="failed", msg=f"没有 id 为 {id} 的 Java 项目", data=None)
 
         self.logger.info(f"开始部署项目：{self.java_project}")
+        # 生产部署历史id
         self.deploy_history_id = str(uuid.uuid4()).replace("-", "")[:8]
 
         self._create_project_directory()
@@ -190,7 +195,7 @@ class JavaProjectDeployer:
             self.deploy_status = StatusEnum.FAILED
             err_msg = f"5 - ERROR - 镜像构建失败: {image_name}, 错误: {e}"
             self.logger.error(err_msg)
-            self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, "failed", err_msg)
+            self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, "failed", err_msg, self.user)
             raise RuntimeError(err_msg)
 
     def _start_container(self, id: str, dockercommand_content: str):
@@ -209,7 +214,7 @@ class JavaProjectDeployer:
             self.deploy_status = StatusEnum.FAILED
             err_msg = f"6 - ERROR - 容器启动失败: {container_name}, 错误: {e}"
             self.logger.error(err_msg)
-            self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, self.deploy_status, err_msg)
+            self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, self.deploy_status, err_msg, self.user)
             raise RuntimeError(err_msg)
 
     def _update_java_project_data(self, id):
@@ -234,7 +239,7 @@ class JavaProjectDeployer:
 
         try:
             self.deploy_status = StatusEnum.SUCCESS
-            self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, self.deploy_status, None)
+            self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, self.deploy_status, None, self.user)
             self.logger.info("7.2 - FINISH - 部署记录更新成功")
         except Exception as e:
             self.deploy_status = StatusEnum.FAILED

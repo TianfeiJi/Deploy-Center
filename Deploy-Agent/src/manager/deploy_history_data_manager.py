@@ -1,6 +1,6 @@
 import json
 import os
-from typing import List, Optional
+from typing import Dict, List, Optional
 from datetime import datetime
 from models.entity.deploy_history import DeployHistory
 
@@ -20,7 +20,14 @@ class DeployHistoryDataManager:
             cls._instance = cls()
         return cls._instance
     
-    def log_deploy_result(self, deploy_history_id: str, project_id: str, status: str, failed_reason: Optional[str] = None):
+    def log_deploy_result(
+        self,
+        deploy_history_id: str,
+        project_id: str,
+        status: str,
+        failed_reason: Optional[str] = None,
+        user: Optional[Dict] = None
+    ):
         deploy_history = self.get_deploy_history(deploy_history_id)
         # 如果已存在就更新
         if deploy_history:
@@ -34,6 +41,8 @@ class DeployHistoryDataManager:
                 project_id=project_id,
                 status=status,
                 failed_reason=failed_reason,
+                operator_name=user.get("user_name") if user else None,
+                created_by=user.get("user_id") if user else None,
                 created_at=datetime.now().isoformat()
             )
             self.create_deploy_history(deploy_history)

@@ -13,10 +13,15 @@
             :timestampString="formatDate(history.created_at)"
             :color="history.status === 'success' ? 'green' : 'red'"
           >
+            <div><strong>项目代号：</strong>{{ history.project_code }}</div>
             <div><strong>项目名称：</strong>{{ history.project_name }}</div>
+            <div><strong>操作人：</strong>{{ history.operator_name }}</div>
             <div>
               <strong>状态：</strong
               >{{ history.status === 'success' ? '成功' : '失败' }}
+            </div>
+            <div v-if="history.status === 'failed'">
+              <strong>失败原因：</strong>{{ history.failed_reason}}
             </div>
             <div>
               <strong>时间：</strong>{{ formatDate(history.created_at) }}（{{ timeAgo(history.created_at) }}前）
@@ -30,10 +35,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
+import { storeToRefs } from 'pinia';
+import { formatDate } from 'src/utils/dateFormatter';
 import { DeployHistoryVo } from 'src/types/vo/DeployHistoryVo';
 import { AgentCommandApi } from 'src/api/AgentCommandApi';
-import { formatDate } from 'src/utils/dateFormatter';
-import { storeToRefs } from 'pinia';
 import { useAgentStore } from 'src/stores/useAgentStore';
 
 const agentStore = useAgentStore();

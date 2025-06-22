@@ -1,9 +1,6 @@
-export interface DeployHistoryVo {
-  id: number;
-  project_id: string;
+import { DeployHistory } from "src/types/DeployHistory";
+
+export interface DeployHistoryVo extends DeployHistory {
   project_code: string;
   project_name: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
 }

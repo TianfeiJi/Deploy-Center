@@ -10,6 +10,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from middleware.verify_user_middleware import VerifyUserMiddleware
+from middleware.user_injection_middleware import UserInjectionMiddleware
 from routes.project_routes import project_router
 from routes.deploy_history_routes import deploy_history_router
 from routes.deploy_log_routes import deploy_log_router
@@ -48,6 +49,9 @@ async def custom_swagger_ui_html():
 
 # 验证请求头是否携带X-User 用户信息的中间件
 # app.add_middleware(VerifyUserMiddleware)
+
+# 添加用户信息注入中间件
+app.add_middleware(UserInjectionMiddleware)
 
 # 添加 CORS 中间件
 app.add_middleware(

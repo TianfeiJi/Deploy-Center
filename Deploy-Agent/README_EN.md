@@ -62,19 +62,24 @@ docker pull tianfeiji/deploy-agent:v1.0
 docker run -d \
   -p 2333:2333 \
   --name deploy-agent \
+  -v /data/docker/infrastructure/deploy-agent/template:/app/template \
   -v /data/docker/infrastructure/deploy-agent/data:/app/data \
   -v /data/docker/infrastructure/deploy-agent/logs:/app/logs \
   -v /data/docker/projects/java:/app/projects/java \
   -v /data/docker/projects/webs:/app/projects/webs \
-  tianfeiji/deploy-agent:v1.0
+  tianfeiji/deploy-agent:latest
 ```
 
-> **Mount Notes:**  
-> - `/app/data`: Data directory for the deployment agent  
-> - `/app/logs`: Log directory  
-> - `/app/projects/java`: Java project directory  
-> - `/app/projects/webs`: Frontend project directory  
-> You can customize the host paths based on your actual server environment, just ensure read/write permissions.
+**Mount Notes:**  
+> - `/var/run/docker.sock`: **Must be mounted**. This is the critical socket for the container to access the Docker daemon on the host. Without this, container-related operations will fail.
+> - `/usr/bin/docker`: **Must be mounted**. Maps the Docker CLI from the host into the container. The Agent depends on this command to execute deployment processes.
+> - `/app/template`: Agent template directory.
+> - `/app/data`: Agent data directory.
+> - `/app/logs`: Agent log output directory.
+> - `/app/projects/java`: Your Java project deployment path.
+> - `/app/projects/webs`: Your frontend project deployment path.
+
+> Be sure to adjust the host paths according to your actual environment to avoid issues caused by incorrect path settings.
 
 ## Method 2: Build the Image Manually
 

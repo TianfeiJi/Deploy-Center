@@ -6,6 +6,7 @@ import { AddJavaProjectRequestDto } from 'src/types/dto/AddJavaProjectRequestDto
 import { UpdateJavaProjectRequestDto } from "src/types/dto/UpdateJavaProjectRequestDto";
 import { UpdateWebProjectRequestDto } from "src/types/dto/UpdateWebProjectRequestDto";
 import { UpdatePythonProjectRequestDto } from "src/types/dto/UpdatePythonProjectRequestDto";
+import { DeployHistoryVo } from "src/types/vo/DeployHistoryVo";
 import { callAgentApi } from "./agentApi";
 
 
@@ -98,8 +99,8 @@ export class AgentCommandApi {
   // ========================== DeployHistory 管理 ==========================
 
   // 获取部署历史列表
-  async fetchDeployHistoryList(): Promise<any> {
-    const httpResult: HttpResult<HttpResult<any>> =  await callAgentApi(this.agentId, '/api/deploy-agent/deploy-history/list', 'GET');
+  async fetchDeployHistoryList(): Promise<DeployHistoryVo[]> {
+    const httpResult: HttpResult<HttpResult<DeployHistoryVo[]>> =  await callAgentApi(this.agentId, '/api/deploy-agent/deploy-history/list', 'GET');
     return httpResult.data.data;
   }
 

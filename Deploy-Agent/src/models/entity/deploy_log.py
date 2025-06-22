@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-class Log(BaseModel):
+class DeployLog(BaseModel):
     filename: str
     filesize: int
     line_count: int
