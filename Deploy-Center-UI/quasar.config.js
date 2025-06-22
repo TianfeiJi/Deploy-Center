@@ -24,7 +24,6 @@ module.exports = configure(function (/* ctx */) {
       'i18n',
       'axios',
       'element-plus',
-      'init-agent-store',
       'markdown'
     ],
 
