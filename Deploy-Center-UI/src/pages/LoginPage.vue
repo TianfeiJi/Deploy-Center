@@ -146,7 +146,7 @@ const handleLogin = async () => {
   console.log(response.data)
   const { user_id, token } = response.data;
 
-  // 这里会同时更新 Pinia 状态 并将 token 存储在localStorage中
+  // 这里会同时更新 Pinia 状态 并将 token 存储在sessionStorage中
   console.log("token: " + token)
   authStore.setToken(token);
 

@@ -168,7 +168,7 @@ const selectAgent = (agentId: number) => {
   // 设置当前选中的agent
   agentStore.setCurrentAgentById(agentId);
   // 保存当前选中的agentId
-  localStorage.setItem('selectedAgentId', String(agentId));
+  sessionStorage.setItem('selectedAgentId', String(agentId));
 };
 
 const currentHealth = computed(() =>
@@ -234,17 +234,17 @@ onMounted(async () => {
   // 2. 获取所有Agent运行时信息
   await agentStore.getAllAgentRuntimeInfo();
   // 3. 设置当前选中的 Agent
-  // 3.1 尝试从 localStorage 中读取上次选中的 Agent ID
-  const storedAgentId = Number(localStorage.getItem('selectedAgentId'));
+  // 3.1 尝试从 sessionStorage 中读取上次选中的 Agent ID
+  const storedAgentId = Number(sessionStorage.getItem('selectedAgentId'));
   // 3.2 在当前 agentList 中查找匹配的 Agent
   const selectedAgentFromStorage = agentList.value.find((a) => a.id === storedAgentId);
   if (selectedAgentFromStorage) {
     // 3.3 若存在匹配项，则设为当前 Agent
     agentStore.setCurrentAgentById(selectedAgentFromStorage.id);
   } else if (agentList.value.length > 0) {
-    // 3.4 否则默认选择第一个 Agent，并将selectedAgentId写入 localStorage
+    // 3.4 否则默认选择第一个 Agent，并将selectedAgentId写入 sessionStorage
     agentStore.setCurrentAgentById(agentList.value[0].id);
-    localStorage.setItem('selectedAgentId', String(agentList.value[0].id));
+    sessionStorage.setItem('selectedAgentId', String(agentList.value[0].id));
   }
 
   // ✅ 判断登录用户是否存在
@@ -318,8 +318,8 @@ const handleConfirmLogout = () => {
       // 2.清除所有store
       resetAllStores();
 
-      // 3. 清除所有localStorage存储的数据
-      localStorage.clear();
+      // 3. 清除所有sessionStorage存储的数据
+      sessionStorage.clear();
     });
   });
 };
