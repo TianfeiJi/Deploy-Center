@@ -7,19 +7,12 @@
 
         <div class="q-ml-sm">
         <q-spinner
-          v-if="runtimeStatus === 'Checking'"
+          v-if="deploymentStatus === 'Checking'"
           color="grey-5"
           size="16px"
         />
-        <el-tag
-          v-else
-          :type="{
-            Accessible: 'success',
-            Inaccessible: 'error',
-            Unknown: 'info'
-          }[runtimeStatus]"
-        >
-          {{ runtimeStatus }}
+        <el-tag v-else :type="getDeploymentStatusTagType(deploymentStatus)">
+          {{ deploymentStatus }}
         </el-tag>
       </div>
       </div>
@@ -179,21 +172,27 @@ const viewWebProjectDetail = () => {
     { label: '创建时间', key: 'created_at', value: formatDate(props.webProject.created_at), editable: false },
     { label: '更新时间', key: 'updated_at', value: formatDate(props.webProject.updated_at), editable: false },
     { label: '最近部署时间', key: 'last_deployed_at', value: formatDate(props.webProject.last_deployed_at), editable: false },
-    { label: '运行状态', key: 'runtime_status', value: runtimeStatus.value, editable: false },
+    { label: '运行状态', key: 'runtime_status', value: deploymentStatus.value, editable: false },
   ];
   isViewDetailDialogOpen.value = true;
 };
 
-const runtimeStatus = ref<'Checking' | 'Accessible' | 'Inaccessible' | 'Unknown'>('Checking');
+const deploymentStatus = ref<'Deployed' | 'Awaiting Deployment' | 'Checking' | 'Unknown'>('Checking');
 
 onMounted(async () => {
   try {
-    const response = await getAgentCommandApi().checkWebProjectAccessibility(props.webProject.access_url);
-    runtimeStatus.value = response.runtime_status;
+    const response = await getAgentCommandApi().checkWebProjectDeploymentStatus(props.webProject.id);
+    deploymentStatus.value = response.deployment_status;
   } catch (error) {
-    runtimeStatus.value = 'Unknown';
+    deploymentStatus.value = 'Unknown';
   }
 });
+
+const getDeploymentStatusTagType = (status: string): string => {
+  if (status == "Deployed") return "success"; 
+  if (status == "Awaiting Deployment") return "info"; 
+  return "default";
+};
 
 const isEditing = ref(false);
 

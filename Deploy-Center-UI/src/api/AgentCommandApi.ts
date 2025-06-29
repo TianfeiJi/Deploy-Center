@@ -135,11 +135,20 @@ export class AgentCommandApi {
     return httpResult.data.data;
   }
 
+  // 检查前端项目部署状态
+  async checkWebProjectDeploymentStatus(id: string): Promise<any> {
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(
+      this.agentId, 
+      encodeURIComponent(`/api/deploy-agent/project/web/check-deployment-status?id=${id}`),
+      'GET');
+    return httpResult.data.data;
+  }
+
   // 检查前端项目可及性
   async checkWebProjectAccessibility(url: string): Promise<any> {
     const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(
       this.agentId, 
-      encodeURIComponent(`/api/deploy-agent/project/check-web-project-accessibility?url=${url}`),
+      encodeURIComponent(`/api/deploy-agent/project/web/check-accessibility?url=${url}`),
       'GET');
     return httpResult.data.data;
   }

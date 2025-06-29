@@ -6,6 +6,7 @@ import httpx
 from httpx import RequestError
 from urllib.parse import urlparse
 import uuid
+from pathlib import Path
 from manager.project_data_manager import ProjectDataManager
 from fastapi import File, Query, Request, UploadFile, Form, APIRouter
 from models.common.http_result import HttpResult
@@ -50,7 +51,42 @@ async def render_template_content(
     return {"code": 200, "status": "success", "msg": None, "data": content}
 
 # ==================== 前端项目接口 ====================
-@project_router.get("/api/deploy-agent/project/check-web-project-accessibility", summary="检测前端项目是否可访问", description="根据项目 access_url 判断是否可达")
+@project_router.get(
+    "/api/deploy-agent/project/web/check-deployment-status",
+    summary="检测项目是否已部署",
+    description="根据项目 ID 判断是否已部署，逻辑为检查 container_project_path 是否存在有效文件"
+)
+async def check_web_project_deployment_status(id: str = Query(..., description="项目ID")):
+    check_time = datetime.now(timezone.utc).isoformat()
+
+    # 1. 获取项目信息
+    project = PROJECT_DATA_MANAGER.get_project(id)
+    if project is None:
+        return HttpResult(code=404, status="failed", msg="项目不存在", data=None)
+
+    # 2. 获取部署路径
+    container_path = project.get("container_project_path")
+    if not container_path:
+        return HttpResult(code=400, status="failed", msg="项目未配置container_project_path（容器项目路径）", data=None)
+
+    path_obj = Path(container_path)
+
+    # 3. 判断目录是否存在，且是否包含任何文件（忽略空目录）
+    if path_obj.exists() and any(path_obj.iterdir()):
+        deployment_status = "Deployed"
+    else:
+        deployment_status = "Awaiting Deployment"
+
+    print(f"[部署状态检测] 项目ID: {id} 路径: {container_path} 状态: {deployment_status}")
+
+    return HttpResult(code=200, status="success", msg=None, data={
+        "project_id": id,
+        "container_project_path": container_path,
+        "deployment_status": deployment_status,
+        "check_time": check_time
+    })
+
+@project_router.get("/api/deploy-agent/project/web/check-accessibility", summary="检测前端项目是否可访问", description="根据项目 access_url 判断是否可达")
 async def check_web_project_accessibility(url: str = Query(..., description="前端项目的访问地址")):
     # 判空 & 去除空格
     if not url or not url.strip():
