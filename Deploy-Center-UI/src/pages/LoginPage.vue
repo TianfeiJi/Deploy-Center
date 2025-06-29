@@ -157,7 +157,12 @@ const handleLogin = async () => {
 
   // 3. 获取agent数据
   const agentStore = useAgentStore();
-  await agentStore.initAgentStore();
+  // 3.1 获取所有Agent列表
+  await agentStore.getAllAgentList();
+  // 3.2 获取所有Agent运行时信息
+  await agentStore.getAllAgentRuntimeInfo();
+  // 3.3 设置当前Agent为第一个
+  await agentStore.setCurrentAgentById(agentStore.agentList[0].id);
 
   // 4. 跳转到主页面
   await router.replace('/dashboard');

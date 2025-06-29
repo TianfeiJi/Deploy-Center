@@ -40,7 +40,7 @@
           <q-menu transition-show="jump-down">
             <q-list>
               <q-item v-for="agent in agentList" :key="agent.id" clickable v-close-popup
-                @click="selectedAgentId = agent.id">
+                @click="selectAgent(agent.id)">
                 <q-item-section avatar style="min-width: 16px; padding-right: 8px">
                   <q-avatar size="24px"
                     :color="agentRuntimeInfoMap[agent.id]?.health === 'healthy' ? 'green-5' : 'grey-5'"
@@ -153,35 +153,23 @@ import { useSystemConfigStore } from 'stores/useSystemConfigStore';
 import { observeWatermark } from 'src/utils/watermark';
 import { version } from '../../package.json'
 import { resetAllStores } from 'src/utils/resetAllStores';
-import type { AgentRuntimeInfo } from 'src/types/AgentRuntimeInfo'
-import { AgentCommandApi } from 'src/api/AgentCommandApi';
-const agentRuntimeInfoMap = ref<Record<number, AgentRuntimeInfo>>({})
 
 const route = useRoute();
 const router = useRouter();
 
 const agentStore = useAgentStore();
 
-// 解构出 agentStore 中的 agentList 和 currentAgent，
+// 解构出 agentStore 中的 agentList、currentAgent、agentRuntimeInfoMap
 // 使用 storeToRefs 保证它们在组合式 API 中依然保持响应式引用
-const { agentList, currentAgent } = storeToRefs(agentStore);
-// 当前选中的 Agent ID，用于绑定下拉框
-const selectedAgentId = ref(currentAgent.value?.id ?? null);
+const { agentList, currentAgent, agentRuntimeInfoMap } = storeToRefs(agentStore);
 
-// 监听选中 Agent 的id的变化，更新store的 currentAgent 及重新获取项目列表
-watch(
-  selectedAgentId,
-  async (newId) => {
-    const agent = agentList.value.find((a) => a.id === newId);
-    if (agent) {
-      currentAgent.value = agent; // 保证 store 里的 currentAgent 也同步
-      console.log('当前选择的agent:', JSON.stringify(agent, null, 2));
-    } else {
-      currentAgent.value = null;
-    }
-  },
-  { immediate: true }
-);
+// 选择agent
+const selectAgent = (agentId: number) => {
+  // 设置当前选中的agent
+  agentStore.setCurrentAgentById(agentId);
+  // 保存当前选中的agentId
+  localStorage.setItem('selectedAgentId', String(agentId));
+};
 
 const currentHealth = computed(() =>
   currentAgent.value?.id !== undefined
@@ -238,32 +226,27 @@ watch(
   { immediate: true, deep: true }
 );
 
-const fetchAllAgentRuntimeInfo = async () => {
-  // 获取每个 Agent 的运行时信息
-  for (const agent of agentList.value) {
-    try {
-      const api = new AgentCommandApi(agent.id)
-
-      const info = await api.fetchInspectInfo();
-
-      agentRuntimeInfoMap.value[agent.id] = {
-        health: info.status,
-        agent_version: info.agent_version,
-        // productName: info.product_name,
-        // sysVendor: info.sys_vendor
-      };
-    } catch (e) {
-      agentRuntimeInfoMap.value[agent.id] = {
-        health: "未知",
-        agent_version: "未知",
-      }
-    }
-  }
-}
-
 const isSuperAdminUser = ref(false);
 onMounted(async () => {
-  fetchAllAgentRuntimeInfo()
+  const agentStore = useAgentStore();
+  // 1. 获取所有Agent列表
+  await agentStore.getAllAgentList();
+  // 2. 获取所有Agent运行时信息
+  await agentStore.getAllAgentRuntimeInfo();
+  // 3. 设置当前选中的 Agent
+  // 3.1 尝试从 localStorage 中读取上次选中的 Agent ID
+  const storedAgentId = Number(localStorage.getItem('selectedAgentId'));
+  // 3.2 在当前 agentList 中查找匹配的 Agent
+  const selectedAgentFromStorage = agentList.value.find((a) => a.id === storedAgentId);
+  if (selectedAgentFromStorage) {
+    // 3.3 若存在匹配项，则设为当前 Agent
+    agentStore.setCurrentAgentById(selectedAgentFromStorage.id);
+  } else if (agentList.value.length > 0) {
+    // 3.4 否则默认选择第一个 Agent，并将selectedAgentId写入 localStorage
+    agentStore.setCurrentAgentById(agentList.value[0].id);
+    localStorage.setItem('selectedAgentId', String(agentList.value[0].id));
+  }
+
   // ✅ 判断登录用户是否存在
   if (!loginUser.value) {
     console.warn('未获取到登录用户，跳转登录页');
