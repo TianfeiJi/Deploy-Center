@@ -122,7 +122,7 @@
           </q-btn>
         </div>
 
-        <div v-if="isSuperAdminUser" class="q-gutter-sm row items-center no-wrap">
+        <div v-if="isAdminUser" class="q-gutter-sm row items-center no-wrap">
           <q-btn round dense flat color="grey-8" icon="settings" to="/setting/systemConfig">
             <q-tooltip>设置</q-tooltip>
           </q-btn>
@@ -226,7 +226,7 @@ watch(
   { immediate: true, deep: true }
 );
 
-const isSuperAdminUser = ref(false);
+const isAdminUser = ref(false);
 onMounted(async () => {
   const agentStore = useAgentStore();
   // 1. 获取所有Agent列表
@@ -266,8 +266,8 @@ onMounted(async () => {
     const response = await getUser(loginUser.value.id);
     const user = response.data;
 
-    if (user.role === 'superadmin') {
-      isSuperAdminUser.value = true;
+    if (user.role === 'admin') {
+      isAdminUser.value = true;
     }
   } catch (error) {
     console.error('获取用户信息或系统配置失败', error);

@@ -6,7 +6,7 @@
         "nickname": "管理员",
         "email": null,
         "avatar": "https://cdn.quasar.dev/img/boy-avatar.png",
-        "role": "superadmin",
+        "role": "admin",
         "permissions": null,
         "two_factor_secret": null,
         "status": "ENABLED",

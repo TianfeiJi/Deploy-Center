@@ -115,7 +115,7 @@
           <el-input v-model="newUser.role" />
         </el-form-item>
 
-        <el-form-item label="权限" v-if="newUser.role !== 'superadmin'">
+        <el-form-item label="权限" v-if="newUser.role !== 'admin'">
           <el-input v-model="newUser.permissions" />
         </el-form-item>
       </el-form>
