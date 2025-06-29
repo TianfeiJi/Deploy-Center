@@ -52,6 +52,9 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/setting',
+    meta: {
+      requiresRoles: ["admin"],
+    },
     component: () => import('layouts/MainLayout.vue'),
     children: settingChildrenRoutes
   },
