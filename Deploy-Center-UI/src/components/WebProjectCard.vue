@@ -171,8 +171,7 @@ const viewWebProjectDetail = () => {
     { label: '访问地址', key: 'access_url', value: props.webProject.access_url, editable: true },
     { label: '创建时间', key: 'created_at', value: formatDate(props.webProject.created_at), editable: false },
     { label: '更新时间', key: 'updated_at', value: formatDate(props.webProject.updated_at), editable: false },
-    { label: '最近部署时间', key: 'last_deployed_at', value: formatDate(props.webProject.last_deployed_at), editable: false },
-    { label: '运行状态', key: 'runtime_status', value: deploymentStatus.value, editable: false },
+    { label: '最近部署时间', key: 'last_deployed_at', value: formatDate(props.webProject.last_deployed_at), editable: false }
   ];
   isViewDetailDialogOpen.value = true;
 };
@@ -208,9 +207,9 @@ const saveEdit = async () => {
   const updateData: Partial<UpdateWebProjectRequestDto> = {};
 
   tableData.value.forEach(item => {
-    if (item.key === 'created_at' || item.key === 'updated_at' || item.key === 'last_deployed_at') {
-      // 这些时间时间不需要修改
-    } else {
+    const skipKeys = ['created_at', 'updated_at', 'last_deployed_at'];
+
+    if (!skipKeys.includes(item.key)) {
       updateData[item.key as keyof UpdateWebProjectRequestDto] = item.value as any;
     }
   });
@@ -218,7 +217,7 @@ const saveEdit = async () => {
   // 确保包含 ID
   updateData['id'] = props.webProject.id;
 
-  console.log(updateData)
+  console.log('[编辑保存] 构造的更新数据：', updateData);
 
   try {
     await getAgentCommandApi().updateWebProject(updateData as UpdateWebProjectRequestDto);

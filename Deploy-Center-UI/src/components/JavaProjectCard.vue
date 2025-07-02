@@ -259,9 +259,9 @@ const saveEdit = async () => {
   const updateData: Partial<UpdateJavaProjectRequestDto> = {};
 
   tableData.value.forEach(item => {
-    if (item.key === 'created_at' || item.key === 'updated_at' || item.key === 'last_deployed_at') {
-      // 这些时间时间不需要修改
-    } else {
+    const skipKeys = ['created_at', 'updated_at', 'last_deployed_at'];
+
+    if (!skipKeys.includes(item.key)) {
       updateData[item.key as keyof UpdateJavaProjectRequestDto] = item.value as any;
     }
   });
@@ -269,7 +269,7 @@ const saveEdit = async () => {
   // 确保包含 ID
   updateData['id'] = props.javaProject.id;
 
-  console.log(updateData)
+  console.log('[编辑保存] 构造的更新数据：', updateData);
 
   try {
     await getAgentCommandApi().updateJavaProject(updateData as UpdateJavaProjectRequestDto);
