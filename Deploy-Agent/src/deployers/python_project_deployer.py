@@ -14,9 +14,7 @@ from loguru import logger
 from fastapi import UploadFile
 from models.common.http_result import HttpResult
 from models.enum.status_enum import StatusEnum
-from manager.project_data_manager import ProjectDataManager
-from manager.deploy_history_data_manager import DeployHistoryDataManager
-from manager.template_manager import TemplateManager
+from manager import PROJECT_DATA_MANAGER, DEPLOY_HISTORY_DATA_MANAGER
 
 
 class PythonProjectDeployer:
@@ -45,17 +43,13 @@ class PythonProjectDeployer:
         return cls._instance
 
     def __init__(self):
-        self.project_data_manager = ProjectDataManager().get_instance()
-        self.deploy_history_manager = DeployHistoryDataManager().get_instance()
-        self.template_manager = TemplateManager().get_instance()
-
         self.python_project = None
         self.dockerfile_path = None
 
     def deploy(self, id: str, zip_file: UploadFile, dockerfile_content: str, dockercommand_content: str):
         logger.info("==================== Python 项目部署：开始 ====================")
         self.deploy_status = StatusEnum.START
-        self.python_project = self.project_data_manager.get_project(id)
+        self.python_project = PROJECT_DATA_MANAGER.get_project(id)
         if self.python_project is None:
             return HttpResult[None](code=400, status="failed", msg=f"没有 id 为 {id} 的 Python 项目", data=None)
 
@@ -171,7 +165,7 @@ class PythonProjectDeployer:
             self.deploy_status = StatusEnum.FAILED
             err_msg = f"7 - ERROR - 镜像构建失败: {image_name}, 错误: {e}"
             logger.error(err_msg)
-            self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, "failed", err_msg)
+            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, "failed", err_msg)
             raise RuntimeError(err_msg)
 
     def _start_container(self, id: str, dockercommand_content: str):
@@ -185,7 +179,7 @@ class PythonProjectDeployer:
             self.deploy_status = StatusEnum.FAILED
             err_msg = f"8 - ERROR - 容器启动失败: {container_name}, 错误: {e}"
             logger.error(err_msg)
-            self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, self.deploy_status, err_msg)
+            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, self.deploy_status, err_msg)
             raise RuntimeError(err_msg)
 
     def _update_python_project_data(self, id: str):
@@ -196,7 +190,7 @@ class PythonProjectDeployer:
             "last_deployed_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         }
         try:
-            self.project_data_manager.update_project(id, updated_data)
+            PROJECT_DATA_MANAGER.update_project(id, updated_data)
             logger.info("9.1 - FINISH - 项目信息更新成功")
         except Exception as e:
             self.deploy_status = StatusEnum.FAILED
@@ -204,7 +198,7 @@ class PythonProjectDeployer:
 
         try:
             self.deploy_status = StatusEnum.SUCCESS
-            self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, self.deploy_status, None)
+            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, self.deploy_status, None)
             logger.info("9.2 - FINISH - 部署记录更新成功")
         except Exception as e:
             self.deploy_status = StatusEnum.FAILED

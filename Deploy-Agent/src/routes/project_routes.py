@@ -7,7 +7,7 @@ from httpx import RequestError
 from urllib.parse import urlparse
 import uuid
 from pathlib import Path
-from manager.project_data_manager import ProjectDataManager
+from manager import PROJECT_DATA_MANAGER
 from fastapi import File, Query, Request, UploadFile, Form, APIRouter
 from models.common.http_result import HttpResult
 from deployers.java_project_deployer import JavaProjectDeployer
@@ -20,10 +20,7 @@ from models.dto.update_web_project_request_dto import UpdateWebProjectRequestDto
 from models.dto.update_java_project_request_dto import UpdateJavaProjectRequestDto
 from models.dto.update_python_project_request_dto import UpdatePythonProjectRequestDto
 
-
 project_router = APIRouter()
-PROJECT_DATA_MANAGER = ProjectDataManager().get_instance()
-
 
 # 获取所有项目数据
 @project_router.get("/api/deploy-agent/project/list", summary="获取项目数据", description="返回所有项目数据。")

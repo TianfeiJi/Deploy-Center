@@ -1,25 +1,20 @@
 from typing import List
 from fastapi import APIRouter
-from manager.project_data_manager import ProjectDataManager
-from manager.deploy_history_data_manager import DeployHistoryDataManager
 from models.entity.deploy_history import DeployHistory
 from models.vo.deploy_history_vo import DeployHistoryVo
 from models.common.http_result import HttpResult
-
+from manager import DEPLOY_HISTORY_DATA_MANAGER, PROJECT_DATA_MANAGER
 
 deploy_history_router = APIRouter()
-deploy_history_data_manager = DeployHistoryDataManager.get_instance()
-project_data_manager = ProjectDataManager.get_instance()
-
 
 # 获取部署历史列表
 @deploy_history_router.get("/api/deploy-agent/deploy-history/list", summary="获取部署历史列表")
 async def get_deploy_history_list():
-    deploy_history_list: List[DeployHistory] = deploy_history_data_manager.list_deploy_historys()
+    deploy_history_list: List[DeployHistory] = DEPLOY_HISTORY_DATA_MANAGER.list_deploy_historys()
     # 转换为 DeployHistoryVo 并设置 project_code
     vo_list = []
     for deploy_history in deploy_history_list:
-        project = project_data_manager.get_project(deploy_history.project_id)
+        project = PROJECT_DATA_MANAGER.get_project(deploy_history.project_id)
         if project is None:
             continue
         # 创建 DeployHistoryVo 并复制属性

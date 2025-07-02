@@ -2,12 +2,9 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import Dict, Optional
 from models.common.http_result import HttpResult
 from loguru import logger
-from manager.template_manager import TemplateManager
+from manager import TEMPLATE_MANAGER
 
 template_router = APIRouter()
-
-TEMPLATE_MANAGER = TemplateManager.get_instance()
-
 
 @template_router.get("/api/deploy-agent/template/list", summary="获取所有模板列表")
 async def get_template_list(template_type: Optional[str] = Query(None, description="模板类型（可选）")):

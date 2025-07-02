@@ -5,7 +5,7 @@ from models.entity.user import User
 from manager.user_data_manager import UserDataManager
 from models.dto.user_login_request_dto import UserLoginRequestDto
 from models.common.http_result import HttpResult
-from manager.system_config_data_manager import SystemConfigManager
+from manager.system_config_data_manager import SystemConfigDataManager
 from models.entity.system_config import SystemConfig
 from security.two_factor_auth import TwoFactorAuth
 
@@ -29,7 +29,7 @@ async def login(dto: UserLoginRequestDto):
         return HttpResult[None](code=400, status="failed", msg="密码错误", data=None)
 
     # 检查是否开启 2FA
-    enable_2fa_config: SystemConfig = SystemConfigManager.get_instance().get_config("enable_2fa")
+    enable_2fa_config: SystemConfig = SystemConfigDataManager.get_instance().get_config("enable_2fa")
     is_2fa_enabled = enable_2fa_config and str(enable_2fa_config.config_value).lower() == "true"
 
     if is_2fa_enabled:

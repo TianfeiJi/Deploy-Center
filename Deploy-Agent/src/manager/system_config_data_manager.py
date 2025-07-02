@@ -5,7 +5,7 @@ from datetime import datetime
 from models.entity.system_config import SystemConfig
 
 
-class SystemConfigManager:
+class SystemConfigDataManager:
     _instance = None
     _data_file_path = os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
@@ -14,7 +14,7 @@ class SystemConfigManager:
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(SystemConfigManager, cls).__new__(cls)
+            cls._instance = super(SystemConfigDataManager, cls).__new__(cls)
         return cls._instance
 
     def _load_configs(self) -> List[SystemConfig]:

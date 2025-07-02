@@ -7,8 +7,7 @@ from fastapi import UploadFile
 from loguru import logger
 from models.common.http_result import HttpResult
 from models.enum.status_enum import StatusEnum
-from manager.deploy_history_data_manager import DeployHistoryDataManager
-from manager.project_data_manager import ProjectDataManager
+from manager import PROJECT_DATA_MANAGER, DEPLOY_HISTORY_DATA_MANAGER
 from utils.user_context import get_current_user
 
 
@@ -19,8 +18,6 @@ class WebProjectDeployer:
 
         该类用于处理前端项目的部署流程，包括解压上传的 ZIP 文件、验证项目结构、部署到指定路径等。
         """
-        self.project_data_manager = ProjectDataManager().get_instance()
-        self.deploy_history_manager = DeployHistoryDataManager().get_instance()
         self.web_project = None
         
     def deploy(self, id: str, zip_file: UploadFile):
@@ -30,7 +27,7 @@ class WebProjectDeployer:
         logger.info(f"当前用户：{self.user}")
         
         self.deploy_status = StatusEnum.START
-        self.web_project = self.project_data_manager.get_project(id)
+        self.web_project = PROJECT_DATA_MANAGER.get_project(id)
         if (self.web_project is None):
             return HttpResult[None](code=400, status="failed", msg=f"没有id为{id}的Web项目", data=None)
         
@@ -60,7 +57,7 @@ class WebProjectDeployer:
             self.deploy_status = StatusEnum.FAILED
             err_msg = f"1 - Failed - 创建项目目录失败: {e}"
             logger.error(err_msg)
-            self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, "failed", err_msg, self.user)
+            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, "failed", err_msg, self.user)
             raise
 
     def _save_zip_file(self, zip_file: UploadFile) -> str:
@@ -75,7 +72,7 @@ class WebProjectDeployer:
             self.deploy_status = StatusEnum.FAILED
             err_msg = f"2 - Failed - 保存 ZIP 文件失败: {e}"
             logger.error(err_msg)
-            self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, "failed", err_msg, self.user)
+            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, "failed", err_msg, self.user)
             raise
         return zip_path
         
@@ -94,7 +91,7 @@ class WebProjectDeployer:
             self.deploy_status = StatusEnum.FAILED
             err_msg = f"3 - Failed - 解压 ZIP 文件失败: {e}"
             logger.error(err_msg)
-            self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, "failed", err_msg, self.user, self.user)
+            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, "failed", err_msg, self.user, self.user)
             raise
 
     def _delete_zip_file(self, zip_path: str):
@@ -106,7 +103,7 @@ class WebProjectDeployer:
         except Exception as e:
             logger.error(f"4 - Failed - 删除 ZIP 文件失败: {e}")
             self.deploy_status = StatusEnum.FAILED
-            self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, self.deploy_status, None, self.user)
+            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, self.deploy_status, None, self.user)
             raise
 
     def _update_web_project_data(self, id: str):
@@ -119,7 +116,7 @@ class WebProjectDeployer:
         # 更新项目可能失败，但是至此，项目更新操作是成功了的
         self.deploy_status = StatusEnum.SUCCESS
         try:
-            self.project_data_manager.update_project(id, updated_data)
+            PROJECT_DATA_MANAGER.update_project(id, updated_data)
             logger.info(f"5 - Success - 更新项目数据成功")
         except Exception as e:
             logger.error(f"5 - Failed - 更新项目数据失败: {e}")
@@ -129,7 +126,7 @@ class WebProjectDeployer:
         try:
             logger.info("6. - START - 更新部署记录")
             self.deploy_status = StatusEnum.SUCCESS
-            self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, self.deploy_status, None, self.user)
+            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, self.deploy_status, None, self.user)
             logger.info("6. - FINISH - 部署记录更新成功")
         except Exception as e:
             self.deploy_status = StatusEnum.FAILED
