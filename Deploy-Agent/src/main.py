@@ -5,10 +5,14 @@
 TODO:
 1. 其他项目部署接口
 """
+# 导入一次 log_config 模块，从而触发 Loguru 的全局日志配置初始化
+import config.log_config
+
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.openapi.docs import get_swagger_ui_html
 from middleware.verify_user_middleware import VerifyUserMiddleware
 from middleware.user_injection_middleware import UserInjectionMiddleware
 from routes.project_routes import project_router
@@ -20,7 +24,6 @@ from routes.system_config_routes import system_config_router
 from routes.template_routes import template_router
 from routes.inspect_routes import inspect_router
 from routes.statistics_routes import statistics_router
-from fastapi.openapi.docs import get_swagger_ui_html
 
 
 app = FastAPI(

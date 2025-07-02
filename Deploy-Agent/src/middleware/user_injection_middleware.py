@@ -2,10 +2,9 @@
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi import Request
 import json
-from config.log_config import get_logger
+from loguru import logger
 from utils.user_context import set_current_user
 
-logger = get_logger()
 
 class UserInjectionMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):

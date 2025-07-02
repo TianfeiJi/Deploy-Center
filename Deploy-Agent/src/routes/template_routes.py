@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException, Query
 from typing import Dict, Optional
 from models.common.http_result import HttpResult
-from config.log_config import get_logger
+from loguru import logger
 from manager.template_manager import TemplateManager
 
 template_router = APIRouter()
-logger = get_logger()
+
 TEMPLATE_MANAGER = TemplateManager.get_instance()
 
 

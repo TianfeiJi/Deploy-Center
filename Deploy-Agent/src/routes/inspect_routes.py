@@ -9,11 +9,10 @@ import subprocess
 from datetime import datetime
 from fastapi import APIRouter
 from models.common.http_result import HttpResult
-from config.log_config import get_logger
+from loguru import logger
 from config.version import AGENT_VERSION
 
 inspect_router = APIRouter()
-logger = get_logger()
 
 @inspect_router.get("/api/deploy-agent/inspect/info", summary="获取 Agent 汇总信息")
 async def get_info():

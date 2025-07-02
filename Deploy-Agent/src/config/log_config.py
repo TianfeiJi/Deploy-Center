@@ -19,11 +19,8 @@ from loguru import logger
 # Define log output directory relative to this file
 LOG_DIR = os.path.join(os.path.dirname(__file__), "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
-
-# Define log filename format: "YYYY-MM-DD.log"
-def get_daily_log_path(record):
-    date_str = datetime.now().strftime("%Y-%m-%d")
-    return os.path.join(LOG_DIR, f"{date_str}.log")
+# Define log path
+LOG_PATH = os.path.join(LOG_DIR, f"{datetime.now().strftime('%Y-%m-%d')}.log")
 
 # Define rotation policy: rotate if current date != file date
 def should_rotate_on_new_day(message, file):
@@ -57,10 +54,10 @@ logger.add(
 
 # File output (daily rolling, filename = YYYY-MM-DD.log)
 logger.add(
-    get_daily_log_path,
-    rotation=should_rotate_on_new_day,
+    LOG_PATH,
     format=LOG_FORMAT,
     colorize=False,
+    rotation=should_rotate_on_new_day,
     enqueue=True,
     backtrace=True,
     diagnose=True

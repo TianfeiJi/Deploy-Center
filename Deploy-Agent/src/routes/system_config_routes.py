@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from typing import Dict, Optional, Union
 from models.common.http_result import HttpResult
-from config.log_config import get_logger
+from loguru import logger
 from manager.system_config_data_manager import SystemConfigManager
 
 
-logger = get_logger()
+
 system_config_router = APIRouter()
 config_manager = SystemConfigManager.get_instance()
 

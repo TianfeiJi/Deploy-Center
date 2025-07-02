@@ -5,10 +5,8 @@ import cpuinfo
 import platform
 import socket
 from models.common.http_result import HttpResult
-from config.log_config import get_logger
+from loguru import logger
 
-
-logger = get_logger()
 server_router = APIRouter()
 
 
