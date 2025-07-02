@@ -37,6 +37,15 @@ async def get_project_list(request: Request):
     except FileNotFoundError:
         return HttpResult[None](code=404, status="success", msg="project_data.json not found.", data=None)
 
+# 获取项目详情
+@project_router.get("/api/deploy-agent/project/{id}", summary="获取项目详情", description="根据项目 ID 获取对应的项目详细信息")
+async def get_project(id: str = Query(..., description="项目 ID")):
+    project = PROJECT_DATA_MANAGER.get_project(id)
+    if project is not None:
+        return HttpResult[dict](code=200, status="success", msg=None, data=project)
+    else:
+        return HttpResult[None](code=500, status="failed", msg=f"未找到 ID 为 {id} 的项目", data=None)
+
 # ==================== 项目部署通用接口 ====================
 @project_router.get("/api/deploy-agent/project/support/render-template-content", summary="渲染模板内容, 渲染dockerfile和dockercommand")
 async def render_template_content(
@@ -137,14 +146,6 @@ async def check_web_project_accessibility(url: str = Query(..., description="前
             "check_time": check_time,
             "error": str(e)
         })
-
-@project_router.get("/api/deploy-agent/project/web/get/{id}", summary="获取Web项目详情")
-async def get_web_project(id: str):
-    project = PROJECT_DATA_MANAGER.get_project(id)
-    if (project != None):
-        return HttpResult[dict](code=200, status="success", msg=None, data=project)
-    else:
-        return HttpResult[None](code=500, status="failed", msg=f"没有id为{id}的项目", data=None)
 
 @project_router.post("/api/deploy-agent/project/web/add", summary="创建 待部署的 Web 项目")
 async def add_web_project(dto: AddWebProjectRequestDto):

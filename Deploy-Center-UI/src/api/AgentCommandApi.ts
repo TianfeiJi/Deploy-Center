@@ -131,7 +131,13 @@ export class AgentCommandApi {
   // ========================== Project 管理 ==========================
   // 获取项目列表
   async fetchProjectList(): Promise<any[]> {
-    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(this.agentId, '/api/deploy-agent/project/list', 'GET');
+    const httpResult: HttpResult<HttpResult<any[]>> = await callAgentApi(this.agentId, '/api/deploy-agent/project/list', 'GET');
+    return httpResult.data.data;
+  }
+
+  // 获取项目详情
+  async fetchProjectDetail(id: string): Promise<any> {
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(this.agentId, `/api/deploy-agent/project/id=${id}`, 'GET');
     return httpResult.data.data;
   }
 
