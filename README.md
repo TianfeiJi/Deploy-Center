@@ -137,3 +137,16 @@ flowchart TD
 > This project is designed and maintained by **[Tianfei Ji](https://github.com/TianfeiJi)**.
 
 欢迎关注、交流与反馈。 
+
+## 💖 支持
+Deploy Center 最初是一个简化部署操作的小工具，后来发现还能勉强见人，于是就放出来了 🙈
+功能不多，界面不丑，代码能跑，希望你用得上 💻
+如果它帮你少敲几行 docker 命令，不用手动登录服务器进行项目部署，那就不白写了  🧘
+当然，愿意打赏我一杯咖啡，那更不白写了 ☕️😌
+
+<p align="center">
+  <img src="http://jitianfei.com/resource/images/sponsor-wechat.png" width="150" alt="微信" style="margin-right: 40px;"/>
+  <img src="http://jitianfei.com/resource/images/sponsor-alipay.jpg" width="150" alt="支付宝"/>
+</p>
+
+<p align="center">你的支持不仅是对这个项目的认可，也是对我个人的巨大鼓励。</p>

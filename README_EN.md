@@ -144,3 +144,18 @@ The project consists of two main modules: the Deployment Management Platform (De
 > This project is designed and maintained by **[Tianfei Ji](https://github.com/TianfeiJi)**.
 
 Feel free to follow, connect, or share your feedback.
+
+## 💖 Support
+
+Deploy Center started as a small tool to simplify deployment tasks.  
+Eventually, it grew into something presentable, so I decided to open-source it 🙈  
+It's not packed with features, but it's clean, useful, and just works 💻  
+If it saves you from typing a few extra `docker` commands or logging into a remote server, then it was totally worth writing 🧘  
+And if you'd like to buy me a coffee — that would be even better ☕️😌
+
+<p align="center">
+  <img src="http://jitianfei.com/resource/images/sponsor-wechat.png" width="150" alt="WeChat" style="margin-right: 40px;"/>
+  <img src="http://jitianfei.com/resource/images/sponsor-alipay.jpg" width="150" alt="Alipay"/>
+</p>
+
+<p align="center">Your support means a lot — not just for this project, but for my ongoing open-source work 🙏</p>

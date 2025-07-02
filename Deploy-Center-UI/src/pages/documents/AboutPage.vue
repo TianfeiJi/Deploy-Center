@@ -50,28 +50,6 @@
 
       <q-separator class="q-my-md" />
 
-      <!-- 支持与捐赠 -->
-      <q-expansion-item icon="fa-solid fa-hand-holding-heart" :label="language === 'zh' ? '支持与捐赠' : 'Support & Donate'">
-        <div class="donate-text q-mb-md">
-          {{ language === 'zh' ? zhDonateIntro : enDonateIntro }}
-        </div>
-
-        <div class="row justify-center q-gutter-xl q-mb-xl">
-          <div class="column items-center">
-            <img src="images/wechat_donate.jpg" alt="微信收款码" class="pay-code" />
-            <div class="pay-label">{{ language === 'zh' ? '微信支付' : 'WeChat Pay' }}</div>
-          </div>
-          <div class="column items-center">
-            <img src="images/alipay_donate.jpg" alt="支付宝收款码" class="pay-code" />
-            <div class="pay-label">{{ language === 'zh' ? '支付宝支付' : 'Alipay' }}</div>
-          </div>
-        </div>
-
-        <div class="thanks">
-          {{ language === 'zh' ? zhThanks : enThanks }}
-        </div>
-      </q-expansion-item>
-
     </q-card>
   </q-page>
 </template>
@@ -101,20 +79,6 @@ const language = ref<'zh' | 'en'>('zh')
 
 const zhIntro = '一个轻量化的项目部署平台，支持前端项目与任何容器化服务（如 Java、Python 等）的自动化部署。'
 const enIntro = 'A lightweight deployment platform supporting frontend projects and any containerized services like Java, Python, etc.'
-
-const zhDonateIntro = `Deploy Center 最初是一个简化部署操作的小工具，后来发现还能勉强见人，于是就放出来了  \uD83D\uDE48
-功能不多，界面不丑，代码能跑，希望你用得上 \uD83D\uDCBB
-如果它帮你少敲几行 docker 命令，不用手动登录服务器进行项目部署，那就不白写了 \uD83E\uDDD8
-当然，愿意打赏我一杯咖啡，那更不白写了 \u2615\uFE0F\uD83D\uDE0C`
-
-const enDonateIntro = `Deploy Center started as a small tool to simplify deployment tasks.
-Later I realized it looked just decent enough to share, so here it is \uD83D\uDE48
-It doesn't do much, doesn't look too bad, and the code mostly runs — hopefully you'll find it useful \uD83D\uDCBB
-If it saves you from typing a few Docker commands or manually logging into a server, then it wasn’t written in vain \uD83E\uDDD8
-And if you're feeling generous and want to buy me a coffee — well, that's even better \u2615\uFE0F\uD83D\uDE0C`
-
-const zhThanks = '你的支持不仅是对这个项目的认可，也是对我个人的巨大鼓励。'
-const enThanks = 'Your support means a lot to both this project and myself.'
 
 const setLanguage = (lang: 'zh' | 'en') => {
   language.value = lang
