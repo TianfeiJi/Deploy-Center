@@ -1,54 +1,67 @@
+"""
+This module provides centralized logging configuration using Loguru.
+
+Features:
+- Daily log rotation with fixed file name format (YYYY-MM-DD.log)
+- Asynchronous file writing to prevent I/O blocking
+- Console output with color formatting for development
+"""
+# ==============================================================================
+# @File         : log_config.py
+# @Author       : Tianfei Ji
+# @Description  : 项目日志配置模块，基于 Loguru 实现按天记录、自动轮转、异步写入。
+# ==============================================================================
 import os
 import sys
-from loguru import logger
 from datetime import datetime
+from loguru import logger
 
+# Define log output directory relative to this file
+LOG_DIR = os.path.join(os.path.dirname(__file__), "logs")
+os.makedirs(LOG_DIR, exist_ok=True)
 
-# 获取当前文件的绝对路径
-current_file_path = os.path.abspath(__file__)
-# 获取当前文件所在文件夹
-current_folder = os.path.dirname(current_file_path)
-# 获取父级文件夹
-parent_directory = os.path.dirname(current_folder)
-# 获取父级的父级文件夹
-parent_parent_directory = os.path.dirname(parent_directory)
-# 日志文件所在文件夹
-log_directory = os.path.join(parent_parent_directory, "logs")
+# Define log filename format: "YYYY-MM-DD.log"
+def get_daily_log_path(record):
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    return os.path.join(LOG_DIR, f"{date_str}.log")
 
+# Define rotation policy: rotate if current date != file date
+def should_rotate_on_new_day(message, file):
+    current_date = datetime.now().date()
+    try:
+        filename_date = datetime.strptime(os.path.basename(file.name).split(".")[0], "%Y-%m-%d").date()
+    except ValueError:
+        # fallback: always rotate if filename doesn't match expected format
+        return True
+    return current_date != filename_date
 
-os.makedirs(log_directory, exist_ok=True)
+# Define log message format
+LOG_FORMAT = (
+    "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
+    "<level>{level: <8}</level> | "
+    "<cyan>{module}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
+    "<level>{message}</level>"
+)
 
-logger.remove()  # 移除默认处理器
+# Remove the default logger to apply custom handlers only
+logger.remove()
 
-log_filename = os.path.join(log_directory, f"{datetime.now().strftime('%Y-%m-%d')}.log")
-
-custom_format = (
-            "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
-            "<level>{level: <8}</level> | "
-            "<fg #53c0c0>{name}</fg #53c0c0>:<fg #f0e68c>{function}</fg #f0e68c>:<cyan>{line}</cyan> - <level>{message}</level>"
-        )
-
-# 添加标准输出输出：实时输出到控制台
+# Console output (colored, for development/debugging)
 logger.add(
     sys.stdout,
-    format=custom_format,
-    colorize=True,  # 控制台输出需要颜色
-    backtrace=True,  # 包含调用堆栈
-    diagnose=True  # 包含诊断信息
+    format=LOG_FORMAT,
+    colorize=True,
+    backtrace=True,
+    diagnose=True
 )
 
-# 添加文件输出：按日期自动切换日志文件
+# File output (daily rolling, filename = YYYY-MM-DD.log)
 logger.add(
-    log_filename,
-    format=custom_format,
-    colorize=False,  # 文件输出不需要颜色
-    rotation="00:00",  # 每天自动切换日志文件
-    enqueue=True,  # 异步写入
-    backtrace=True,  # 包含调用堆栈
-    diagnose=True  # 包含诊断信息
+    get_daily_log_path,
+    rotation=should_rotate_on_new_day,
+    format=LOG_FORMAT,
+    colorize=False,
+    enqueue=True,
+    backtrace=True,
+    diagnose=True
 )
-
-
-# 返回 logger 实例
-def get_logger():
-    return logger
