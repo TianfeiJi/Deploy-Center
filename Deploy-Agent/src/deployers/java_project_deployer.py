@@ -65,7 +65,7 @@ class JavaProjectDeployer:
             return HttpResult[None](code=400, status="failed", msg=f"没有 id 为 {id} 的 Java 项目", data=None)
 
         self.logger.info(f"开始部署项目：{self.java_project}")
-        # 生产部署历史id
+        # 生成部署历史id
         self.deploy_history_id = str(uuid.uuid4()).replace("-", "")[:8]
 
         self._create_project_directory()

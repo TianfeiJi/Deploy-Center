@@ -5,9 +5,11 @@ import shutil
 from datetime import datetime
 from fastapi import UploadFile
 from models.common.http_result import HttpResult
+from models.enum.status_enum import StatusEnum
 from manager.deploy_history_data_manager import DeployHistoryDataManager
 from manager.project_data_manager import ProjectDataManager
 from config.log_config import get_logger
+from utils.user_context import get_current_user
 
 
 class WebProjectDeployer:
@@ -25,12 +27,16 @@ class WebProjectDeployer:
     def deploy(self, id: str, zip_file: UploadFile):
         """部署前端项目"""
         self.logger.info("==================== Web Project Deploy : Start ====================")
+        self.user = get_current_user()
+        self.logger.info(f"当前用户：{self.user}")
+        
+        self.deploy_status = StatusEnum.START
         self.web_project = self.project_data_manager.get_project(id)
         if (self.web_project is None):
             return HttpResult[None](code=400, status="failed", msg=f"没有id为{id}的Web项目", data=None)
         
         self.logger.info(f"开始部署项目：{self.web_project}")
-        # 部署历史ID
+        # 生成部署历史id
         self.deploy_history_id = str(uuid.uuid4()).replace("-", "")[:8]
 
         self._create_project_directory()
@@ -39,7 +45,10 @@ class WebProjectDeployer:
         self._delete_zip_file(zip_path)
         self._update_web_project_data(id)
         self.logger.info("==================== Web Project Deploy : Finish ====================")
-        return HttpResult[None](code=200, status="success", msg=f"{self.web_project.get('project_name')} 项目部署成功", data=None)
+        success_msg = (
+            f"{self.web_project.get('project_name')} 项目部署成功"
+        )
+        return HttpResult[None](code=200, status="success", msg=success_msg, data=None)
     
     def _create_project_directory(self):
         """创建项目目录"""
@@ -49,7 +58,10 @@ class WebProjectDeployer:
             os.makedirs(self.web_project.get('container_project_path'), exist_ok=True)
             self.logger.info(f"1 - Success - 项目目录已创建: {self.web_project.get('container_project_path')}")
         except Exception as e:
-            self.logger.error(f"1 - Failed - 创建项目目录失败: {e}")
+            self.deploy_status = StatusEnum.FAILED
+            err_msg = f"1 - Failed - 创建项目目录失败: {e}"
+            self.logger.error(err_msg)
+            self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, "failed", err_msg, self.user)
             raise
 
     def _save_zip_file(self, zip_file: UploadFile) -> str:
@@ -61,7 +73,10 @@ class WebProjectDeployer:
                 shutil.copyfileobj(zip_file.file, buffer)
             self.logger.debug(f"2 - Success - ZIP 文件已保存到: {zip_path}")
         except Exception as e:
-            self.logger.error(f"2 - Failed - 保存 ZIP 文件失败: {e}")
+            self.deploy_status = StatusEnum.FAILED
+            err_msg = f"2 - Failed - 保存 ZIP 文件失败: {e}"
+            self.logger.error(err_msg)
+            self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, "failed", err_msg, self.user)
             raise
         return zip_path
         
@@ -77,7 +92,10 @@ class WebProjectDeployer:
             
             self.logger.debug(f"3 - Success - ZIP 文件已解压到: {extract_path}")
         except Exception as e:
-            self.logger.error(f"3 - Failed - 解压 ZIP 文件失败: {e}")
+            self.deploy_status = StatusEnum.FAILED
+            err_msg = f"3 - Failed - 解压 ZIP 文件失败: {e}"
+            self.logger.error(err_msg)
+            self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, "failed", err_msg, self.user)
             raise
 
     def _delete_zip_file(self, zip_path: str):
@@ -88,6 +106,8 @@ class WebProjectDeployer:
             self.logger.debug(f"4 - Success - 删除临时 ZIP 文件: {zip_path}")
         except Exception as e:
             self.logger.error(f"4 - Failed - 删除 ZIP 文件失败: {e}")
+            self.deploy_status = StatusEnum.FAILED
+            self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, self.deploy_status, None)
             raise
 
     def _update_web_project_data(self, id: str):
@@ -98,7 +118,13 @@ class WebProjectDeployer:
             "updated_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
             "last_deployed_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         }
-        self.project_data_manager.update_project(id, updated_data)
-        self.logger.info(f"6 - Success - 更新项目数据成功")
+        # 更新项目可能失败，但是至此，项目更新操作是成功了的
+        self.deploy_status = StatusEnum.SUCCESS
+        try:
+            self.project_data_manager.update_project(id, updated_data)
+            self.logger.info(f"5 - Success - 更新项目数据成功")
+        except Exception as e:
+            self.logger.error(f"5 - Failed - 更新项目数据失败: {e}")
+            raise
 
-        self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, "success", None)
+        self.deploy_history_manager.log_deploy_result(self.deploy_history_id, id, self.deploy_status, None)
