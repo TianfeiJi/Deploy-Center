@@ -9,10 +9,8 @@ from loguru import logger
 # 初始化Router和Logger
 docker_router = APIRouter()
 
-@docker_router.get("/api/deploy-agent/docker/container-status", summary="获取指定容器原始运行状态", description="根据容器名称（支持模糊匹配）返回 Docker 原生状态描述")
-async def get_container_status(
-    container_name: str = Query(..., description="容器名称（支持部分匹配）")
-):
+@docker_router.get("/api/deploy-agent/docker/container-status", summary="获取指定容器原始运行状态", description="根据容器名称返回 Docker 原生状态描述")
+async def get_container_status(container_name: str = Query(..., description="容器名称")):
     check_time = datetime.now(timezone.utc).isoformat()
 
     try:
@@ -23,7 +21,7 @@ async def get_container_status(
             name = info.get("Names", "")
             status_str = info.get("Status", "")
 
-            if container_name in name:
+            if container_name == name:
                 return HttpResult(code=200, status="success", msg=None, data={
                     "container_name": name,
                     "container_status": status_str,
