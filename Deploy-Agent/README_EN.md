@@ -54,7 +54,7 @@ Make sure Docker is installed on your system.
 
 **1. Pull the Image**
 ```bash
-docker pull tianfeiji/deploy-agent:v1.0
+docker pull tianfeiji/deploy-agent:vlatest
 ```
 
 **2. Run the Container**
@@ -104,8 +104,10 @@ Expected directory structure:
 
 **3. Build the Docker Image**
 ```bash
-docker build -t deploy-agent:v1.0 .
+docker build -t deploy-agent:latest .
 ```
+
+> Or tag it with your own version.
 
 **4. Run the Container**
 ```bash
@@ -117,7 +119,7 @@ docker run -d \
   -v /data/docker/infrastructure/deploy-agent/logs:/app/logs \
   -v /data/docker/projects/java:/app/projects/java \
   -v /data/docker/projects/webs:/app/projects/webs \
-  deploy-agent:v1.0
+  deploy-agent:latest
 ```
 
 **Mount Notes:**  

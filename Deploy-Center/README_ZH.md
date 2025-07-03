@@ -76,7 +76,7 @@ uvicorn src.main:app --host 0.0.0.0 --port 1333 --reload
 
 **1. 拉取镜像**
 ```bash
-docker pull tianfeiji/deploy-center:v1.0
+docker pull tianfeiji/deploy-center:latest
 ```
 
 **2. 运行**
@@ -86,7 +86,7 @@ docker run -d \
   --name deploy-center \
   -v /data/docker/infrastructure/deploy-center/data:/app/data \
   -v /data/docker/infrastructure/deploy-center/logs:/app/logs \
-  tianfeiji/deploy-center:v1.0
+  tianfeiji/deploy-center:latest
 ```
 
 > **挂载说明:** 为了实现数据持久化和日志记录，建议挂载以下目录（宿主路径可根据实际情况调整）：
@@ -122,8 +122,10 @@ cd /data/docker/infrastructure/deploy-center
 **3. 构建 Docker 镜像**
 
 ```bash
-docker build -t deploy-center:v1.0 .
+docker build -t deploy-center:latest .
 ```
+
+> 或自行指定版本号
 
 **4：运行 Docker 容器**
 ```bash

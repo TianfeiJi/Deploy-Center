@@ -54,7 +54,7 @@ uvicorn src.main:app --host 0.0.0.0 --port 2333 --reload
 
 **1. 拉取镜像**
 ```bash
-docker pull tianfeiji/deploy-agent:v1.0
+docker pull tianfeiji/deploy-agent:latest
 ```
 
 **2. 运行**
@@ -105,8 +105,10 @@ cd /data/docker/infrastructure/deploy-agent
 
 **3. 构建镜像**
 ```bash
-docker build -t deploy-agent:v1.0 .
+docker build -t deploy-agent:latest .
 ```
+
+> 或自行指定版本号
 
 **4. 运行容器**
 ```bash
@@ -120,7 +122,7 @@ docker run -d \
   -v /data/docker/infrastructure/deploy-agent/logs:/app/logs \
   -v /data/docker/projects/java:/app/projects/java \
   -v /data/docker/projects/webs:/app/projects/webs \
-  deploy-agent:v1.0
+  deploy-agent:latest
 ```
 
 **挂载说明：**

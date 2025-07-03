@@ -80,6 +80,8 @@ No need to build the image, just pull and run:
 docker pull tianfeiji/deploy-center:v1.0
 ```
 
+> Or tag it with your own version.
+
 **2. Run the container**
 ```bash
 docker run -d \
