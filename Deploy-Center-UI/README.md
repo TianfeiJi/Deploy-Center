@@ -1,4 +1,4 @@
-#  Deploy Center UI
+# Deploy Center UI
 
 Deploy Center UI 是一个基于 [Quasar Framework](https://quasar.dev) 和 Vue 3 构建的现代化前端项目，提供部署自动化平台的交互式界面。项目支持打包为 Web 应用和 Electron 桌面应用，适用于跨平台运行和多场景部署。
 

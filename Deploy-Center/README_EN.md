@@ -1,4 +1,4 @@
-# Backend - Deploy Center
+# Deploy Center
 
 The Deploy Center backend service handles frontend requests, managing authentication, configuration, user information, and deployment targets. It coordinates with Deploy Agents to execute actual deployment tasks.
 

@@ -1,4 +1,4 @@
-# Backend - Deploy Center
+# Deploy Center
 
 部署中心后端服务，负责接收前端请求，处理认证、配置管理、用户信息、部署目标维护等操作，协调部署代理（Deploy Agent）完成具体部署行为。
 
