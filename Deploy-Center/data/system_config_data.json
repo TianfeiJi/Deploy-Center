@@ -21,7 +21,7 @@
     },
     {
         "id": 3,
-        "config_name": "是否启用2FA",
+        "config_name": "是否启用2FA（双因素认证）",
         "config_key": "enable_2fa",
         "config_value": false,
         "config_remark": "启用后，用户登录时将需输入双因素验证码以完成身份验证。",
@@ -31,12 +31,22 @@
     },
     {
         "id": 4,
-        "config_name": "白名单ip列表",
-        "config_key": "ip_whitelist",
-        "config_value": null,
-        "config_remark": "限制系统访问 IP，多个 IP 用逗号分隔，如：127.0.0.1, 192.168.0.1。",
+        "config_name": "启用 IP 访问控制",
+        "config_key": "enable_ip_allow_list",
+        "config_value": true,
+        "config_remark": "是否启用 IP 访问控制，启用后仅允许允许列表中的 IP 访问系统。",
         "config_group": "安全设置",
-        "created_at": "2025-04-08 16:00:00",
-        "updated_at": "2025-04-08 16:00:00"
+        "created_at": "2025-04-08 22:13:00",
+        "updated_at": null
+    },
+    {
+        "id": 5,
+        "config_name": "允许访问的 IP 列表",
+        "config_key": "ip_allow_list",
+        "config_value": "127.0.0.1,192.168.1.*,10.0.0.0/8",
+        "config_remark": "多个 IP 用英文逗号分隔，支持精确匹配、通配符（*）和 CIDR 网段，例如：127.0.0.1,192.168.1.*,10.0.0.0/8。",
+        "config_group": "安全设置",
+        "created_at": "2025-07-03 22:13:00",
+        "updated_at": null
     }
 ]

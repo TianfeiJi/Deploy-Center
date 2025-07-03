@@ -5,8 +5,10 @@
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from middleware.verify_token_middleware import VerifyTokenMiddleware
 from fastapi.responses import JSONResponse
+from middleware.verify_token_middleware import VerifyTokenMiddleware
+from middleware.ip_access_control_middleware import IPAccessControlMiddleware
+from config.version import CENTER_VERSION
 from routes.auth_routes import auth_router
 from routes.agent_routes import agent_router
 from routes.user_routes import user_router
@@ -17,7 +19,7 @@ from routes.two_factor_routes import two_factor_router
 app = FastAPI(
     title="Deploy Center",
     description=(""),
-    version="1.0.0", 
+    version=CENTER_VERSION, 
     contact={ 
         "name": "纪田飞",
         "url": "http://jitianfei.com",
@@ -26,10 +28,13 @@ app = FastAPI(
     openapi_url=None    # 禁用API文档
 )
 
-# 添加 Token校验 middleware
+# 添加 Token校验 Middleware
 app.add_middleware(VerifyTokenMiddleware)
 
-# 添加 CORS 中间件
+# 添加 IPAccessControlMiddleware
+app.add_middleware(IPAccessControlMiddleware)
+
+# 添加 CORS Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # 允许任何源
@@ -41,7 +46,7 @@ app.add_middleware(
 
 @app.get("/api/deploy-center/index")
 async def index():
-    return {"code": 200, "status": "success", "msg": "Welcome to Deploy Center!", "data": None}
+    return {"code": 200, "status": "success", "msg": f"Deploy Center {CENTER_VERSION} Ready!", "data": None}
 
 
 # 全局HTTPException异常捕获处理
