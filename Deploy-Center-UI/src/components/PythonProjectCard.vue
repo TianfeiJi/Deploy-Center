@@ -26,13 +26,13 @@
 
     <q-card-section>
       <p>项目代号: {{ pythonProject.project_code }}</p>
+      <p v-if="pythonProject.access_url">访问地址: <a :href="pythonProject.access_url" target="_blank">{{ pythonProject.access_url }}</a></p>
       <p>Python版本: {{ pythonProject.python_version }}</p>
       <p>框架: {{ pythonProject.framework }}</p>
       <p>容器名称: {{ pythonProject.container_name }}</p>
       <p v-if="pythonProject.network">Docker网络: {{ pythonProject.network }}</p>
       <p>宿主机路径: {{ pythonProject.host_project_path }}</p>
       <p>容器内路径: {{ pythonProject.container_project_path }}</p>
-      <p v-if="pythonProject.access_url">访问地址: {{ pythonProject.access_url }}</p>
     </q-card-section>
 
     <q-card-actions align="right">

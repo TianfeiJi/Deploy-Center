@@ -22,7 +22,7 @@
 
     <q-card-section>
       <p>项目代号: {{ webProject.project_code }}</p>
-      <p>访问地址: <a :href="webProject.access_url" target="_blank">{{ webProject.access_url }}</a></p>
+      <p v-if="webProject.access_url">访问地址: <a :href="webProject.access_url" target="_blank">{{ webProject.access_url }}</a></p>
       <p>宿主机路径: {{ webProject.host_project_path }}</p>
       <p>容器内路径: {{ webProject.container_project_path }}</p>
     </q-card-section>

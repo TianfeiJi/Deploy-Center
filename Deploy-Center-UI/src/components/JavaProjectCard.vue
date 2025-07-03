@@ -31,6 +31,7 @@
 
     <q-card-section>
       <p>项目代号: {{ javaProject.project_code }}</p>
+      <p v-if="javaProject.access_url">访问地址: <a :href="javaProject.access_url" target="_blank">{{ javaProject.access_url }}</a></p>
       <p>JDK版本: {{ javaProject.jdk_version }}</p>
       <p>
         Docker 镜像: {{ javaProject.docker_image_name }}:{{
@@ -43,7 +44,6 @@
       <p v-if="javaProject.network">Docker网络: {{ javaProject.network }}</p>
       <p>宿主机路径: {{ javaProject.host_project_path }}</p>
       <p>容器内路径: {{ javaProject.container_project_path }}</p>
-      <p v-if="javaProject.access_url">访问地址: {{ javaProject.access_url }}</p>
     </q-card-section>
 
     <q-card-actions align="right">
