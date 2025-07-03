@@ -185,7 +185,6 @@ class PythonProjectDeployer:
     def _update_python_project_data(self, id: str):
         logger.info("9 - START - 更新部署记录与项目信息")
         updated_data = {
-            "status": "running",
             "updated_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
             "last_deployed_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         }

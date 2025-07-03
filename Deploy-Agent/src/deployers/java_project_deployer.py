@@ -218,7 +218,6 @@ class JavaProjectDeployer:
         """
         logger.info("7 - START - 更新部署记录和项目状态")
         updated_data = {
-            "status": "running",
             "updated_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
             "last_deployed_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         }
