@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from models.entity.user import User
 from security.two_factor_auth import TwoFactorAuth
 from models.common.http_result import HttpResult
-from manager.user_data_manager import UserDataManager
+from manager import USER_DATA_MANAGER
 from config.log_config import get_logger
 from utils.decorators.skip_auth import skip_auth
 
@@ -21,8 +21,7 @@ def setup_2fa(username: str):
     """
     生成用户的 TOTP 密钥并返回二维码 Base64 图片（仅注册时调用一次）
     """
-    user_data_manager = UserDataManager.get_instance()
-    user: User = user_data_manager.get_user_by_username(username)
+    user: User = USER_DATA_MANAGER.get_user_by_username(username)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
@@ -33,7 +32,7 @@ def setup_2fa(username: str):
         updated_data = {
             "two_factor_secret": secret
         }
-        user_data_manager.update_user(user.id, updated_data)
+        USER_DATA_MANAGER.update_user(user.id, updated_data)
     else:
         # 已经绑定过 2FA 的情况，可以根据业务处理方式选择：
         # 方式一：返回已存在的二维码（用于前端展示）
@@ -51,7 +50,7 @@ def setup_2fa(username: str):
         updated_data = {
             "two_factor_secret": secret
         }
-        user_data_manager.update_user(user.id, updated_data)
+        USER_DATA_MANAGER.update_user(user.id, updated_data)
 
     return HttpResult[dict](code=200, status="success", msg=None, data={"secret": secret, "qr_code_base64": qr_base64})
 
@@ -67,8 +66,7 @@ def verify_2fa(dto: Verify2FARequestDto):
     """
     验证用户输入的验证码是否正确
     """
-    user_data_manager = UserDataManager.get_instance()
-    user: User = user_data_manager.get_user_by_username(dto.username)
+    user: User = USER_DATA_MANAGER.get_user_by_username(dto.username)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -83,7 +81,7 @@ def get_2fa_status(username: str) -> HttpResult[bool]:
     """
     查询用户是否已绑定 2FA（是否已有 two_factor_secret）
     """
-    user = UserDataManager.get_instance().get_user_by_username(username)
+    user = USER_DATA_MANAGER.get_user_by_username(username)
     if not user:
         raise HTTPException(status_code=404, detail="用户不存在")
 

@@ -1,10 +1,9 @@
 import jwt
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict
-from manager.system_config_data_manager import SystemConfigDataManager
-SYSTEM_CONFIG_MANAGER = SystemConfigDataManager.get_instance()
+from manager import SYSTEM_CONFIG_DATA_MANAGER
 
-raw_config = SYSTEM_CONFIG_MANAGER.get_config("token_expiration_hours")
+raw_config = SYSTEM_CONFIG_DATA_MANAGER.get_config("token_expiration_hours")
 if raw_config is None:
     token_expiration_hours = 24
 else:

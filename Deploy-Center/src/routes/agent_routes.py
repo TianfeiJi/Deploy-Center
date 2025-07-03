@@ -5,14 +5,13 @@ import httpx
 from models.entity.agent import Agent
 from models.dto.update_agent_request_dto import UpdateAgentRequestDto
 from manager.user_data_manager import UserDataManager
-from manager.agent_data_manager import AgentDataManager
+from manager import AGENT_DATA_MANAGER
 from typing import Any, Dict, List, Optional
 from models.common.http_result import HttpResult
 from config.log_config import get_logger
 
 agent_router = APIRouter()
 logger = get_logger()
-AGENT_DATA_MANAGER = AgentDataManager.get_instance()
 
 
 @agent_router.get("/api/deploy-center/agent/list", summary="获取Agent列表")

@@ -2,7 +2,7 @@ from models.entity.user import User
 from fastapi import APIRouter, HTTPException
 from typing import List, Dict
 from models.common.http_result import HttpResult
-from manager.user_data_manager import UserDataManager
+from manager import USER_DATA_MANAGER
 from config.log_config import get_logger
 
 user_router = APIRouter()
@@ -15,8 +15,7 @@ async def get_user_list():
     获取所有用户信息
     """
     try:
-        user_data_manager = UserDataManager.get_instance()
-        user_list: List[User] = user_data_manager.list_users()
+        user_list: List[User] = USER_DATA_MANAGER.list_users()
         return HttpResult[List[User]](code=200, status="success", msg=None, data=[user for user in user_list])
     except Exception as e:
         logger.error(f"获取用户列表失败: {e}")
@@ -28,8 +27,7 @@ async def get_user(user_id: int):
     根据用户ID获取用户详情
     """
     try:
-        user_data_manager = UserDataManager.get_instance()
-        user: User = user_data_manager.get_user(user_id)
+        user: User = USER_DATA_MANAGER.get_user(user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
@@ -46,8 +44,7 @@ async def create_user(user_info: Dict):
     新增用户
     """
     try:
-        user_data_manager = UserDataManager.get_instance()
-        user_data_manager.create_user(user_info)
+        USER_DATA_MANAGER.create_user(user_info)
         return HttpResult[None](code=200, status="success", msg="用户创建成功", data=None)
     except Exception as e:
         logger.error(f"创建用户失败: {e}")
@@ -59,8 +56,7 @@ async def update_user(user_id: int, updated_info: Dict):
     更新用户信息
     """
     try:
-        user_data_manager = UserDataManager.get_instance()
-        user_data_manager.update_user(user_id, updated_info)
+        USER_DATA_MANAGER.update_user(user_id, updated_info)
         return HttpResult[Dict](code=200, status="success", msg=None, data=None)
     except ValueError as ve:
         logger.error(f"更新用户信息失败: {ve}")
@@ -75,8 +71,7 @@ async def delete_user(user_id: int):
     删除用户
     """
     try:
-        user_data_manager = UserDataManager.get_instance()
-        user_data_manager.delete_user(user_id)
+        USER_DATA_MANAGER.delete_user(user_id)
         return HttpResult[Dict](code=200, status="success", msg=None, data=None)
     except Exception as e:
         logger.error(f"删除用户失败: {e}")
