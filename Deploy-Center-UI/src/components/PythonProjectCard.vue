@@ -85,7 +85,7 @@
   <q-dialog v-model="isUploadDeployDialogOpen">
     <q-card style="width: 100%; max-width: 70vw;">
       <q-card-section>
-        <div class="text-h5">上传部署</div>
+        <div class="text-h5">上传部署（{{ pythonProject.project_name }}）</div>
       </q-card-section>
 
       <!-- 上传文件 -->

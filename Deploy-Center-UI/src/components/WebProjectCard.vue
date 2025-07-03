@@ -77,7 +77,7 @@
   <q-dialog v-model="isUploadDeployDialogOpen">
     <q-card style="width: 500px">
       <q-card-section>
-        <div class="text-h6">上传部署文件</div>
+        <div class="text-h6">上传部署文件（{{ webProject.project_name }}）</div>
       </q-card-section>
       <q-card-section>
         <el-upload ref="uploadRef" drag :auto-upload="false" accept=".zip" :before-upload="handleBeforeUpload"
