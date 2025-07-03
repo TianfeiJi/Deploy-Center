@@ -183,17 +183,16 @@ class PythonProjectDeployer:
             raise RuntimeError(err_msg)
 
     def _update_python_project_data(self, id: str):
-        logger.info("9 - START - 更新部署记录与项目信息")
+        logger.info("9 - START - 更新部署时间与部署记录数据")
         updated_data = {
-            "updated_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
             "last_deployed_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         }
         try:
             PROJECT_DATA_MANAGER.update_project(id, updated_data)
-            logger.info("9.1 - FINISH - 项目信息更新成功")
+            logger.info("9.1 - FINISH - 部署时间更新成功")
         except Exception as e:
             self.deploy_status = StatusEnum.FAILED
-            logger.error(f"9.1 - ERROR - 更新项目信息失败: {e}")
+            logger.error(f"9.1 - ERROR - 部署时间更新失败: {e}")
 
         try:
             self.deploy_status = StatusEnum.SUCCESS

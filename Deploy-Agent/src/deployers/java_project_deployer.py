@@ -212,21 +212,20 @@ class JavaProjectDeployer:
 
     def _update_java_project_data(self, id):
         """
-        7 - 更新部署记录和项目状态
+        7 - 更新项目部署时间和部署记录
 
-        更新部署成功后的项目状态和时间戳。
+        更新部署成功后的项目部署时间和部署记录数据。
         """
-        logger.info("7 - START - 更新部署记录和项目状态")
+        logger.info("7 - START - 更新项目部署时间和部署记录")
         updated_data = {
-            "updated_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
             "last_deployed_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         }
         try:
             PROJECT_DATA_MANAGER.update_project(id, updated_data)
-            logger.info("7.1 - FINISH - 项目状态更新成功")
+            logger.info("7.1 - FINISH - 项目部署时间更新成功")
         except Exception as e:
             self.deploy_status = StatusEnum.FAILED
-            err_msg = f"7.1 - ERROR - 项目状态更新失败: {e}"
+            err_msg = f"7.1 - ERROR - 项目部署时间更新失败: {e}"
             logger.error(err_msg)
 
         try:
@@ -237,6 +236,6 @@ class JavaProjectDeployer:
             self.deploy_status = StatusEnum.FAILED
             err_msg = f"7.2 - ERROR - 部署记录更新失败: {e}"
             logger.error(err_msg)
-        logger.info("7 - FINISH - 更新部署记录和项目状态完成")
+        logger.info("7 - FINISH - 更新项目状态和部署记录完成")
         
         

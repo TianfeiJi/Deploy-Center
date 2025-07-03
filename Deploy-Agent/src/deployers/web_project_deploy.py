@@ -107,29 +107,31 @@ class WebProjectDeployer:
             raise
 
     def _update_web_project_data(self, id: str):
-        """更新项目数据"""
-        logger.info(f"5 - Start - 更新项目数据")
+        """
+        5 - 更新项目部署时间和部署记录
+
+        更新部署成功后的项目部署时间和部署记录数据。
+        """
+        logger.info(f"5 - Start - 更新部署时间")
         updated_data = {
-            "updated_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
             "last_deployed_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         }
         # 更新项目可能失败，但是至此，项目更新操作是成功了的
         self.deploy_status = StatusEnum.SUCCESS
         try:
             PROJECT_DATA_MANAGER.update_project(id, updated_data)
-            logger.info(f"5 - Success - 更新项目数据成功")
+            logger.info(f"5 - Success - 更新部署时间成功")
         except Exception as e:
-            logger.error(f"5 - Failed - 更新项目数据失败: {e}")
+            logger.error(f"5 - Failed - 更新部署时间失败: {e}")
             raise
-
         
         try:
-            logger.info("6. - START - 更新部署记录")
+            logger.info("6. - START - 更新部署记录数据")
             self.deploy_status = StatusEnum.SUCCESS
             DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, self.deploy_status, None, self.user)
-            logger.info("6. - FINISH - 部署记录更新成功")
+            logger.info("6. - FINISH - 部署记录数据更新成功")
         except Exception as e:
             self.deploy_status = StatusEnum.FAILED
-            err_msg = f"6 - ERROR - 部署记录更新失败: {e}"
+            err_msg = f"6 - ERROR - 部署记录数据更新失败: {e}"
             logger.error(err_msg)
         
