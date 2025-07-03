@@ -38,7 +38,7 @@ async def get_project_list(request: Request):
         return HttpResult[None](code=404, status="success", msg="project_data.json not found.", data=None)
 
 # 获取项目详情
-@project_router.get("/api/deploy-agent/project/{id}", summary="获取项目详情", description="根据项目 ID 获取对应的项目详细信息")
+@project_router.get("/api/deploy-agent/project", summary="获取项目详情", description="根据项目 ID 获取对应的项目详细信息")
 async def get_project(id: str = Query(..., description="项目 ID")):
     project = PROJECT_DATA_MANAGER.get_project(id)
     if project is not None:

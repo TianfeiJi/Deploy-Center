@@ -30,6 +30,7 @@ export interface JavaProject {
   jdk_version?: number;
   host_project_path: string; // 宿主机项目路径
   container_project_path: string; // 容器项目路径
+  access_url: string; // 访问地址
   git_repository: string; // Git地址
   created_at: string;
   updated_at: string;
@@ -53,6 +54,7 @@ export interface PythonProject {
   framework: string;
   host_project_path: string; // 宿主机项目路径
   container_project_path: string; // 容器项目路径
+  access_url: string; // 访问地址
   git_repository: string; // Git地址
   created_at: string;
   updated_at: string;

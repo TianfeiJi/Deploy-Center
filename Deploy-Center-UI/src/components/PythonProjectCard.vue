@@ -32,6 +32,7 @@
       <p v-if="pythonProject.network">Docker网络: {{ pythonProject.network }}</p>
       <p>宿主机路径: {{ pythonProject.host_project_path }}</p>
       <p>容器内路径: {{ pythonProject.container_project_path }}</p>
+      <p v-if="pythonProject.access_url">访问地址: {{ pythonProject.access_url }}</p>
     </q-card-section>
 
     <q-card-actions align="right">
@@ -209,6 +210,7 @@ const viewPythonProjectDetail = () => {
     { label: 'Python版本', key: 'python_version', value: props.pythonProject.python_version, editable: false },
     { label: '宿主机路径', key: 'host_project_path', value: props.pythonProject.host_project_path, editable: true },
     { label: '容器内路径', key: 'container_project_path', value: props.pythonProject.container_project_path, editable: true },
+    { label: '访问地址', key: 'access_url', value: props.pythonProject.access_url, editable: true },
     { label: 'Git地址', key: 'git_repository', value: props.pythonProject.git_repository, editable: true },
     { label: '创建时间', key: 'created_at', value: formatDate(props.pythonProject.created_at), editable: false },
     { label: '更新时间', key: 'updated_at', value: formatDate(props.pythonProject.updated_at), editable: false },

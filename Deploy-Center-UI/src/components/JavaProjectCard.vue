@@ -43,6 +43,7 @@
       <p v-if="javaProject.network">Docker网络: {{ javaProject.network }}</p>
       <p>宿主机路径: {{ javaProject.host_project_path }}</p>
       <p>容器内路径: {{ javaProject.container_project_path }}</p>
+      <p v-if="javaProject.access_url">访问地址: {{ javaProject.access_url }}</p>
     </q-card-section>
 
     <q-card-actions align="right">
@@ -211,6 +212,7 @@ const viewJavaProjectDetail = () => {
     { label: '内部端口', key: 'internal_port', value: String(props.javaProject.internal_port), editable: true },    // 转字符串
     { label: '宿主机路径', key: 'host_project_path', value: props.javaProject.host_project_path, editable: true },
     { label: '容器内路径', key: 'container_project_path', value: props.javaProject.container_project_path, editable: true },
+    { label: '访问地址', key: 'access_url', value: props.javaProject.access_url, editable: true },
     { label: 'Git地址', key: 'git_repository', value: props.javaProject.git_repository, editable: true },
     { label: 'JDK版本', key: 'jdk_version', value: String(props.javaProject.jdk_version), editable: false },
     { label: '创建时间', key: 'created_at', value: formatDate(props.javaProject.created_at), editable: false },
