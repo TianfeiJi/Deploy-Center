@@ -23,8 +23,13 @@ class WebProjectDeployer:
     def deploy(self, id: str, zip_file: UploadFile):
         """部署前端项目"""
         logger.info("==================== Web Project Deploy : Start ====================")
-        self.user = get_current_user()
-        logger.info(f"当前用户：{self.user}")
+        user = get_current_user()
+        safe_user_info = {
+            "id": user.get("id"),
+            "username": user.get("username"),
+            "nickname": user.get("nickname")
+        }
+        logger.info(f"当前用户（简要）：{safe_user_info}")
         
         self.deploy_status = StatusEnum.START
         self.web_project = PROJECT_DATA_MANAGER.get_project(id)

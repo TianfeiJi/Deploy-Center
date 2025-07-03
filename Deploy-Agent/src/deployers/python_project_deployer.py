@@ -15,6 +15,7 @@ from fastapi import UploadFile
 from models.common.http_result import HttpResult
 from models.enum.status_enum import StatusEnum
 from manager import PROJECT_DATA_MANAGER, DEPLOY_HISTORY_DATA_MANAGER
+from utils.user_context import get_current_user
 
 
 class PythonProjectDeployer:
@@ -48,6 +49,14 @@ class PythonProjectDeployer:
 
     def deploy(self, id: str, zip_file: UploadFile, dockerfile_content: str, dockercommand_content: str):
         logger.info("==================== Python 项目部署：开始 ====================")
+        user = get_current_user()
+        safe_user_info = {
+            "id": user.get("id"),
+            "username": user.get("username"),
+            "nickname": user.get("nickname")
+        }
+        logger.info(f"当前用户（简要）：{safe_user_info}")
+        
         self.deploy_status = StatusEnum.START
         self.python_project = PROJECT_DATA_MANAGER.get_project(id)
         if self.python_project is None:
