@@ -145,7 +145,7 @@ Deploy Center 最初是一个简化部署操作的小工具，后来发现还能
 当然，愿意打赏我一杯咖啡，那更不白写了 ☕️😌
 
 <p align="center">
-  <img src="http://jitianfei.com/resource/images/sponsor-wechat.png" width="150" alt="微信" style="margin-right: 40px;"/>
+  <img src="http://jitianfei.com/resource/images/sponsor-wechat.png" width="150" alt="微信" style="margin-right: 100px;"/>
   <img src="http://jitianfei.com/resource/images/sponsor-alipay.jpg" width="150" alt="支付宝"/>
 </p>
 
