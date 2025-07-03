@@ -2,6 +2,10 @@
 import { defineStore } from 'pinia';
 import { User } from 'src/types/User';
 import { getUser } from 'src/api/userApi';
+import { useAuthStore } from './useAuthStore';
+import { useAgentStore } from './useAgentStore';
+import { useServerStore } from './useServerStore';
+import { useSystemConfigStore } from './useSystemConfigStore';
 
 export const useLoginUserStore = defineStore('loginUserStore', {
   state: () => ({
@@ -29,8 +33,15 @@ export const useLoginUserStore = defineStore('loginUserStore', {
 
     // 清除当前登录用户
     clearLoginUser() {
-      this.loginUser = null;
-      sessionStorage.removeItem('loginUser'); // 清除 sessionStorage 中的用户信息
+      // 清空 sessionStorage
+      sessionStorage.clear();
+
+      // 重置所有 Pinia Store
+      useLoginUserStore().$reset();
+      useAuthStore().$reset();
+      useAgentStore().$reset();
+      useServerStore().$reset();
+      useSystemConfigStore().$reset();
     },
   }
 });

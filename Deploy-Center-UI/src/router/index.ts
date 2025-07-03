@@ -51,6 +51,9 @@ export default route(function (/* { store, ssrContext } */) {
       } catch (e) {
         console.error('获取用户信息失败', e);
         Notify.create({ message: '身份校验失败，请重新登录', color: 'negative' });
+        // 清除用户信息
+        loginUserStore.clearLoginUser();
+
         return next('/login');
       }
     }
