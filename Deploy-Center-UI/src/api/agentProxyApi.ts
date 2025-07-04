@@ -10,7 +10,7 @@ import { DeployHistoryVo } from "src/types/vo/DeployHistoryVo";
 import { callAgentApi } from "./agentApi";
 
 
-export class AgentCommandApi {
+export class AgentProxyApi {
   private agentId: number;
 
   constructor(agentId: number) {

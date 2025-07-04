@@ -4,7 +4,8 @@ import {
   getAgentList,
   getAgent,
 } from 'src/api/agentApi';
-import { AgentCommandApi } from 'src/api/AgentCommandApi';
+import { AgentProxyApi } from 'src/api/agentProxyApi';
+import { provideAgentProxyApi } from 'src/factory/agentProxyApiFactory';
 import type { AgentRuntimeInfo } from 'src/types/AgentRuntimeInfo';
 
 export const useAgentStore = defineStore('agentStore', {
@@ -65,8 +66,8 @@ export const useAgentStore = defineStore('agentStore', {
       }
 
       try {
-        const api = new AgentCommandApi(agentId);
-        const info = await api.fetchInspectInfo();
+        const agentProxyApi: AgentProxyApi = provideAgentProxyApi(agentId);
+        const info = await agentProxyApi.fetchInspectInfo();
         const result: AgentRuntimeInfo = {
           health: info.status,
           agent_version: info.agent_version,

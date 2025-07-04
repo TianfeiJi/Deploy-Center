@@ -8,7 +8,7 @@
       <q-card-section>
         <el-timeline>
           <el-timeline-item
-            v-for="history in deployHistorys"
+            v-for="history in deployHistoryVOs"
             :key="history.id"
             :timestampString="formatDate(history.created_at)"
             :color="history.status === 'success' ? 'green' : 'red'"
@@ -34,40 +34,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
-import { storeToRefs } from 'pinia';
+import { ref, onMounted } from 'vue';
 import { formatDate } from 'src/utils/dateFormatter';
 import { DeployHistoryVo } from 'src/types/vo/DeployHistoryVo';
-import { AgentCommandApi } from 'src/api/AgentCommandApi';
-import { useAgentStore } from 'src/stores/useAgentStore';
+import { provideCurrentAgentProxyApi } from 'src/factory/agentProxyApiFactory';
 
-const agentStore = useAgentStore();
-
-const { currentAgent } = storeToRefs(agentStore);
-
-const agentCommandApi = ref<AgentCommandApi | null>(null);
-
-const deployHistorys = ref<DeployHistoryVo[]>([]);
+const deployHistoryVOs = ref<DeployHistoryVo[]>([]);
 
 onMounted(async () => {
-  agentCommandApi.value = new AgentCommandApi(currentAgent.value!.id)
-  deployHistorys.value = await agentCommandApi.value.fetchDeployHistoryList();
+  deployHistoryVOs.value = await provideCurrentAgentProxyApi().fetchDeployHistoryList();
 });
-
-// 监听 currentAgent 变化
-watch(
-  currentAgent,
-  async (agent) => {
-    if (agent?.id) {
-      agentCommandApi.value = new AgentCommandApi(agent.id);
-      console.log(`Agent 切换到: ${agent.name} (${agent.ip})`);
-      deployHistorys.value = await agentCommandApi.value.fetchDeployHistoryList();
-    } else {
-      deployHistorys.value = []
-      agentCommandApi.value = null;
-    }
-  },
-);
 
 // 计算属性：返回“xxx前”格式的时间差
 const timeAgo = (timestampString: string) => {

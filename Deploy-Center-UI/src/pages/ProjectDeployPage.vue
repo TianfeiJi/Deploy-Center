@@ -206,11 +206,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Notify } from 'quasar';
 import { useAgentStore } from 'src/stores/useAgentStore';
-import { AgentCommandApi } from 'src/api/AgentCommandApi';
+import { provideCurrentAgentProxyApi } from 'src/factory/agentProxyApiFactory';
 import { AddWebProjectRequestDto } from 'src/types/dto/AddWebProjectRequestDto';
 import { AddJavaProjectRequestDto } from 'src/types/dto/AddJavaProjectRequestDto';
 import WebProjectCard from 'src/components/WebProjectCard.vue';
@@ -221,9 +221,6 @@ const agentStore = useAgentStore();
 
 const { currentAgent } = storeToRefs(agentStore);
 
-// 部署中心用于控制当前 Agent 的指挥通道实例
-const agentCommandApi = ref<AgentCommandApi | null>(null);
-
 // 当前 Agent 关联的项目列表
 const projects = ref<any[]>([]);
 
@@ -232,14 +229,13 @@ watch(
   currentAgent,
   async (agent) => {
     if (agent?.id) {
-      agentCommandApi.value = new AgentCommandApi(agent.id);
-      projects.value = await agentCommandApi.value.fetchProjectList();
+      projects.value = await provideCurrentAgentProxyApi().fetchProjectList();
       console.log(`Agent 切换到: ${agent.name} (${agent.ip})，已刷新项目列表`);
     } else {
       projects.value = [];
-      agentCommandApi.value = null;
     }
-  }
+  },
+  { immediate: true }
 );
 
 const filterType = ref<'所有' | 'Web' | 'Java' | 'Python'>('所有');
@@ -318,7 +314,7 @@ const handleCreateNewProject = async () => {
         access_url: currentProject.value.access_url,
       };
 
-      await agentCommandApi.value!.addWebProject(addWebProjectRequestDto);
+      await provideCurrentAgentProxyApi().addWebProject(addWebProjectRequestDto);
       break;
     case 'Java':
       const addJavaProjectRequestDto: AddJavaProjectRequestDto = {
@@ -337,7 +333,7 @@ const handleCreateNewProject = async () => {
         container_project_path: currentProject.value.container_project_path
       };
 
-      await agentCommandApi.value!.addJavaProject(addJavaProjectRequestDto);
+      await provideCurrentAgentProxyApi().addJavaProject(addJavaProjectRequestDto);
       break;
     default:
       Notify.create({
@@ -355,14 +351,9 @@ const handleCreateNewProject = async () => {
   });
   isCreateNewProjectDialogOpen.value = false;
   // 刷新项目列表
-  projects.value = await agentCommandApi.value!.fetchProjectList();
+  projects.value = await provideCurrentAgentProxyApi().fetchProjectList();
 };
 // ========== ↑↑↑↑↑ 新增项目 ↑↑↑↑↑ ==========
-
-onMounted(async () => {
-  agentCommandApi.value = new AgentCommandApi(currentAgent.value!.id)
-  projects.value = await agentCommandApi.value.fetchProjectList();
-});
 
 // 提取所有唯一的分组值，并过滤掉空值
 const uniqueGroups = computed(() => {

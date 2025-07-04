@@ -3,24 +3,11 @@
     <!-- 日志列表 -->
     <div class="row q-col-gutter-md">
       <div class="col-12">
-        <q-table
-          title="部署日志"
-          :rows="logList"
-          :columns="columns"
-          row-key="filename"
-          :loading="loading"
-          :pagination="pagination"
-          @request="onPagination"
-          class="log-table"
-        >
+        <q-table title="部署日志" :rows="logList" :columns="columns" row-key="filename" :loading="loading"
+          :pagination="pagination" @request="onPagination" class="log-table">
           <template v-slot:body-cell-actions="props">
             <q-td :props="props">
-              <q-btn
-                label="查看"
-                size="sm"
-                color="primary"
-                @click="selectLog(props.row.filename)"
-              />
+              <q-btn label="查看" size="sm" color="primary" @click="selectLog(props.row.filename)" />
             </q-td>
           </template>
         </q-table>
@@ -34,39 +21,19 @@
           <!-- 标题 & 切换按钮 -->
           <q-card-section class="row items-center q-pb-none">
             <div class="col-2 text-left">
-              <q-btn
-                icon="arrow_left"
-                flat
-                dense
-                @click="previousLog"
-                v-if="logList.length > 1"
-              />
+              <q-btn icon="arrow_left" flat dense @click="previousLog" v-if="logList.length > 1" />
             </div>
             <div class="text-h6 col text-center">{{ selectedLog }}</div>
             <div class="col-2 text-right">
-              <q-btn
-                icon="arrow_right"
-                flat
-                dense
-                @click="nextLog"
-                v-if="logList.length > 1"
-              />
+              <q-btn icon="arrow_right" flat dense @click="nextLog" v-if="logList.length > 1" />
             </div>
           </q-card-section>
 
           <!-- 日志内容区域 -->
           <q-card-section class="log-content-section">
-            <q-scroll-area
-              class="full-height"
-              :thumb-style="{ background: '#888', width: '6px' }"
-            >
+            <q-scroll-area class="full-height" :thumb-style="{ background: '#888', width: '6px' }">
               <div class="log-content">
-                <div
-                  v-for="(line, index) in formattedLogDetail"
-                  :key="index"
-                  v-html="line"
-                  class="log-line"
-                ></div>
+                <div v-for="(line, index) in formattedLogDetail" :key="index" v-html="line" class="log-line"></div>
               </div>
             </q-scroll-area>
           </q-card-section>
@@ -78,37 +45,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch, nextTick } from 'vue';
-import { AgentCommandApi } from 'src/api/AgentCommandApi';
+import { AgentProxyApi } from 'src/api/agentProxyApi';
+import { provideCurrentAgentProxyApi } from 'src/factory/agentProxyApiFactory';
 import { formatBytes } from 'src/utils/bytesConverter';
 import { formatDate } from 'src/utils/dateFormatter';
 import { Notify } from 'quasar';
-import { storeToRefs } from 'pinia';
-import { useAgentStore } from 'src/stores/useAgentStore';
-
-const agentStore = useAgentStore();
-
-const { currentAgent } = storeToRefs(agentStore);
-
-// 部署中心用于控制当前 Agent 的指挥通道实例
-const agentCommandApi = ref<AgentCommandApi | null>(null);
 
 const logList = ref<any[]>([]);
-
-// 监听 currentAgent 变化
-watch(
-  currentAgent,
-  async (agent) => {
-    if (agent?.id) {
-      agentCommandApi.value = new AgentCommandApi(agent.id);
-      console.log(`Agent 切换到: ${agent.name} (${agent.ip})`);
-      logList.value = await agentCommandApi.value.fetchDeployLogList();
-      selectLog(logList.value[0].filename);
-    } else {
-      logList.value = []
-      agentCommandApi.value = null;
-    }
-  },
-);
 
 const logDetail = ref<string>('');
 const selectedLog = ref<string>('');
@@ -129,10 +72,9 @@ const onPagination = (paginationData: { pagination: { page: number; rowsPerPage:
 };
 
 onMounted(async () => {
-  agentCommandApi.value = new AgentCommandApi(currentAgent.value!.id)
   loading.value = true;
   try {
-    logList.value = await agentCommandApi.value.fetchDeployLogList();
+    logList.value = await provideCurrentAgentProxyApi().fetchDeployLogList();
     if (logList.value.length > 0) {
       selectLog(logList.value[0].filename);
     }
@@ -144,21 +86,19 @@ onMounted(async () => {
 });
 
 const columns = [
-  { name: 'filename', label: '文件名称', field: 'filename', sortable: true, align: 'left' as const},
+  { name: 'filename', label: '文件名称', field: 'filename', sortable: true, align: 'left' as const },
   { name: 'filesize', label: '文件大小', field: 'filesize', sortable: true, align: 'left' as const, format: (val: number) => formatBytes(val) },
   { name: 'line_count', label: '行数', field: 'line_count', sortable: true, align: 'left' as const },
   { name: 'created_at', label: '创建时间', field: 'created_at', sortable: true, align: 'left' as const, format: (val: string) => formatDate(val) },
   { name: 'updated_at', label: '最近更新', field: 'updated_at', sortable: true, align: 'left' as const, format: (val: string) => formatDate(val) },
-  { name: 'actions', label: '操作', field: 'actions', align: 'left' as const},
+  { name: 'actions', label: '操作', field: 'actions', align: 'left' as const },
 ];
 
 const loadLogList = async () => {
-  if (agentCommandApi.value) {
-    try {
-      logList.value = await agentCommandApi.value.fetchDeployLogList();
-    } catch (error) {
-      console.error('重新加载日志列表失败:', error);
-    }
+  try {
+    logList.value = await provideCurrentAgentProxyApi().fetchDeployLogList();
+  } catch (error) {
+    console.error('重新加载日志列表失败:', error);
   }
 };
 
@@ -167,7 +107,7 @@ const selectLog = async (filename: string) => {
   selectedLog.value = filename;
   loading.value = true;
   try {
-    logDetail.value = await agentCommandApi.value?.fetchDeployLogContent(filename);
+    logDetail.value = await provideCurrentAgentProxyApi().fetchDeployLogContent(filename);
     currentIndex.value = logList.value.findIndex((log) => log.filename === filename);
     await nextTick();
   } catch (error) {
@@ -204,14 +144,14 @@ const formattedLogDetail = computed(() => {
 
 // 日志颜色高亮
 const highlightLogLine = (line: string) => {
-    const colorMap: Record<string, string> = {
-      success: 'color: #00ff00; font-weight: bold;', // 绿色加粗
-      fail: 'color: #ff0000;', // 红色
-      error: 'color: #ff0000;', // 红色
-      warning: 'color: #ffff00;', // 黄色
-      debug: 'color: #488FEF;', // 蓝色
-      critical: 'color: #ff00ff;', // 紫色
-    };
+  const colorMap: Record<string, string> = {
+    success: 'color: #00ff00; font-weight: bold;', // 绿色加粗
+    fail: 'color: #ff0000;', // 红色
+    error: 'color: #ff0000;', // 红色
+    warning: 'color: #ffff00;', // 黄色
+    debug: 'color: #488FEF;', // 蓝色
+    critical: 'color: #ff00ff;', // 紫色
+  };
 
   Object.keys(colorMap).forEach((keyword: string) => {
     const regex = new RegExp(`\\b(${keyword})\\b`, 'gi');
@@ -228,11 +168,12 @@ const highlightLogLine = (line: string) => {
   color: #ffffff;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 250px); 
+  height: calc(100vh - 250px);
 }
 
 .log-content-section {
-  flex-grow: 1; /* 让内容区域占据剩余空间 */
+  flex-grow: 1;
+  /* 让内容区域占据剩余空间 */
   overflow-x: auto;
   white-space: nowrap;
   padding: 10px;

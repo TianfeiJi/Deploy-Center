@@ -69,11 +69,10 @@ request.interceptors.response.use(
 
       // 重定向到login页
       redirectToLogin();
-    } 
-    // else {
-    //   // 从后端响应中提取业务错误消息进行提示
-    //   Notify.create({type: 'negative', message: error?.response?.data?.msg || error?.message || '请求失败，请检查网络或稍后重试' });
-    // }
+    } else {
+      // 从后端响应中提取业务错误消息进行提示
+      Notify.create({type: 'negative', message: error?.response?.data?.msg || error?.message || '请求失败，请检查网络或稍后重试' });
+    }
 
     // 如果请求失败，直接返回 Promise.reject，其中包含 Axios 的错误对象
     return Promise.reject(error); // 只有 HTTP 错误才抛

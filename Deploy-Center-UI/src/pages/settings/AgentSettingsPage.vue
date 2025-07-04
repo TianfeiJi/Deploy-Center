@@ -112,7 +112,7 @@
 import { ref, onMounted } from 'vue'
 import { Notify } from 'quasar'
 import { getAgentList, updateAgent, createAgent } from 'src/api/agentApi'
-import { AgentCommandApi } from 'src/api/AgentCommandApi';
+import { provideAgentProxyApi } from 'src/factory/agentProxyApiFactory';
 import type { Agent } from 'src/types/Agent'
 import type { AgentRuntimeInfo } from 'src/types/AgentRuntimeInfo'
 
@@ -125,9 +125,9 @@ const fetchAgents = async () => {
 
   // 加载每个 Agent 的运行状态和版本信息
   for (const agent of response.data) {
-    const api = new AgentCommandApi(agent.id)
+    const agentProxyApi = provideAgentProxyApi(agent.id)
     try {
-      const info = await api.fetchInspectInfo();
+      const info = await agentProxyApi.fetchInspectInfo();
 
       agentRuntimeInfoMap.value[agent.id] = {
         health: info.status,

@@ -162,24 +162,13 @@
 import { ref, onMounted } from 'vue';
 import { Notify } from 'quasar';
 import { formatDate } from 'src/utils/dateFormatter';
-import { useAgentStore } from 'src/stores/useAgentStore';
-import { AgentCommandApi } from 'src/api/AgentCommandApi';
+import { provideCurrentAgentProxyApi } from 'src/factory/agentProxyApiFactory';
 import { PythonProject } from 'src/types/Project.types';
 import { UpdatePythonProjectRequestDto } from "src/types/dto/UpdatePythonProjectRequestDto";
 
 const props = defineProps<{
   pythonProject: PythonProject;
 }>();
-
-const agentStore = useAgentStore();
-
-// 获取 AgentCommandApi 实例
-const getAgentCommandApi = () => {
-  if (!agentStore.currentAgent) {
-    throw new Error('未选择 Agent');
-  }
-  return new AgentCommandApi(agentStore.currentAgent.id);
-};
 
 const isViewDetailDialogOpen = ref(false);
 const isUploadDeployDialogOpen = ref(false);
@@ -223,7 +212,7 @@ const containerStatus = ref('Checking');
 
 onMounted(async () => {
   try {
-    const response = await getAgentCommandApi().fetchDockerContainerStatus(`${props.pythonProject.container_name}`);
+    const response = await provideCurrentAgentProxyApi().fetchDockerContainerStatus(`${props.pythonProject.container_name}`);
     containerStatus.value = response.container_status;
   } catch (error) {
     containerStatus.value = 'Unknown';
@@ -273,7 +262,7 @@ const saveEdit = async () => {
   console.log('[编辑保存] 构造的更新数据：', updateData);
 
   try {
-    await getAgentCommandApi().updatePythonProject(updateData as UpdatePythonProjectRequestDto);
+    await provideCurrentAgentProxyApi().updatePythonProject(updateData as UpdatePythonProjectRequestDto);
     Notify.create({
       type: 'positive',
       message: '保存成功',
@@ -297,14 +286,13 @@ const openUploadDeployDialog = async () => {
   fileList.value = [];
   uploadProgress.value = 0;
 
-
-  const systemConfig1 = await getAgentCommandApi().fetchSystemConfig("default_python_dockerfile_template")
+  const systemConfig1 = await provideCurrentAgentProxyApi().fetchSystemConfig("default_python_dockerfile_template")
   const defaultPythonDockerfileTemplate = systemConfig1.config_value
-  dockerfileContent.value = await getAgentCommandApi().renderTemplateContent(props.pythonProject.id, defaultPythonDockerfileTemplate)
+  dockerfileContent.value = await provideCurrentAgentProxyApi().renderTemplateContent(props.pythonProject.id, defaultPythonDockerfileTemplate)
 
-  const systemConfig2 = await getAgentCommandApi().fetchSystemConfig("default_python_dockercommand_template")
+  const systemConfig2 = await provideCurrentAgentProxyApi().fetchSystemConfig("default_python_dockercommand_template")
   const defaultPythonDockercommandTemplate = systemConfig2.config_value
-  dockerCommand.value = await getAgentCommandApi().renderTemplateContent(props.pythonProject.id, defaultPythonDockercommandTemplate)
+  dockerCommand.value = await provideCurrentAgentProxyApi().renderTemplateContent(props.pythonProject.id, defaultPythonDockercommandTemplate)
 };
 
 const openCloudBuildDeployDialog = () => {
@@ -354,7 +342,7 @@ const handleUploadDeploy = async () => {
     formData.append('dockercommand_content', dockerCommand.value);
 
     // 调用 deployPythonProject API
-    const response = await getAgentCommandApi().deployPythonProject(formData, {
+    const response = await provideCurrentAgentProxyApi().deployPythonProject(formData, {
       onUploadProgress: (event) => {
         if (event.total) {
           const percentCompleted = Math.round(
@@ -399,7 +387,7 @@ const handleUploadDeploy = async () => {
 const handleSecondConfirmDelete = async () => {
   if (confirmText.value === '确定删除') {
     try {
-      await getAgentCommandApi().deletePythonProject(props.pythonProject.id)
+      await provideCurrentAgentProxyApi().deletePythonProject(props.pythonProject.id)
 
       Notify.create({
         message: '删除成功',

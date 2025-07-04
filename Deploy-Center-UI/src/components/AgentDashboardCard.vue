@@ -141,28 +141,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Notify } from 'quasar';
 import { getAgent } from 'src/api/agentApi';
-import { AgentCommandApi } from 'src/api/AgentCommandApi';
+import { provideCurrentAgentProxyApi } from 'src/factory/agentProxyApiFactory';
 import * as echarts from 'echarts';
 
 const props = defineProps({
   agentId: Number,
 });
-
-// 创建 AgentCommandApi 实例
-const agentCommandApi = new AgentCommandApi(props.agentId);
-
-// 监听 agentId 变化，以重建 AgentCommandApi 实例
-watch(
-  () => props.agentId,
-  async (newVal, oldVal) => {
-    if (newVal && newVal !== oldVal) {
-      agentCommandApi = new AgentCommandApi(newVal);
-    }
-  }
-);
 
 const agent = ref({});
 
@@ -248,16 +235,16 @@ const saveServerSettings = () => {
 // 打开设置对话框
 const handleOpenServerSettingsDialog = async () => {
   isShowServerSettingsDialog.value = true;
-  const systemConfig = await agentCommandApi.fetchSystemConfig("docker_path");
+  const systemConfig = await provideCurrentAgentProxyApi().fetchSystemConfig("docker_path");
   dockerPath.value = systemConfig.config_value
 };
 
 // 定时更新系统数据和图表
 const updateSystemDataAndCharts = async () => {
   try {
-    cpuUsage.value = await agentCommandApi.fetchServerCpuUsage();
-    memoryInfo.value = await agentCommandApi.fetchServerMemoryInfo();
-    diskInfo.value = await agentCommandApi.fetchServerDiskInfo();
+    cpuUsage.value = await provideCurrentAgentProxyApi().fetchServerCpuUsage();
+    memoryInfo.value = await provideCurrentAgentProxyApi().fetchServerMemoryInfo();
+    diskInfo.value = await provideCurrentAgentProxyApi().fetchServerDiskInfo();
 
     initCpuUsageChart();
     initMemoryUsageChart();
@@ -279,14 +266,14 @@ onMounted(async () => {
   agent.value = response.data;
 
   // 获取服务器数据
-  systemInfo.value = await agentCommandApi.fetchServerSystemInfo();
+  systemInfo.value = await provideCurrentAgentProxyApi().fetchServerSystemInfo();
   // 获取项目数据
-  projects.value = await agentCommandApi.fetchProjectList();
+  projects.value = await provideCurrentAgentProxyApi().fetchProjectList();
   // 获取部署历史数据
-  deployHistorys.value = await agentCommandApi.fetchDeployHistoryList();
+  deployHistorys.value = await provideCurrentAgentProxyApi().fetchDeployHistoryList();
 
   // 获取容器状态统计
-  const statistics = await agentCommandApi.fetchProjectStatusStatistics();
+  const statistics = await provideCurrentAgentProxyApi().fetchProjectStatusStatistics();
   totalProjectCount.value = statistics.total;
   runningProjectCount.value = statistics.running;
   exitedProjectCount.value = statistics.exited;

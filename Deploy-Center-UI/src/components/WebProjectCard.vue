@@ -135,20 +135,9 @@
 import { onMounted, ref } from 'vue';
 import { Notify } from 'quasar';
 import { formatDate } from 'src/utils/dateFormatter';
-import { useAgentStore } from 'src/stores/useAgentStore';
-import { AgentCommandApi } from 'src/api/AgentCommandApi';
+import { provideCurrentAgentProxyApi } from 'src/factory/agentProxyApiFactory';
 import { WebProject } from 'src/types/Project.types';
 import { UpdateWebProjectRequestDto } from "src/types/dto/UpdateWebProjectRequestDto";
-
-const agentStore = useAgentStore();
-
-// 获取 AgentCommandApi 实例
-const getAgentCommandApi = () => {
-  if (!agentStore.currentAgent) {
-    throw new Error('未选择 Agent');
-  }
-  return new AgentCommandApi(agentStore.currentAgent.id);
-};
 
 const props = defineProps<{
   webProject: WebProject;
@@ -180,7 +169,7 @@ const deploymentStatus = ref<'Deployed' | 'Awaiting Deployment' | 'Checking' | '
 
 onMounted(async () => {
   try {
-    const response = await getAgentCommandApi().checkWebProjectDeploymentStatus(props.webProject.id);
+    const response = await provideCurrentAgentProxyApi().checkWebProjectDeploymentStatus(props.webProject.id);
     deploymentStatus.value = response.deployment_status;
   } catch (error) {
     deploymentStatus.value = 'Unknown';
@@ -220,7 +209,7 @@ const saveEdit = async () => {
   console.log('[编辑保存] 构造的更新数据：', updateData);
 
   try {
-    await getAgentCommandApi().updateWebProject(updateData as UpdateWebProjectRequestDto);
+    await provideCurrentAgentProxyApi().updateWebProject(updateData as UpdateWebProjectRequestDto);
 
     Notify.create({
       type: 'positive',
@@ -296,7 +285,7 @@ const handleUploadDeploy = async () => {
     formData.append('file', file);
 
     // 调用 deployWebProject API
-    const response = await getAgentCommandApi().deployWebProject(formData, {
+    const response = await provideCurrentAgentProxyApi().deployWebProject(formData, {
       onUploadProgress: (event) => {
         if (event.total) {
           const percentCompleted = Math.round(
@@ -343,7 +332,7 @@ const confirmText = ref('');
 const handleSecondConfirmDelete = async () => {
   if (confirmText.value === '确定删除') {
     try {
-      await getAgentCommandApi().deleteWebProject(props.webProject.id)
+      await provideCurrentAgentProxyApi().deleteWebProject(props.webProject.id)
       Notify.create({
         message: '删除成功',
         type: 'positive',

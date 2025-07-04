@@ -60,7 +60,8 @@ import nodeHtmlLabel from 'cytoscape-node-html-label'
 import { getAgentList } from 'src/api/agentApi'
 import type { Agent } from 'src/types/Agent'
 import type { AgentRuntimeInfo } from 'src/types/AgentRuntimeInfo'
-import { AgentCommandApi } from 'src/api/AgentCommandApi'
+import { provideAgentProxyApi } from 'src/factory/agentProxyApiFactory';
+
 
 interface NodeCard {
   id: string
@@ -94,7 +95,7 @@ onMounted(async () => {
   // 查询每个 Agent 的运行时状态
   for (const agent of agents.value) {
     try {
-      const api = new AgentCommandApi(agent.id)
+      const api = provideAgentProxyApi(agent.id)
       const info = await api.fetchInspectInfo()
       agentRuntimeInfoMap[agent.id] = {
         health: info.status,
