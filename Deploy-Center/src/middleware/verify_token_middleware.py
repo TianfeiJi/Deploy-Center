@@ -1,8 +1,8 @@
 # middleware/verify_token_middleware.py
 import re
 from fastapi import Request, status
-from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+from models.common.http_result import HttpResult
 from utils.jwt_util import JWTUtil
 
 # 定义静态路径白名单（完全匹配或前缀匹配）
@@ -31,19 +31,11 @@ class VerifyTokenMiddleware(BaseHTTPMiddleware):
         # Step 3: 验证 Token
         token = request.headers.get("Authorization")
         if not token:
-            return JSONResponse(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                content={"detail": "Token is missing"},
-                headers={"WWW-Authenticate": "Bearer"}
-            )
+            return HttpResult.failed(msg="Token is missing", code=403).json_response()
 
         token = token.replace("Bearer ", "")
         user = JWTUtil.get_user_from_token(token)
         if not user:
-            return JSONResponse(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                content={"detail": "Invalid or expired token"},
-                headers={"WWW-Authenticate": "Bearer"}
-            )
+            return HttpResult.failed(msg="Invalid or expired token", code=403).json_response()
 
         return await call_next(request)

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Notify } from 'quasar';
 import { useAuthStore } from 'src/stores/useAuthStore';
+import { useRouter } from 'vue-router';
 
 axios.defaults.headers['Content-Type'] = 'application/json;charset=utf-8'
 
@@ -37,36 +38,47 @@ request.interceptors.request.use(
   }
 );
 
+function redirectToLogin(delay = 2000) {
+  setTimeout(() => {
+    const isHashMode = window.location.href.includes('#/');
+    if (isHashMode) {
+      window.location.href = '#/login';
+    } else {
+      window.location.href = '/login';
+    }
+  }, delay);
+}
+
 // 响应拦截器
 request.interceptors.response.use(
   response => {
     const ajaxResult = response.data;
     
-    if (ajaxResult.code == 401) { //01 Unauthorized 需要登录
-      setTimeout(() => {
-        // 重定向到登录页面
-        window.location.href = '#/login';   // 注：在history模式下，不需要携带#
-      }, 2000); // 等待2秒
-    }
-    if (ajaxResult.code !== 200) {
-      console.log('请求失败：', ajaxResult.msg)
-      // 直接返回响应，不抛出错误，由调用者进行处理(Notify.create()弹出错误信息）
-    }
+    // if (ajaxResult.code == 401) { //01 Unauthorized 需要登录
+    //   setTimeout(() => {
+    //     // 重定向到登录页面
+    //     window.location.href = '#/login';   // 注：在history模式下，不需要携带#
+    //   }, 2000); // 等待2秒
+    // }
+    // if (ajaxResult.code !== 200) {
+    //   console.log('请求失败：', ajaxResult.msg)
+    //   // 直接返回响应，不抛出错误，由调用者进行处理(Notify.create()弹出错误信息）
+    // }
     return ajaxResult;
   },
   error => {
-    console.log('错误信息：', error)
+    console.log('捕获到错误：', error);
+
     if(error.status == 401){    // 如果后端报错401，则AxiosError 的code是401，则需要重新登录
-      Notify.create({
-        position: 'top',
-        type: 'negative',
-        message: '登录过期，请重新登录',
-      });
-      setTimeout(() => {
-        // 重定向到登录页面
-        window.location.href = '#/login';   // 注：在history模式下，不需要携带#
-      }, 2000); // 等待2秒
+      Notify.create({type: 'negative', message: '登录过期，请重新登录'});
+
+      // 重定向到login页
+      redirectToLogin();
     }
+
+    // 从后端响应中提取业务错误消息进行提示
+    Notify.create({type: 'negative', message: error?.response?.data?.msg || error?.message || '请求失败，请检查网络或稍后重试' });
+
     // 如果请求失败，直接返回 Promise.reject，其中包含 Axios 的错误对象
     return Promise.reject(error);
   }

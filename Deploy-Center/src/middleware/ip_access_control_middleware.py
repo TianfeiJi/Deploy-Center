@@ -1,8 +1,8 @@
 from fastapi import Request, status
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import JSONResponse
 from typing import Callable, List
 import ipaddress
+from models.common.http_result import HttpResult
 from loguru import logger
 
 from manager import SYSTEM_CONFIG_DATA_MANAGER
@@ -77,12 +77,6 @@ class IPAccessControlMiddleware(BaseHTTPMiddleware):
 
         if not ip_in_allow_list(client_ip, allow_list):
             logger.warning(f"非法访问尝试：IP {client_ip} 不在允许列表")
-            return JSONResponse(
-                status_code=status.HTTP_403_FORBIDDEN,
-                content={
-                    "msg": "非法请求，拒绝访问",
-                    "data": None
-                }
-            )
+            return HttpResult.failed(msg="非法访问", code=403).json_response()
 
         return await call_next(request)

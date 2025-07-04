@@ -35,7 +35,7 @@ export default route(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
-  // 添加全局前置守卫
+  // 注册全局前置路由守卫（权限控制）
   Router.beforeEach(async (to, from, next) => {
     const requiredRoles = to.meta.requiresRoles as string[] | undefined;
 
@@ -49,11 +49,13 @@ export default route(function (/* { store, ssrContext } */) {
         const response = await getUser(loginUserStore.loginUser.id);
         userRole = response.data?.role ?? '';
       } catch (e) {
-        console.error('获取用户信息失败', e);
-        Notify.create({ message: '身份校验失败，请重新登录', color: 'negative' });
+        console.error('[前置路由守卫] 获取用户信息失败，将跳转至登录页', {
+          userId: loginUserStore.loginUser?.id,
+          error: e
+        });
+
         // 清除用户信息
         loginUserStore.clearLoginUser();
-
         return next('/login');
       }
     }

@@ -1,8 +1,8 @@
 # middleware/verify_user_middleware.py
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import JSONResponse
 from starlette import status
+from models.common.http_result import HttpResult
 
 # WARNING：当前逻辑仅检查 X-User 请求头是否存在，尚未验证用户的合法性
 # TODO：后续应接入用户合法性验证
@@ -13,11 +13,7 @@ class VerifyUserMiddleware(BaseHTTPMiddleware):
         user = request.headers.get("X-User")
         # 检查是否携带 X-User 且用户合法（暂时只判断是否存在）
         if not user or not self.is_valid_user(user):
-            return JSONResponse(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                content={"detail": "Invalid Request"},
-                headers={"WWW-Authenticate": "Bearer"}
-            )
+            return HttpResult[None](code=status.HTTP_401_UNAUTHORIZED, status="failed", msg="用户缺失，非法访问", data=None)
 
         return await call_next(request)
     
