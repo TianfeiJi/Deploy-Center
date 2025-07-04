@@ -58,19 +58,19 @@
 
     <el-dialog v-model="showEditDialog" title="编辑用户" width="500px">
       <el-form :model="editUser" label-width="80px">
-        <el-form-item label="用户名"
-          ><el-input v-model="editUser.username"
-        /></el-form-item>
+        <el-form-item label="用户名">
+          <el-input v-model="editUser.username"/>
+        </el-form-item>
 
-        <el-form-item label="昵称"
-          ><el-input v-model="editUser.nickname"
-        /></el-form-item>
+        <el-form-item label="昵称">
+          <el-input v-model="editUser.nickname"/>
+        </el-form-item>
 
         <el-form-item label="密码">
           <el-input
-            :type="showPassword ? 'text' : 'text'"
-            :model-value="showPassword ? editUser.password : '**********'"
-            readonly
+            v-model="editUser.password"
+            :type="showPassword ? 'text' : 'password'"
+            placeholder="请输入密码"
           >
             <template #append>
               <q-icon
@@ -82,14 +82,26 @@
           </el-input>
         </el-form-item>
 
-        <el-form-item label="角色"
-          ><el-input v-model="editUser.role"
-        /></el-form-item>
+        <el-form-item label="角色">
+          <el-input v-model="editUser.role"/>
+        </el-form-item>
 
-        <el-form-item label="权限"
-          ><el-input v-model="editUser.permissions"
-        /></el-form-item>
+        <el-form-item label="权限">
+          <el-input v-model="editUser.permissions"/>
+        </el-form-item>
+
+        <el-form-item label="状态">
+          <el-switch
+            v-model="editUser.status"
+            :active-value="'ENABLED'"
+            :inactive-value="'DISENABLED'"
+            active-text="启用"
+            inactive-text="禁用"
+          />
+        </el-form-item>
+
       </el-form>
+
       <template #footer>
         <el-button @click="showEditDialog = false">取消</el-button>
         <el-button type="primary" @click="onUpdateUser">保存</el-button>

@@ -2,11 +2,10 @@ from fastapi import APIRouter
 from utils.jwt_util import JWTUtil
 from utils.decorators.skip_auth import skip_auth
 from models.entity.user import User
-from manager.user_data_manager import UserDataManager
 from models.dto.user_login_request_dto import UserLoginRequestDto
 from models.common.http_result import HttpResult
-from manager import SYSTEM_CONFIG_DATA_MANAGER
 from models.entity.system_config import SystemConfig
+from manager import SYSTEM_CONFIG_DATA_MANAGER, USER_DATA_MANAGER
 from security.two_factor_auth import TwoFactorAuth
 
 
@@ -21,13 +20,14 @@ async def login(dto: UserLoginRequestDto):
     password = dto.credential
     two_factor_code = dto.two_factor_code
 
-    user_manager = UserDataManager().get_instance()
-    user: User = user_manager.get_user_by_username(username)
-    if (user == None):
+    user: User = USER_DATA_MANAGER.get_user_by_username(username)
+    if not user:
         return HttpResult[None](code=400, status="failed", msg="用户不存在", data=None)
-    if (password != user.password):
+    if password != user.password:
         return HttpResult[None](code=400, status="failed", msg="密码错误", data=None)
-
+    if user.status != "ENABLED":
+        return HttpResult[None](code=400, status="failed", msg="用户已被禁用", data=None)
+    
     # 检查是否开启 2FA
     enable_2fa_config: SystemConfig = SYSTEM_CONFIG_DATA_MANAGER.get_config("enable_2fa")
     is_2fa_enabled = enable_2fa_config and str(enable_2fa_config.config_value).lower() == "true"
@@ -55,5 +55,5 @@ async def login(dto: UserLoginRequestDto):
 @skip_auth
 @auth_router.post("/api/deploy-center/auth/logout")
 async def logout():
-    # TODO考虑加一些别的逻辑
+    # TODO: 考虑加一些别的逻辑
     return HttpResult[None](code=200, status="success", msg="退出登录成功", data=None)
