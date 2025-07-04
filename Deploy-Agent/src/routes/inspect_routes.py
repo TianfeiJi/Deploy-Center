@@ -9,8 +9,9 @@ import subprocess
 from datetime import datetime
 from fastapi import APIRouter
 from models.common.http_result import HttpResult
+from __version__ import __version__
 from loguru import logger
-from config.version import AGENT_VERSION
+
 
 inspect_router = APIRouter()
 
@@ -31,7 +32,7 @@ async def get_info():
 
         data = {
             "status": "healthy",
-            "agent_version": AGENT_VERSION,
+            "agent_version": __version__,
             "hostname": socket.gethostname(),
             "os": platform.system(),
             "arch": platform.machine(),
@@ -56,4 +57,4 @@ async def get_version():
     """
     返回当前 Agent 的版本信息。
     """
-    return HttpResult[str](code=200, status="success", msg=None, data=AGENT_VERSION)
+    return HttpResult[str](code=200, status="success", msg=None, data=__version__)

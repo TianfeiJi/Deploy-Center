@@ -5,9 +5,9 @@
 TODO:
 1. 其他项目部署接口
 """
+from __version__ import __version__
 # 导入一次 log_config 模块，从而触发 Loguru 的全局日志配置初始化
 import config.log_config
-from config.version import AGENT_VERSION
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
@@ -30,7 +30,7 @@ from routes.statistics_routes import statistics_router
 app = FastAPI(
     title="Deploy Agent",
     description=(""),
-    version=AGENT_VERSION, 
+    version=__version__, 
     contact={ 
         "name": "纪田飞",
         "url": "http://jitianfei.com",
@@ -68,7 +68,7 @@ app.add_middleware(
 
 @app.get("/api/deploy-agent/index")
 async def index():
-    return {"code": 200, "status": "success", "msg": f"Deploy Agent {AGENT_VERSION} Ready!", "data": None}
+    return {"code": 200, "status": "success", "msg": f"Deploy Agent {__version__} Ready!", "data": None}
 
 
 # 全局HTTPException异常捕获处理
