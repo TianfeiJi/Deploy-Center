@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from middleware.verify_token_middleware import VerifyTokenMiddleware
 from middleware.ip_access_control_middleware import IPAccessControlMiddleware
+from middleware.user_injection_middleware import UserInjectionMiddleware
 from config.version import CENTER_VERSION
 from routes.auth_routes import auth_router
 from routes.agent_routes import agent_router
@@ -33,6 +34,9 @@ app.add_middleware(VerifyTokenMiddleware)
 
 # 添加 IPAccessControlMiddleware
 app.add_middleware(IPAccessControlMiddleware)
+
+# 添加 UserInjectionMiddleware
+app.add_middleware(UserInjectionMiddleware)
 
 # 添加 CORS Middleware
 app.add_middleware(

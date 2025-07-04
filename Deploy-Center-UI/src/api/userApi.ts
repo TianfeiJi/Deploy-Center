@@ -38,6 +38,15 @@ export function updateUser(user_id: number, updated_data: Partial<User>): Promis
   });
 }
 
+// 变更用户状态
+export function changeUserStatus(user_id: number, status: string): Promise<HttpResult<null>> {
+  return request({
+    url: `/api/deploy-center/user/${user_id}/change-status`,
+    method: 'put',
+    data: { status: status }
+  });
+}
+
 // 删除用户
 export function deleteUser(user_id: number): Promise<HttpResult<User>> {
   return request({

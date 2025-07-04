@@ -34,25 +34,26 @@
           <template #default="{ row }">{{ row.permissions }}</template>
         </el-table-column>
 
-        <el-table-column label="状态" min-width="30">
+        <el-table-column label="状态" min-width="50">
           <template #default="{ row }">
-            <el-tag
-              :closable="false"
-              :type="row.status === 'ENABLED' ? 'success' : 'info'"
-              effect="light"
-            >
-              {{ row.status === 'ENABLED' ? '启用' : '禁用' }}
-            </el-tag>
+           <el-switch
+              v-model="row.status"
+              :active-value="'ENABLED'"
+              :inactive-value="'DISENABLED'"
+              inline-prompt
+              active-text="启用"
+              inactive-text="禁用"
+              @change="(val: string) => onToggleUserStatus(row, val)"
+            />
           </template>
         </el-table-column>
 
         <el-table-column label="操作" width="80">
           <template #default="{ row }">
-            <el-button size="small" type="primary" @click="onEditUser(row)"
-              >修改</el-button
-            >
+            <el-button size="small" type="primary" @click="onEditUser(row)">修改</el-button>
           </template>
         </el-table-column>
+
       </el-table>
     </q-card>
 
@@ -89,17 +90,6 @@
         <el-form-item label="权限">
           <el-input v-model="editUser.permissions"/>
         </el-form-item>
-
-        <el-form-item label="状态">
-          <el-switch
-            v-model="editUser.status"
-            :active-value="'ENABLED'"
-            :inactive-value="'DISENABLED'"
-            active-text="启用"
-            inactive-text="禁用"
-          />
-        </el-form-item>
-
       </el-form>
 
       <template #footer>
@@ -142,8 +132,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { Notify } from 'quasar';
-import { getUserList, updateUser, createUser } from 'src/api/userApi';
+import { getUserList, updateUser, createUser, changeUserStatus } from 'src/api/userApi';
 import type { User } from 'src/types/User';
+import { ElMessageBox } from 'element-plus';
 
 const userList = ref<User[]>([]);
 
@@ -168,6 +159,34 @@ const onUpdateUser = async () => {
     await fetchUsers();
   } catch (e) {
     Notify.create({ type: 'negative', message: '更新失败' });
+  }
+};
+
+const onToggleUserStatus = async (row: User, newStatus: string) => {
+  const action = newStatus === 'ENABLED' ? '启用' : '禁用';
+  const confirm = await ElMessageBox.confirm(
+    `确定要${action}该用户（${row.username}）吗？`,
+    '确认操作',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  ).catch(() => false); // 如果取消，不弹出错误
+
+  if (!confirm) {
+    // 取消操作，回滚状态
+    row.status = newStatus === 'ENABLED' ? 'DISENABLED' : 'ENABLED';
+    return;
+  }
+
+  const ajaxResult = await changeUserStatus(row.id, newStatus);
+
+  if (ajaxResult.status == "success"){
+    Notify.create({type: 'positive', message: `${action}成功`});
+  } else {
+    // 取消操作，回滚状态
+    row.status = newStatus === 'ENABLED' ? 'DISENABLED' : 'ENABLED';
   }
 };
 
