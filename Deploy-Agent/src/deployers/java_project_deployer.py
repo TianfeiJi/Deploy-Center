@@ -50,11 +50,11 @@ class JavaProjectDeployer:
         """
         logger.info("==================== Java 项目部署：开始 ====================")
 
-        user = get_current_user()
+        self.user = get_current_user()
         safe_user_info = {
-            "id": user.get("id"),
-            "username": user.get("username"),
-            "nickname": user.get("nickname")
+            "id": self.user.get("id"),
+            "username": self.user.get("username"),
+            "nickname": self.user.get("nickname")
         }
         logger.info(f"当前用户（简要）：{safe_user_info}")
         

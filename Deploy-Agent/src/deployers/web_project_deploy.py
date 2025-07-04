@@ -23,11 +23,11 @@ class WebProjectDeployer:
     def deploy(self, id: str, zip_file: UploadFile):
         """部署前端项目"""
         logger.info("==================== Web Project Deploy : Start ====================")
-        user = get_current_user()
+        self.user = get_current_user()
         safe_user_info = {
-            "id": user.get("id"),
-            "username": user.get("username"),
-            "nickname": user.get("nickname")
+            "id": self.user.get("id"),
+            "username": self.user.get("username"),
+            "nickname": self.user.get("nickname")
         }
         logger.info(f"当前用户（简要）：{safe_user_info}")
         
@@ -44,7 +44,7 @@ class WebProjectDeployer:
         zip_path = self._save_zip_file(zip_file)
         self._extract_zip_file(zip_path)
         self._delete_zip_file(zip_path)
-        self._update_web_project_data(id)
+        self._update_web_project_data()
         logger.info("==================== Web Project Deploy : Finish ====================")
         success_msg = (
             f"{self.web_project.get('project_name')} 项目部署成功"
@@ -62,7 +62,7 @@ class WebProjectDeployer:
             self.deploy_status = StatusEnum.FAILED
             err_msg = f"1 - Failed - 创建项目目录失败: {e}"
             logger.error(err_msg)
-            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, "failed", err_msg, self.user)
+            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, self.web_project.get("id"), "failed", err_msg, self.user)
             raise
 
     def _save_zip_file(self, zip_file: UploadFile) -> str:
@@ -77,7 +77,7 @@ class WebProjectDeployer:
             self.deploy_status = StatusEnum.FAILED
             err_msg = f"2 - Failed - 保存 ZIP 文件失败: {e}"
             logger.error(err_msg)
-            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, "failed", err_msg, self.user)
+            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, self.web_project.get("id"), "failed", err_msg, self.user)
             raise
         return zip_path
         
@@ -111,7 +111,7 @@ class WebProjectDeployer:
             DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, self.deploy_status, None, self.user)
             raise
 
-    def _update_web_project_data(self, id: str):
+    def _update_web_project_data(self):
         """
         5 - 更新项目部署时间和部署记录
 
@@ -124,7 +124,7 @@ class WebProjectDeployer:
         # 更新项目可能失败，但是至此，项目更新操作是成功了的
         self.deploy_status = StatusEnum.SUCCESS
         try:
-            PROJECT_DATA_MANAGER.update_project(id, updated_data)
+            PROJECT_DATA_MANAGER.update_project(self.web_project.get("id"), updated_data)
             logger.info(f"5 - Success - 更新部署时间成功")
         except Exception as e:
             logger.error(f"5 - Failed - 更新部署时间失败: {e}")
@@ -133,7 +133,7 @@ class WebProjectDeployer:
         try:
             logger.info("6. - START - 更新部署记录数据")
             self.deploy_status = StatusEnum.SUCCESS
-            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, self.deploy_status, None, self.user)
+            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, self.web_project.get("id"), self.deploy_status, None, self.user)
             logger.info("6. - FINISH - 部署记录数据更新成功")
         except Exception as e:
             self.deploy_status = StatusEnum.FAILED

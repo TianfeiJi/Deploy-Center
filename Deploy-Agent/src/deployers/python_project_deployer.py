@@ -49,11 +49,11 @@ class PythonProjectDeployer:
 
     def deploy(self, id: str, zip_file: UploadFile, dockerfile_content: str, dockercommand_content: str):
         logger.info("==================== Python 项目部署：开始 ====================")
-        user = get_current_user()
+        self.user = get_current_user()
         safe_user_info = {
-            "id": user.get("id"),
-            "username": user.get("username"),
-            "nickname": user.get("nickname")
+            "id": self.user.get("id"),
+            "username": self.user.get("username"),
+            "nickname": self.user.get("nickname")
         }
         logger.info(f"当前用户（简要）：{safe_user_info}")
         
@@ -174,7 +174,7 @@ class PythonProjectDeployer:
             self.deploy_status = StatusEnum.FAILED
             err_msg = f"7 - ERROR - 镜像构建失败: {image_name}, 错误: {e}"
             logger.error(err_msg)
-            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, "failed", err_msg)
+            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, "failed", err_msg, self.user)
             raise RuntimeError(err_msg)
 
     def _start_container(self, id: str, dockercommand_content: str):
@@ -188,7 +188,7 @@ class PythonProjectDeployer:
             self.deploy_status = StatusEnum.FAILED
             err_msg = f"8 - ERROR - 容器启动失败: {container_name}, 错误: {e}"
             logger.error(err_msg)
-            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, self.deploy_status, err_msg)
+            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, self.deploy_status, err_msg, self.user)
             raise RuntimeError(err_msg)
 
     def _update_python_project_data(self, id: str):
@@ -205,7 +205,7 @@ class PythonProjectDeployer:
 
         try:
             self.deploy_status = StatusEnum.SUCCESS
-            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, self.deploy_status, None)
+            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, self.deploy_status, None, self.user)
             logger.info("9.2 - FINISH - 部署记录更新成功")
         except Exception as e:
             self.deploy_status = StatusEnum.FAILED
