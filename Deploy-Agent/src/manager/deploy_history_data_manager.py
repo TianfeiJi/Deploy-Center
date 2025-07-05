@@ -41,8 +41,8 @@ class DeployHistoryDataManager:
                 project_id=project_id,
                 status=status,
                 failed_reason=failed_reason,
-                operator_name=user.get("user_name") if user else None,
-                created_by=user.get("user_id") if user else None,
+                operator_name=user.get("nickname") if user else None,
+                created_by=user.get("id") if user else None,
                 created_at=datetime.now().isoformat(),
                 updated_by=None,
                 updated_at=None
