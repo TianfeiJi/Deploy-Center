@@ -5,34 +5,31 @@ Features:
 - Daily log rotation with fixed file name format (YYYY-MM-DD.log)
 - Asynchronous file writing to prevent I/O blocking
 - Console output with color formatting for development
+- Configurable logging level and file output switch
 """
+
 # ==============================================================================
 # @File         : log_config.py
 # @Author       : Tianfei Ji
-# @Description  : 项目日志配置模块，基于 Loguru 实现按天记录、自动轮转、异步写入。
+# @Description  : Centralized logging configuration based on Loguru.
 # ==============================================================================
-import os
+
 import sys
 from datetime import datetime
+from pathlib import Path
 from loguru import logger
+from config.app_config import app_config
 
-# Define log output directory relative to this file
-LOG_DIR = os.path.join(os.path.dirname(__file__), "logs")
-os.makedirs(LOG_DIR, exist_ok=True)
-# Define log path
-LOG_PATH = os.path.join(LOG_DIR, f"{datetime.now().strftime('%Y-%m-%d')}.log")
+# Resolve base directory: /app/src/config/log_config.py → /app
+CURRENT_FILE = Path(__file__).resolve()
+BASE_DIR = CURRENT_FILE.parents[2]
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-# Define rotation policy: rotate if current date != file date
-def should_rotate_on_new_day(message, file):
-    current_date = datetime.now().date()
-    try:
-        filename_date = datetime.strptime(os.path.basename(file.name).split(".")[0], "%Y-%m-%d").date()
-    except ValueError:
-        # fallback: always rotate if filename doesn't match expected format
-        return True
-    return current_date != filename_date
+# Define log file path: /app/logs/YYYY-MM-DD.log
+LOG_PATH = LOG_DIR / f"{datetime.now():%Y-%m-%d}.log"
 
-# Define log message format
+# Define log format
 LOG_FORMAT = (
     "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
     "<level>{level: <8}</level> | "
@@ -40,25 +37,39 @@ LOG_FORMAT = (
     "<level>{message}</level>"
 )
 
-# Remove the default logger to apply custom handlers only
+# Extract log level from config
+log_level = app_config.logging.get("level", "DEBUG").upper()
+
+# Remove the default handler before applying custom sinks
 logger.remove()
 
-# Console output (colored, for development/debugging)
+# Add console sink (colored output)
 logger.add(
     sys.stdout,
     format=LOG_FORMAT,
     colorize=True,
     backtrace=True,
-    diagnose=True
+    diagnose=True,
+    level=log_level
 )
 
-# File output (daily rolling, filename = YYYY-MM-DD.log)
-logger.add(
-    LOG_PATH,
-    format=LOG_FORMAT,
-    colorize=False,
-    rotation=should_rotate_on_new_day,
-    enqueue=True,
-    backtrace=True,
-    diagnose=True
-)
+# Add file sink if enabled in config
+if app_config.logging.get("file", False):
+    rotation = "00:00"  # Daily rotation at midnight
+    sink_id = logger.add(
+        LOG_PATH,
+        format=LOG_FORMAT,
+        colorize=False,
+        rotation=rotation,
+        enqueue=True,
+        backtrace=True,
+        diagnose=True,
+        level=log_level
+    )
+    logger.debug(
+       f"[Logger file sink configured] sink_id='{sink_id}' | path='{LOG_PATH}' | rotation='{rotation}' | level='{log_level}'"
+    )
+else:
+    logger.debug(
+       f"[Logger file sink skipped] file=disabled | level='{log_level}'"
+    )

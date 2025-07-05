@@ -1,0 +1,16 @@
+app:
+  name: Deploy Agent
+  version: "v1.0.8"
+  logging:
+    file: true
+    level: debug
+  datasource:
+    type: json  # 当前可选: json，未来可能实现支持设置mysql等作为数据源
+    json:
+      dir: data
+    mysql:
+      host: 127.0.0.1
+      port: 3306
+      database: deploy_agent_db
+      username: root
+      password: your_password
