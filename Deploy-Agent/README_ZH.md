@@ -48,16 +48,18 @@ uvicorn src.main:app --host 0.0.0.0 --port 2333 --reload
 
 ## 🐳 使用 Docker 部署
 
-请确保您已经安装了 Docker 环境。
+请确保您已安装 Docker。
 
-## 方式一：使用官方镜像
+---
+
+## 方式一：使用官方镜像部署
 
 **1. 拉取镜像**
 ```bash
 docker pull tianfeiji/deploy-agent:latest
 ```
 
-**2. 运行**
+**2. 运行容器**
 ```bash
 docker run -d \
   -p 2333:2333 \
@@ -67,22 +69,48 @@ docker run -d \
   -v /data/docker/infrastructure/deploy-agent/template:/app/template \
   -v /data/docker/infrastructure/deploy-agent/data:/app/data \
   -v /data/docker/infrastructure/deploy-agent/logs:/app/logs \
-  -v /data/docker/projects/java:/app/projects/java \
-  -v /data/docker/projects/webs:/app/projects/webs \
+  -v /data/docker/projects:/app/projects \
   tianfeiji/deploy-agent:latest
 ```
 
-> **挂载说明：**  
-> - `/var/run/docker.sock`：**必须挂载**，容器访问宿主机 Docker 守护进程的关键通道，否则无法执行容器相关操作。
-> - `/usr/bin/docker`: **必须挂载**，将宿主机 Docker CLI 映射进容器，Agent 内部依赖该命令执行部署流程。
-> - `/app/template`：Agent 模板目录
-> - `/app/data`：Agent 数据目录
-> - `/app/logs`：Agent 日志输出目录
-> - `/app/projects/java`：你的Java项目部署路径
-> - `/app/projects/webs`：你的前端项目部署路径
+---
 
+### 容器券挂载路径说明
 
-## 方式二：自行构建镜像
+| 宿主路径 | 容器路径 | 说明 |
+|----------|-----------|------|
+| `/var/run/docker.sock` | `/var/run/docker.sock` | **必须挂载**。容器访问宿主机 Docker 守护进程的关键通道，否则无法执行容器相关操作。 |
+| `/usr/bin/docker` | `/usr/bin/docker` | **必须挂载**。将宿主机 Docker CLI 映射进容器，Agent 内部依赖该命令执行部署流程。 |
+| `/data/docker/infrastructure/deploy-agent/template` | `/app/template` | Agent 模板目录，存放部署模版文件（如 Dockerfile、启动脚本等）。 |
+| `/data/docker/infrastructure/deploy-agent/data` | `/app/data` | Agent 数据目录，记录部署配置、状态缓存、项目元数据等。 |
+| `/data/docker/infrastructure/deploy-agent/logs` | `/app/logs` | Agent 日志目录，建议挂载到宿主机以便持久保存日志内容。 |
+| `/data/docker/projects` | `/app/projects` | 项目部署路径挂载点。容器内部统一使用 `/app/projects/{类型}/{项目名}` 访问部署产物。该路径仅为示例，你可以根据实际情况进行调整。 |
+
+> `/data/docker/infrastructure/deploy-agent` 是你部署 deploy-agent 的宿主机目录，**即源码所在位置**。只需确保其子目录正确挂载到容器 `/app` 内部对应路径即可。
+
+### 项目目录结构示例
+
+```
+# 宿主机目录结构示例
+/data/docker/projects/
+├── java/
+├── webs/
+├── python/
+└── ...
+```
+
+```
+# 容器内对应路径
+/app/projects/java/...
+/app/projects/webs/...
+/app/projects/python/...
+```
+
+> 上述路径仅为示例，你可以自由组织宿主机目录结构，通过 `-v` 参数挂载到 `/app/projects` 即可，无需完全一致。
+ 
+---
+
+## 方式二：自行构建镜像部署
 
 **1. 准备项目目录**
 ```bash
@@ -90,7 +118,7 @@ mkdir -p /data/docker/infrastructure/deploy-agent
 cd /data/docker/infrastructure/deploy-agent
 ```
 
-**2. 拷贝项目源码至该目录**
+**2. 将项目源码拷贝或 clone 到该目录**
 
 期望目录结构如下：
 
@@ -108,8 +136,6 @@ cd /data/docker/infrastructure/deploy-agent
 docker build -t deploy-agent:latest .
 ```
 
-> 或自行指定版本号
-
 **4. 运行容器**
 ```bash
 docker run -d \
@@ -120,18 +146,8 @@ docker run -d \
   -v /data/docker/infrastructure/deploy-agent/template:/app/template \
   -v /data/docker/infrastructure/deploy-agent/data:/app/data \
   -v /data/docker/infrastructure/deploy-agent/logs:/app/logs \
-  -v /data/docker/projects/java:/app/projects/java \
-  -v /data/docker/projects/webs:/app/projects/webs \
+  -v /data/docker/projects:/app/projects \
   deploy-agent:latest
 ```
 
-**挂载说明：**
-> - `/var/run/docker.sock`：**必须挂载**，容器访问宿主机 Docker 守护进程的关键通道，否则无法执行容器相关操作。
-> - `/usr/bin/docker`: **必须挂载**，将宿主机 Docker CLI 映射进容器，Agent 内部依赖该命令执行部署流程。
-> - `/app/template`：Agent 模板目录
-> - `/app/data`：Agent 数据目录
-> - `/app/logs`：Agent 日志输出目录
-> - `/app/projects/java`：你的Java项目部署路径
-> - `/app/projects/webs`：你的前端项目部署路径
-
-> 请根据实际部署环境合理调整宿主路径，避免路径错误导致部署失败。
+> 容器券挂载路径说明请参考上文

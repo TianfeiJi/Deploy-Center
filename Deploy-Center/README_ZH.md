@@ -134,7 +134,7 @@ docker run -d \
   --name deploy-center \
   -v /data/docker/infrastructure/deploy-center/data:/app/data \
   -v /data/docker/infrastructure/deploy-center/logs:/app/logs \
-  deploy-center:v1.0
+  deploy-center:latest
 ```
 
 > **挂载说明:** 为了实现数据持久化和日志记录，建议挂载以下目录（宿主路径可根据实际情况调整）：

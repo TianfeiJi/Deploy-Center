@@ -70,16 +70,43 @@ docker run -d \
   tianfeiji/deploy-agent:latest
 ```
 
-**Mount Notes:**  
-> - `/var/run/docker.sock`: **Must be mounted**. This is the critical socket for the container to access the Docker daemon on the host. Without this, container-related operations will fail.
-> - `/usr/bin/docker`: **Must be mounted**. Maps the Docker CLI from the host into the container. The Agent depends on this command to execute deployment processes.
-> - `/app/template`: Agent template directory.
-> - `/app/data`: Agent data directory.
-> - `/app/logs`: Agent log output directory.
-> - `/app/projects/java`: Your Java project deployment path.
-> - `/app/projects/webs`: Your frontend project deployment path.
+### Mount Overview
 
-> Be sure to adjust the host paths according to your actual environment to avoid issues caused by incorrect path settings.
+| Host Path | Container Path | Description |
+|-----------|----------------|-------------|
+| `/var/run/docker.sock` | `/var/run/docker.sock` | **Required**. This socket allows the container to communicate with the Docker daemon on the host. Without it, container-related operations cannot be executed. |
+| `/usr/bin/docker` | `/usr/bin/docker` | **Required**. Maps the host's Docker CLI into the container. The Agent relies on this to perform deployment operations. |
+| `/data/docker/infrastructure/deploy-agent/template` | `/app/template` | The Agent's template directory, which contains deployment templates (e.g., Dockerfiles, startup scripts, etc.). |
+| `/data/docker/infrastructure/deploy-agent/data` | `/app/data` | The Agent's data directory, used to store deployment configurations, state cache, project metadata, etc. |
+| `/data/docker/infrastructure/deploy-agent/logs` | `/app/logs` | The Agent's log directory. It is recommended to mount this to the host for persistent logging. |
+| `/data/docker/projects` | `/app/projects` | The mount point for your project deployment directory. This is just an example path—you may adjust it to fit your own directory structure. Inside the container, all projects are accessed under `/app/projects/{type}/{project_name}`. |
+
+> `/data/docker/infrastructure/deploy-agent` refers to the directory on the host where you deploy the `deploy-agent`—**typically the location where you cloned or extracted the agent source code**. This directory contains subdirectories such as `template`, `data`, and `logs`. You are free to place this directory wherever you prefer, as long as these subdirectories are correctly mounted to `/app/template`, `/app/data`, and `/app/logs` inside the container.
+
+**Example Project Directory Structure**
+
+You may organize your deployment projects by type, for example:
+
+```
+# Example structure on the host
+/data/docker/projects/
+├── java/      # Java project artifacts
+├── webs/      # Frontend project artifacts
+├── python/    # Python project artifacts
+└── ...        # Other types (customizable)
+```
+
+The corresponding paths inside the container would be:
+
+```
+/app/projects/java/...
+/app/projects/webs/...
+/app/projects/python/...
+```
+
+> The above paths are for demonstration purposes only. You can organize your host directories however you like, as long as you mount them into `/app/projects` using the `-v` flag. There's no need to follow the example path exactly.
+
+---
 
 ## Method 2: Build the Image Manually
 
@@ -114,21 +141,13 @@ docker build -t deploy-agent:latest .
 docker run -d \
   -p 2333:2333 \
   --name deploy-agent \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /usr/bin/docker:/usr/bin/docker \
   -v /data/docker/infrastructure/deploy-agent/template:/app/template \
   -v /data/docker/infrastructure/deploy-agent/data:/app/data \
   -v /data/docker/infrastructure/deploy-agent/logs:/app/logs \
-  -v /data/docker/projects/java:/app/projects/java \
-  -v /data/docker/projects/webs:/app/projects/webs \
+  -v /data/docker/projects:/app/projects \
   deploy-agent:latest
 ```
 
-**Mount Notes:**  
-> - `/var/run/docker.sock`: **Must be mounted**. This is the critical socket for the container to access the Docker daemon on the host. Without this, container-related operations will fail.
-> - `/usr/bin/docker`: **Must be mounted**. Maps the Docker CLI from the host into the container. The Agent depends on this command to execute deployment processes.
-> - `/app/template`: Agent template directory.
-> - `/app/data`: Agent data directory.
-> - `/app/logs`: Agent log output directory.
-> - `/app/projects/java`: Your Java project deployment path.
-> - `/app/projects/webs`: Your frontend project deployment path.
-
-> Be sure to adjust the host paths according to your actual environment to avoid issues caused by incorrect path settings.
+> For container mount path explanations, please refer to the section above.

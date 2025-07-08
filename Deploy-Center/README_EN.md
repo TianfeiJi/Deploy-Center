@@ -137,7 +137,7 @@ docker run -d \
   --name deploy-center \
   -v /data/docker/infrastructure/deploy-center/data:/app/data \
   -v /data/docker/infrastructure/deploy-center/logs:/app/logs \
-  deploy-center:v1.0
+  deploy-center:latest
 ```
 
 > **Volume Mounting Note:**  
