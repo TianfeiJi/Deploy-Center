@@ -10,4 +10,3 @@ class UpdateWebProjectRequestDto(BaseModel):
     container_project_path: Optional[str]
     git_repository: Optional[str]
     access_url: Optional[str]
-    status: Optional[str]

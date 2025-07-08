@@ -14,4 +14,3 @@ class UpdateJavaProjectRequestDto(BaseModel):
     host_project_path: Optional[str]
     container_project_path: Optional[str]
     git_repository: Optional[str]
-    status: Optional[str]
