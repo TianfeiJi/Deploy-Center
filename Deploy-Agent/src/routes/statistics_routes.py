@@ -1,3 +1,4 @@
+from pathlib import Path
 from fastapi import APIRouter
 import json
 import subprocess
@@ -41,23 +42,30 @@ async def get_project_deployment_statistics():
 
         for p in all_projects:
             container_name = p.get("container_name")
+            container_path = p.get("container_path")
+            project_type = p.get("project_type")
+            
+            path_obj = Path(container_path)
+            if project_type == "web":
+                if path_obj.exists() and any(path_obj.iterdir()):
+                    status_summary["running"] += 1
+            else:
+                # 如果该项目未定义 container_name，或者没有匹配到任何现存容器，视为未部署
+                if not container_name or not any(container_name in name for name in container_status_map):
+                    status_summary["awaiting_deployment"] += 1
+                    continue
 
-            # 如果该项目未定义 container_name，或者没有匹配到任何现存容器，视为未部署
-            if not container_name or not any(container_name in name for name in container_status_map):
-                status_summary["awaiting_deployment"] += 1
-                continue
-
-            # 能匹配到容器名称，进入状态分析
-            for name, status in container_status_map.items():
-                if container_name in name:
-                    normalized = (status or "").lower()
-                    if "up" in normalized:
-                        status_summary["running"] += 1
-                    elif "exited" in normalized:
-                        status_summary["exited"] += 1
-                    elif "restarting" in normalized:
-                        status_summary["restarting"] += 1
-                    break
+                # 能匹配到容器名称，进入状态分析
+                for name, status in container_status_map.items():
+                    if container_name in name:
+                        normalized = (status or "").lower()
+                        if "up" in normalized:
+                            status_summary["running"] += 1
+                        elif "exited" in normalized:
+                            status_summary["exited"] += 1
+                        elif "restarting" in normalized:
+                            status_summary["restarting"] += 1
+                        break
 
         return HttpResult(code=200, status="success", msg=None, data={
             **status_summary,
