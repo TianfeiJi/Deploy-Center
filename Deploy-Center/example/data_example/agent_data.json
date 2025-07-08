@@ -5,10 +5,7 @@
         "ip": "127.0.0.1",
         "port": 2333,
         "service_url": "http://127.0.0.1:2333",
-        "os": "Cent OS",
-        "type": "ECS",
-        "status": "online",
-        "created_at": "2025-05-18T10:00:00",
+        "created_at": "2025-07-01T10:00:00",
         "updated_at": null
     }
 ]
