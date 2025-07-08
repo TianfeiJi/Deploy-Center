@@ -26,7 +26,7 @@ class AgentDataManager:
          
     def create_agent(self, agent_data: Dict) -> Dict:
         agents = self._load_agents()
-        new_id = 1 if not agents else max(agent.id for agent in agents) + 1
+        new_id = 1 if not agents else max(agent["id"] for agent in agents) + 1
         now = datetime.now().isoformat()
         new_agent = {
             "id": new_id,
