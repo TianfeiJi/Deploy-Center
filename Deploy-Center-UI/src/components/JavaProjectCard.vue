@@ -101,7 +101,7 @@
 
       <q-card-section>
         <div class="text-h6">上传Jar包</div>
-        <el-upload ref="uploadRef" drag :auto-upload="false" accept=".zip" :before-upload="handleBeforeUpload"
+        <el-upload ref="uploadRef" drag :auto-upload="false" accept=".jar"
           :on-change="handleFileChange" :file-list="fileList" :disabled="uploadProgress > 0">
           <div class="el-upload__text">
             <i class="el-icon-upload"></i>
@@ -111,7 +111,7 @@
           </div>
           <template #tip>
             <div class="el-upload__tip" style="text-align: right; color: #909399">
-              只能上传.zip文件
+              只能上传.jar文件
             </div>
           </template>
         </el-upload>
@@ -306,19 +306,6 @@ const openCloudBuildDeployDialog = () => {
     type: 'warning',
     position: 'top',
   });
-};
-
-const handleBeforeUpload = (file: File): boolean => {
-  const isZip = file.type === 'application/zip' || file.name.endsWith('.zip');
-  if (!isZip) {
-    Notify.create({
-      type: 'negative',
-      message: '只能上传.zip文件',
-      position: 'top',
-    });
-    return false;
-  }
-  return true;
 };
 
 const handleFileChange = (file: any) => {
