@@ -58,20 +58,20 @@ const settingChildrenRoutes: RouteRecordRaw[] = [
       },
     ],
   },
-  {
-    path: '/setting/selfDeploy',
-    component: () => import('pages/SettingPage.vue'),
-    children: [
-      {
-        path: '',
-        component: () => import('pages/settings/SelfDeploySettingsPage.vue'),
-        meta: {
-          title: '自我部署',
-          icon: 'fa-solid fa-cloud-arrow-up',
-        },
-      },
-    ],
-  },
+  // {
+  //   path: '/setting/selfDeploy',
+  //   component: () => import('pages/SettingPage.vue'),
+  //   children: [
+  //     {
+  //       path: '',
+  //       component: () => import('src/pages/todo/SelfDeploySettingsPage.vue'),
+  //       meta: {
+  //         title: '自我部署',
+  //         icon: 'fa-solid fa-cloud-arrow-up',
+  //       },
+  //     },
+  //   ],
+  // },
 
 ];
 
