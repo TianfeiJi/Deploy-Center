@@ -24,11 +24,12 @@ class JavaProjectDeployer:
     执行 Java 项目从构建到部署的完整流程，包含以下步骤：
         1. 准备部署目录
         2. 写入或覆盖 Dockerfile 文件
-        3. 拷贝Jar包
-        4. 清理同名旧容器与旧镜像（如存在）
-        5. 构建 Docker 镜像
-        6. 启动 Docker 容器
-        7. 更新部署记录、项目信息
+        3. 写入或覆盖 Dockerignore 文件
+        4. 拷贝Jar包
+        5. 清理同名旧容器与旧镜像（如存在）
+        6. 构建 Docker 镜像
+        7. 启动 Docker 容器
+        8. 更新部署记录、项目信息
 
     支持异常处理、部署状态记录、日志输出，适用于后端自动化部署系统。
     """
@@ -69,6 +70,7 @@ class JavaProjectDeployer:
 
         self._create_project_directory()
         self._create_dockerfile(dockerfile_content)
+        self._create_dockerignore()
         self._copy_jar_to_directory(jar_file)
         self._cleanup_old_container_and_image()
         self._build_image(id, self.dockerfile_path)
@@ -120,28 +122,55 @@ class JavaProjectDeployer:
         self.dockerfile_path = dockerfile_path
         return dockerfile_path
 
+    def _create_dockerignore(self):
+        """
+        3 - 写入.dockerignore
+        如果文件不存在则创建，避免将不必要的文件打包进 Docker 构建上下文。
+        """
+        logger.info("3 - START - 写入 .dockerignore")
+        dockerignore_path = os.path.join(self.java_project.get('container_project_path'), ".dockerignore")
+        ignore_rules = [
+            "logs/",
+            "*.log",
+            "*.tmp",
+            ".DS_Store"
+        ]
+        try:
+            # 检查是否已有文件
+            if os.path.exists(dockerignore_path):
+                logger.info(f"3 - PROCESS - 检测到已有 .dockerignore 文件，跳过创建: {dockerignore_path}")
+            else:
+                logger.info("3 - PROCESS - 未检测到 .dockerignore 文件，准备创建")
+                # 创建文件并写入内容
+                with open(dockerignore_path, "w") as f:
+                    f.write("\n".join(ignore_rules) + "\n")
+                logger.info(f"3 - PROCESS - 创建并写入 .dockerignore 完成: {dockerignore_path}")
+            logger.info("3 - FINISH - .dockerignore 检查与写入流程完成")
+        except Exception as e:
+            logger.warning(f"3 - ERROR - 写入 .dockerignore 失败: {e}")
+        
     def _copy_jar_to_directory(self, jar_file: UploadFile):
         """
-        3 - 拷贝 JAR 包
+        4 - 拷贝 JAR 包
 
         拷贝上传的 JAR 文件到目标目录。
         """
-        logger.info("3 - START - 拷贝 JAR 包")
+        logger.info("4 - START - 拷贝 JAR 包")
         target_path = f"{self.java_project.get('container_project_path')}/jars/{self.java_project.get('project_code')}.jar"
         if os.path.exists(target_path):
-            logger.warning(f"3 - PROCESS - 检测到旧 JAR 文件，将进行覆盖: {target_path}")
+            logger.warning(f"4 - PROCESS - 检测到旧 JAR 文件，将进行覆盖: {target_path}")
         with open(target_path, "wb") as buffer:
             shutil.copyfileobj(jar_file.file, buffer)
-        logger.info(f"3 - FINISH - JAR 文件已拷贝至: {target_path}")
+        logger.info(f"4 - FINISH - JAR 文件已拷贝至: {target_path}")
 
     def _cleanup_old_container_and_image(self):
         """
-        4 - 检测并删除旧容器与镜像
+        5 - 检测并删除旧容器与镜像
         """
         container_name = self.java_project.get('project_code')
         image_name = f"{self.java_project.get('docker_image_name')}:{self.java_project.get('docker_image_tag')}"
 
-        logger.info(f"4 - START - 检测并删除旧容器与镜像: {container_name} / {image_name}")
+        logger.info(f"5 - START - 检测并删除旧容器与镜像: {container_name} / {image_name}")
 
         # 清理旧容器
         try:
@@ -150,13 +179,13 @@ class JavaProjectDeployer:
                 shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
             )
             if check_container.returncode == 0:
-                logger.info(f"4.1 - PROCESS - 检测到旧容器 {container_name}，执行删除...")
+                logger.info(f"5.1 - PROCESS - 检测到旧容器 {container_name}，执行删除...")
                 subprocess.run(f"docker rm -f {container_name}", shell=True, check=False)
-                logger.info(f"4.1 - FINISH - 旧容器已删除: {container_name}")
+                logger.info(f"5.1 - FINISH - 旧容器已删除: {container_name}")
             else:
-                logger.info(f"4.1 - SKIP - 未检测到旧容器: {container_name}")
+                logger.info(f"5.1 - SKIP - 未检测到旧容器: {container_name}")
         except Exception as e:
-            logger.warning(f"4.1 - ERROR - 清理容器异常: {e}")
+            logger.warning(f"5.1 - ERROR - 清理容器异常: {e}")
         
         # 清理旧镜像
         try:
@@ -166,82 +195,82 @@ class JavaProjectDeployer:
             )
             image_id = check_image.stdout.decode().strip()
             if image_id:
-                logger.info(f"4.2 - PROCESS - 检测到旧镜像 {image_name}，执行删除...")
+                logger.info(f"5.2 - PROCESS - 检测到旧镜像 {image_name}，执行删除...")
                 subprocess.run(f"docker rmi -f {image_name}", shell=True, check=False)
-                logger.info(f"4.2 - SUCCESS - 旧镜像已删除: {image_name}")
+                logger.info(f"5.2 - SUCCESS - 旧镜像已删除: {image_name}")
             else:
-                logger.info(f"4.2 - SKIP - 未检测到旧镜像: {image_name}")
+                logger.info(f"5.2 - SKIP - 未检测到旧镜像: {image_name}")
         except Exception as e:
-            logger.warning(f"4.2 - ERROR - 清理镜像异常: {e}")
-        logger.info("4 - FINISH - 旧容器与镜像检测与清理流程完成")
+            logger.warning(f"5.2 - ERROR - 清理镜像异常: {e}")
+        logger.info("5 - FINISH - 旧容器与镜像检测与清理流程完成")
         
     def _build_image(self, id, dockerfile_path: str):
         """
-        5 - 构建镜像
+        6 - 构建镜像
 
         执行镜像构建。
         """
-        logger.info("5 - START - 构建镜像")
+        logger.info("6 - START - 构建镜像")
         dockerfile_folder = os.path.dirname(dockerfile_path)
         os.chdir(dockerfile_folder)
         image_name = f"{self.java_project.get('docker_image_name')}:{self.java_project.get('docker_image_tag')}"
         command = ["docker", "build", "-t", image_name, "."]
         try:
-            logger.info(f"5 - PROCESS - 执行构建命令: {' '.join(command)}")
+            logger.info(f"6 - PROCESS - 执行构建命令: {' '.join(command)}")
             subprocess.run(command, check=True)
-            logger.info(f"5 - FINISH - 镜像构建成功: {image_name}")
+            logger.info(f"6 - FINISH - 镜像构建成功: {image_name}")
         except subprocess.CalledProcessError as e:
             self.deploy_status = StatusEnum.FAILED
-            err_msg = f"5 - ERROR - 镜像构建失败: {image_name}, 错误: {e}"
+            err_msg = f"6 - ERROR - 镜像构建失败: {image_name}, 错误: {e}"
             logger.error(err_msg)
             DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, "failed", err_msg, self.user)
             raise RuntimeError(err_msg)
 
     def _start_container(self, id: str, dockercommand_content: str):
         """
-        6 - 启动容器
+        7 - 启动容器
 
         启动 Docker 容器。
         """
-        logger.info("6 - START - 启动容器")
+        logger.info("7 - START - 启动容器")
         container_name = self.java_project.get('project_code')
         try:
             dockercommand_content = re.sub(r'\\\s*\r?\n', ' ', dockercommand_content).strip()
             subprocess.run(dockercommand_content, shell=True, check=True)
-            logger.info(f"6 - FINISH - 容器启动成功: {container_name}")
+            logger.info(f"7 - FINISH - 容器启动成功: {container_name}")
         except Exception as e:
             self.deploy_status = StatusEnum.FAILED
-            err_msg = f"6 - ERROR - 容器启动失败: {container_name}, 错误: {e}"
+            err_msg = f"7 - ERROR - 容器启动失败: {container_name}, 错误: {e}"
             logger.error(err_msg)
             DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, self.deploy_status, err_msg, self.user)
             raise RuntimeError(err_msg)
 
     def _update_java_project_data(self, id):
         """
-        7 - 更新项目部署时间和部署记录
+        8 - 更新项目部署时间和部署记录
 
         更新部署成功后的项目部署时间和部署记录数据。
         """
-        logger.info("7 - START - 更新项目部署时间和部署记录")
+        logger.info("8 - START - 更新项目部署时间和部署记录")
         updated_data = {
             "last_deployed_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         }
         try:
             PROJECT_DATA_MANAGER.update_project(id, updated_data)
-            logger.info("7.1 - FINISH - 项目部署时间更新成功")
+            logger.info("8.1 - FINISH - 项目部署时间更新成功")
         except Exception as e:
             self.deploy_status = StatusEnum.FAILED
-            err_msg = f"7.1 - ERROR - 项目部署时间更新失败: {e}"
+            err_msg = f"8.1 - ERROR - 项目部署时间更新失败: {e}"
             logger.error(err_msg)
 
         try:
             self.deploy_status = StatusEnum.SUCCESS
             DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, self.deploy_status, None, self.user)
-            logger.info("7.2 - FINISH - 部署记录更新成功")
+            logger.info("8.2 - FINISH - 部署记录更新成功")
         except Exception as e:
             self.deploy_status = StatusEnum.FAILED
-            err_msg = f"7.2 - ERROR - 部署记录更新失败: {e}"
+            err_msg = f"8.2 - ERROR - 部署记录更新失败: {e}"
             logger.error(err_msg)
-        logger.info("7 - FINISH - 更新项目状态和部署记录完成")
+        logger.info("8 - FINISH - 更新项目状态和部署记录完成")
         
         
