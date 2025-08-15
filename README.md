@@ -32,7 +32,7 @@
 > 更多说明文档请见 [A-docs/](./A-docs/) 目录  
 
 ## 在线演示
-**演示地址：** [http://jitianfei.com/deploy-center-ui](http://jitianfei.com/deploy-center-ui)  
+**演示地址：** [https://jitianfei.com/demo/deploy-center-ui](https://jitianfei.com/demo/deploy-center-ui)  
 **用户名：** admin  
 **密码：** admin  
 

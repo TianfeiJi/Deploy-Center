@@ -32,7 +32,7 @@
 > For more documentation, please refer to the [A-docs/](./A-docs/) directory.
 
 ## Live Demo
-**Demo URL:** [http://jitianfei.com/deploy-center-ui](http://jitianfei.com/deploy-center-ui)  
+**Demo URL:** [https://jitianfei.com/demo/deploy-center-ui](https://jitianfei.com/demo/deploy-center-ui)  
 **Username:** admin  
 **Password:** admin  
 
@@ -154,8 +154,8 @@ If it saves you from typing a few extra `docker` commands or logging into a remo
 And if you'd like to buy me a coffee — that would be even better ☕️😌
 
 <p align="center">
-  <img src="http://jitianfei.com/resource/images/sponsor-wechat.png" width="150" alt="WeChat" style="margin-right: 40px;"/>
-  <img src="http://jitianfei.com/resource/images/sponsor-alipay.jpg" width="150" alt="Alipay"/>
+  <img src="https://jitianfei.com/oss/open/images/sponsor-wechat.png" width="150" alt="WeChat" style="margin-right: 40px;"/>
+  <img src="https://jitianfei.com/oss/open/images/sponsor-alipay.jpg" width="150" alt="Alipay"/>
 </p>
 
 <p align="center">Your support means a lot — not just for this project, but for my ongoing open-source work 🙏</p>
