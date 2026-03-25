@@ -1,87 +1,114 @@
 <template>
   <q-card class="java-project-card">
-    <q-card-section>
-      <div class="text-h6">
-        {{ javaProject.project_name }}
-      </div>
-      <div class="row items-center q-mt-sm">
-        <div class="col text-subtitle2">{{ javaProject.project_type }}</div>
+    <!-- 顶部 -->
+    <q-card-section class="card-header">
+      <div class="project-header">
+        <div class="project-header-left">
+          <div class="project-title" :title="javaProject.project_name || '-'">
+            {{ javaProject.project_name || '-' }}
+          </div>
 
-        <div class="col-auto flex items-center justify-end">
-          <template v-if="containerStatus === 'Checking'">
-            <q-spinner color="grey-5" size="16px" />
-          </template>
-          <template v-else-if="containerStatus === 'Unkown'">
-            <el-tag type="warning" effect="light">Status Unknown</el-tag>
-          </template>
-          <template v-else>
-            <el-tag
-              :closable="false"
-              :type="getContainerStatusTagType(containerStatus)"
-              effect="light"
-            >
-              {{ containerStatus }}
-            </el-tag>
-          </template>
+          <div class="project-submeta">
+            <span class="project-submeta-type">Java</span>
+          </div>
+        </div>
+
+        <div class="project-header-right">
+          <div class="runtime-status-inline">
+            <template v-if="containerStatus === 'Checking'">
+              <q-spinner color="grey-5" size="16px" />
+            </template>
+            <template v-else-if="containerStatus === 'Unknown'">
+              <el-tag type="warning" effect="light" round>Status Unknown</el-tag>
+            </template>
+            <template v-else>
+              <el-tag :closable="false" :type="getContainerStatusTagType(containerStatus)" effect="light" round>
+                {{ containerStatus }}
+              </el-tag>
+            </template>
+          </div>
+
+          <div class="project-deploy-text">
+            最近部署：{{ getDeployText(javaProject.last_deployed_at) }}
+          </div>
+        </div>
+      </div>
+
+      <!-- 直接平铺信息，不再套内部 card -->
+      <div class="info-list q-mt-sm">
+        <div class="info-row" @click="copyValue(javaProject.container_name)">
+          <div class="info-key">容器名称</div>
+          <div class="info-main-value hover-copy" :title="javaProject.container_name || '-'">
+            {{ javaProject.container_name || '-' }}
+          </div>
+        </div>
+
+        <div class="info-row" @click="copyValue(dockerImageText)">
+          <div class="info-key">镜像名称</div>
+          <div class="info-value hover-copy" :title="dockerImageText">
+            {{ dockerImageText }}
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-key">端口映射</div>
+          <div class="info-value" :title="portMappingText">
+            {{ portMappingText }}
+          </div>
+        </div>
+
+        <div class="info-row" @click="copyValue(javaProject.network)">
+          <div class="info-key">Docker 网络</div>
+          <div class="info-value hover-copy" :title="javaProject.network || '-'">
+            {{ javaProject.network || '-' }}
+          </div>
+        </div>
+
+        <div class="info-row" @click="copyValue(javaProject.host_project_path)">
+          <div class="info-key">宿主机路径</div>
+          <div class="info-value hover-copy multi-line-value" :title="javaProject.host_project_path || '-'">
+            {{ javaProject.host_project_path || '-' }}
+          </div>
+        </div>
+
+        <div class="info-row" @click="copyValue(javaProject.container_project_path)">
+          <div class="info-key">容器内路径</div>
+          <div class="info-value hover-copy multi-line-value" :title="javaProject.container_project_path || '-'">
+            {{ javaProject.container_project_path || '-' }}
+          </div>
         </div>
       </div>
     </q-card-section>
 
-    <q-separator />
-
-    <q-card-section>
-      <p>项目代号: {{ javaProject.project_code }}</p>
-      <p v-if="javaProject.access_url">访问地址: <a :href="javaProject.access_url" target="_blank">{{ javaProject.access_url }}</a></p>
-      <p>JDK版本: {{ javaProject.jdk_version }}</p>
-      <p>
-        Docker 镜像: {{ javaProject.docker_image_name }}:{{
-          javaProject.docker_image_tag
-        }}
-      </p>
-      <p>容器名称: {{ javaProject.container_name }}</p>
-      <p>外部端口: {{ javaProject.external_port }}</p>
-      <p>内部端口: {{ javaProject.internal_port }}</p>
-      <p v-if="javaProject.network">Docker网络: {{ javaProject.network }}</p>
-      <p>宿主机路径: {{ javaProject.host_project_path }}</p>
-      <p>容器内路径: {{ javaProject.container_project_path }}</p>
-    </q-card-section>
-
-    <q-card-actions align="right">
+    <!-- 底部 -->
+    <q-card-actions align="right" class="card-actions">
       <q-btn flat color="primary" label="详情" @click="viewJavaProjectDetail" />
-
       <q-btn flat dense color="info" icon="cloud" label="云构建部署" @click="openCloudBuildDeployDialog" />
-
       <q-btn flat dense color="positive" icon="cloud_upload" label="上传部署" @click="openUploadDeployDialog" />
     </q-card-actions>
   </q-card>
 
-  <!-- 详情对话框 -->
+  <!-- 弹窗完全不动 -->
   <q-dialog v-model="isViewDetailDialogOpen">
     <q-card style="width: 100%">
       <q-card-section>
         <q-btn icon="close" flat round dense class="float-right" v-close-popup />
         <div class="text-h6">项目详情</div>
       </q-card-section>
-
       <q-separator />
-
-      <!-- 数据表格 -->
       <q-card-section>
         <el-table :data="tableData" border>
           <el-table-column prop="key" label="字段" width="170" />
           <el-table-column prop="label" label="注释" width="130" />
           <el-table-column label="值">
-            <template v-slot="scope">
+            <template #default="scope">
               <div v-if="!isEditing || !scope.row.editable">{{ scope.row.value }}</div>
               <el-input v-else v-model="scope.row.value" placeholder="请输入内容" clearable />
             </template>
           </el-table-column>
         </el-table>
       </q-card-section>
-
       <q-separator />
-
-      <!-- 控制按钮 -->
       <q-card-actions>
         <q-btn flat color="negative" label="删除" @click="isSecondConfirmDeleteDialogOpen = true" />
         <q-space />
@@ -92,67 +119,48 @@
     </q-card>
   </q-dialog>
 
-  <!-- 上传部署对话框 -->
   <q-dialog v-model="isUploadDeployDialogOpen">
     <q-card style="width: 100%; max-width: 70vw;">
       <q-card-section>
         <div class="text-h5">上传部署（{{ javaProject.project_name }}）</div>
       </q-card-section>
-
+      <q-separator />
       <q-card-section>
         <div class="text-h6">上传Jar包</div>
-        <el-upload ref="uploadRef" drag :auto-upload="false" accept=".jar"
-          :on-change="handleFileChange" :file-list="fileList" :disabled="uploadProgress > 0">
-          <div class="el-upload__text">
-            <i class="el-icon-upload"></i>
-            <div class="el-upload__text">
-              将文件拖到此处，或<em>点击上传</em>
-            </div>
-          </div>
+        <el-upload ref="uploadRef" drag :auto-upload="false" accept=".jar" :on-change="handleFileChange"
+          :file-list="fileList" :disabled="uploadProgress > 0 || isDeploying">
+          <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
           <template #tip>
-            <div class="el-upload__tip" style="text-align: right; color: #909399">
-              只能上传.jar文件
-            </div>
+            <div class="el-upload__tip" style="text-align: right; color: #909399">只能上传 .jar 文件，且一次仅允许一个文件</div>
           </template>
         </el-upload>
-
-        <!-- 进度条和进度百分比 -->
-        <el-progress v-if="uploadProgress > 0" color="#67c23a" :percentage="uploadProgress" :text-inside="true"
+        <el-progress v-if="uploadProgress > 0" :percentage="uploadProgress" :text-inside="true"
           :stroke-width="13" status="success" />
-
-        <div v-if="uploadProgress === 100" class="text-positive" style="margin-top: 10px">
-          上传完成！
-        </div>
+        <div v-if="uploadProgress === 100" class="text-positive" style="margin-top: 10px">上传完成！</div>
       </q-card-section>
-
       <q-card-section>
         <div class="text-h6">设置Dockerfile</div>
         <q-input v-model="dockerfileContent" type="textarea" outlined rows="16"
           style="margin-top: 10px; font-family: Console;" :disable="isDeploying" />
       </q-card-section>
-
       <q-card-section>
         <div class="text-h6">设置Docker命令</div>
         <q-input v-model="dockerCommand" type="textarea" outlined rows="10"
           style="margin-top: 10px; font-family: Console;" :disable="isDeploying" />
       </q-card-section>
-
       <q-card-actions align="right">
         <q-btn flat label="取消" v-close-popup />
         <q-btn flat label="开始部署" color="positive" @click="handleUploadDeploy"
-          :disabled="!fileList.length || uploadProgress > 0" />
+          :disabled="!fileList.length || uploadProgress > 0 || isDeploying" />
       </q-card-actions>
     </q-card>
   </q-dialog>
 
-  <!-- 再次确认删除对话框 -->
   <q-dialog v-model="isSecondConfirmDeleteDialogOpen">
     <q-card style="width: 30%">
-      <q-card-section class="text-h6"> 危险操作 </q-card-section>
+      <q-card-section class="text-h6">危险操作</q-card-section>
       <q-card-section>
-        <div style="color: red; text-indent: 1rem">
-          请输入“确定删除”以进行删除操作。
-        </div>
+        <div style="color: red; text-indent: 1rem">请输入“确定删除”以进行删除操作。</div>
         <q-input v-model="confirmText" />
       </q-card-section>
       <q-card-actions align="right">
@@ -163,253 +171,420 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { Notify } from 'quasar';
+import { ref, onMounted, computed } from 'vue';
+import { Notify, copyToClipboard } from 'quasar';
 import { provideCurrentAgentProxyApi } from 'src/factory/agentProxyApiFactory';
 import { formatDate } from 'src/utils/dateFormatter';
 import { JavaProject } from 'src/types/Project.types';
-import { UpdateJavaProjectRequestDto } from "src/types/dto/UpdateJavaProjectRequestDto";
+import { UpdateJavaProjectRequestDto } from 'src/types/dto/UpdateJavaProjectRequestDto';
 import type { AxiosProgressEvent } from 'axios';
 
-const props = defineProps<{
-  javaProject: JavaProject;
-}>();
+const props = defineProps<{ javaProject: JavaProject }>();
 
 const isViewDetailDialogOpen = ref(false);
 const isUploadDeployDialogOpen = ref(false);
 const isCloudBuildDeployDialogOpen = ref(false);
 const isSecondConfirmDeleteDialogOpen = ref(false);
-
 const dockerfileContent = ref('');
 const dockerCommand = ref('');
-
 const confirmText = ref('');
 const uploadProgress = ref(0);
 const fileList = ref<any[]>([]);
+const tableData = ref<{ label: string; value: string; key: string; editable: boolean }[]>([]);
+const containerStatus = ref('Checking');
+const isEditing = ref(false);
+const isDeploying = ref(false);
 
-const tableData = ref<{ label: string; value: string; key: string, editable: boolean }[]>([]);
+const dockerImageText = computed(() => {
+  return `${props.javaProject.docker_image_name || '-'}:${props.javaProject.docker_image_tag || 'latest'}`;
+});
+const portMappingText = computed(() => {
+  return `${props.javaProject.external_port || '-'} → ${props.javaProject.internal_port || '-'}`;
+});
+
+const getDeployText = (time?: any) => {
+  if (!time) return '未部署';
+  try {
+    const now = Date.now();
+    const t = new Date(time).getTime();
+    if (Number.isNaN(t)) return '-';
+    const diff = Math.floor((now - t) / 1000);
+    if (diff < 60) return '刚刚';
+    if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
+    return `${Math.floor(diff / 86400)}天前`;
+  } catch {
+    return '未部署';
+  }
+};
+
+const copyValue = async (text?: string) => {
+  const value = text?.trim();
+  if (!value || value === '-') return;
+
+  try {
+    await copyToClipboard(value);
+    Notify.create({
+      type: 'positive',
+      message: '复制成功',
+      position: 'top',
+      timeout: 1000,
+    });
+  } catch {
+    Notify.create({
+      type: 'negative',
+      message: '复制失败',
+      position: 'top',
+      timeout: 1000,
+    });
+  }
+};
 
 const viewJavaProjectDetail = () => {
   tableData.value = [
-    { label: '项目Id', key: 'id', value: props.javaProject.id, editable: false },
-    { label: '项目代号', key: 'project_code', value: props.javaProject.project_code, editable: true },
-    { label: '项目名称', key: 'project_name', value: props.javaProject.project_name, editable: true },
-    { label: '项目分组', key: 'project_group', value: props.javaProject.project_group, editable: true },
-    { label: 'Docker 镜像名称', key: 'docker_image_name', value: props.javaProject.docker_image_name, editable: true },
-    { label: 'Docker 镜像标签', key: 'docker_image_tag', value: props.javaProject.docker_image_tag, editable: true },
-    { label: '容器名称', key: 'container_name', value: props.javaProject.container_name, editable: true },
-    { label: '外部端口', key: 'external_port', value: String(props.javaProject.external_port), editable: true },  // 转字符串
-    { label: '内部端口', key: 'internal_port', value: String(props.javaProject.internal_port), editable: true },    // 转字符串
-    { label: '宿主机路径', key: 'host_project_path', value: props.javaProject.host_project_path, editable: true },
-    { label: '容器内路径', key: 'container_project_path', value: props.javaProject.container_project_path, editable: true },
-    { label: '访问地址', key: 'access_url', value: props.javaProject.access_url, editable: true },
-    { label: 'Git地址', key: 'git_repository', value: props.javaProject.git_repository, editable: true },
-    { label: 'JDK版本', key: 'jdk_version', value: String(props.javaProject.jdk_version), editable: false },
+    { label: '项目Id', key: 'id', value: props.javaProject.id ?? '', editable: false },
+    { label: '项目代号', key: 'project_code', value: props.javaProject.project_code ?? '', editable: true },
+    { label: '项目名称', key: 'project_name', value: props.javaProject.project_name ?? '', editable: true },
+    { label: '项目分组', key: 'project_group', value: props.javaProject.project_group ?? '', editable: true },
+    { label: 'Docker 镜像名称', key: 'docker_image_name', value: props.javaProject.docker_image_name ?? '', editable: true },
+    { label: 'Docker 镜像标签', key: 'docker_image_tag', value: props.javaProject.docker_image_tag ?? '', editable: true },
+    { label: '容器名称', key: 'container_name', value: props.javaProject.container_name ?? '', editable: true },
+    { label: '外部端口', key: 'external_port', value: String(props.javaProject.external_port ?? ''), editable: true },
+    { label: '内部端口', key: 'internal_port', value: String(props.javaProject.internal_port ?? ''), editable: true },
+    { label: '宿主机路径', key: 'host_project_path', value: props.javaProject.host_project_path ?? '', editable: true },
+    { label: '容器内路径', key: 'container_project_path', value: props.javaProject.container_project_path ?? '', editable: true },
+    { label: '访问地址', key: 'access_url', value: props.javaProject.access_url ?? '', editable: true },
+    { label: 'Git地址', key: 'git_repository', value: props.javaProject.git_repository ?? '', editable: true },
+    { label: 'JDK版本', key: 'jdk_version', value: String(props.javaProject.jdk_version ?? ''), editable: false },
     { label: '创建时间', key: 'created_at', value: formatDate(props.javaProject.created_at), editable: false },
     { label: '更新时间', key: 'updated_at', value: formatDate(props.javaProject.updated_at), editable: false },
     { label: '最近部署时间', key: 'last_deployed_at', value: formatDate(props.javaProject.last_deployed_at), editable: false },
   ];
+  isEditing.value = false;
   isViewDetailDialogOpen.value = true;
 };
 
-const containerStatus = ref('Checking');
-
-onMounted(async () => {
+const fetchContainerStatus = async () => {
+  containerStatus.value = 'Checking';
   try {
-    const response = await provideCurrentAgentProxyApi().fetchDockerContainerStatus(`${props.javaProject.container_name}`);
-    containerStatus.value = response.container_status;
-  } catch (error) {
+    const res = await provideCurrentAgentProxyApi().fetchDockerContainerStatus(props.javaProject.container_name || '');
+    containerStatus.value = res?.container_status || 'Unknown';
+  } catch {
     containerStatus.value = 'Unknown';
   }
-});
+};
 
-const getContainerStatusTagType = (status: string): string => {
+const getContainerStatusTagType = (status: string) => {
   const s = status.toLowerCase();
-
-  if (s.startsWith("up")) return "success";                 // 容器正在运行
-  if (s.startsWith("exited (0)")) return "info";            // 正常退出
-  if (s.startsWith("exited")) return "danger";              // 非正常退出
-  if (s.startsWith("restarting")) return "warning";         // 正在重启
-  if (s.startsWith("paused")) return "warning";             // 已暂停
-  if (s.startsWith("created")) return "default";            // 刚创建未启动
-  if (s.startsWith("dead")) return "danger";                // 崩溃状态
-  if (s.includes('awaiting deployment')) return 'info';     // 待部署
-  return "default";                                          // 兜底
+  if (s.startsWith('up')) return 'success';
+  if (s.startsWith('exited (0)')) return 'info';
+  if (s.startsWith('exited')) return 'danger';
+  if (s.startsWith('restarting') || s.startsWith('paused')) return 'warning';
+  if (s.startsWith('created')) return 'info';
+  if (s.startsWith('dead')) return 'danger';
+  return 'info';
 };
 
-const isEditing = ref(false);
-
-const startEdit = () => {
-  isEditing.value = true;
-};
-
-const cancelEdit = () => {
-  isEditing.value = false;
-};
-
+const startEdit = () => { isEditing.value = true; };
+const cancelEdit = () => { isEditing.value = false; };
 const saveEdit = async () => {
-  const updateData: Partial<UpdateJavaProjectRequestDto> = {};
-
-  tableData.value.forEach(item => {
-    const skipKeys = ['created_at', 'updated_at', 'last_deployed_at'];
-
-    if (!skipKeys.includes(item.key)) {
-      updateData[item.key as keyof UpdateJavaProjectRequestDto] = item.value as any;
-    }
-  });
-
-  // 确保包含 ID
-  updateData['id'] = props.javaProject.id;
-
-  console.log('[编辑保存] 构造的更新数据：', updateData);
-
   try {
-    await provideCurrentAgentProxyApi().updateJavaProject(updateData as UpdateJavaProjectRequestDto);
-    Notify.create({
-      type: 'positive',
-      message: '保存成功',
-    });
-    isEditing.value = false;
+    await provideCurrentAgentProxyApi().updateJavaProject({ id: props.javaProject.id } as UpdateJavaProjectRequestDto);
+    Notify.create({ type: 'positive', message: '保存成功', position: 'top' });
     isViewDetailDialogOpen.value = false;
-  } catch (error) {
-    Notify.create({
-      type: 'negative',
-      message: '保存失败',
-    });
+    isEditing.value = false;
+  } catch {
+    Notify.create({ type: 'negative', message: '保存失败', position: 'top' });
   }
-};
-
-// ==================== ↓↓↓↓↓ 部署相关 ↓↓↓↓↓ ====================
-const isDeploying = ref(false)
-const openUploadDeployDialog = async () => {
-  isUploadDeployDialogOpen.value = true;
-  fileList.value = [];
-  uploadProgress.value = 0;
-
-  const systemConfig1 = await provideCurrentAgentProxyApi().fetchSystemConfig("default_java_dockerfile_template")
-  const defaultJavaDockerfileTemplate = systemConfig1.config_value
-  dockerfileContent.value = await provideCurrentAgentProxyApi().renderTemplateContent(props.javaProject.id, defaultJavaDockerfileTemplate)
-
-  const systemConfig2 = await provideCurrentAgentProxyApi().fetchSystemConfig("default_java_dockercommand_template")
-  const defaultJavaDockercommandTemplate = systemConfig2.config_value
-  dockerCommand.value = await provideCurrentAgentProxyApi().renderTemplateContent(props.javaProject.id, defaultJavaDockercommandTemplate)
-
-  // const dockerfileTemplates = await provideCurrentAgentProxyApi().fetchTemplateList("dockerfile");
-  // const dockercommandTemplates = await provideCurrentAgentProxyApi().fetchTemplateList("dockercommand");
-
 };
 
 const openCloudBuildDeployDialog = () => {
   isCloudBuildDeployDialogOpen.value = true;
-  Notify.create({
-    message: '尚未实现，敬请期待！',
-    type: 'warning',
-    position: 'top',
-  });
+  Notify.create({ message: '尚未实现，敬请期待！', type: 'warning', position: 'top' });
 };
 
-const handleFileChange = (file: any) => {
-  fileList.value = [file];
+const openUploadDeployDialog = async () => {
+  isUploadDeployDialogOpen.value = true;
+  fileList.value = [];
+  uploadProgress.value = 0;
+  const api = provideCurrentAgentProxyApi();
+  const d = await api.fetchSystemConfig('default_java_dockerfile_template');
+  const c = await api.fetchSystemConfig('default_java_dockercommand_template');
+  dockerfileContent.value = await api.renderTemplateContent(props.javaProject.id, d.config_value);
+  dockerCommand.value = await api.renderTemplateContent(props.javaProject.id, c.config_value);
 };
+
+const handleFileChange = (file: any) => { fileList.value = [file]; };
 
 const handleUploadDeploy = async () => {
-  isDeploying.value = true;
   const file = fileList.value[0]?.raw;
   if (!file) {
-    Notify.create({
-      type: 'negative',
-      message: '请选择一个文件',
-      position: 'top',
-    });
+    Notify.create({ type: 'negative', message: '请选择文件', position: 'top' });
     return;
   }
 
+  isDeploying.value = true;
+  uploadProgress.value = 0;
+
   try {
-    uploadProgress.value = 0;
+    const fd = new FormData();
+    fd.append('id', props.javaProject.id);
+    fd.append('file', file);
+    fd.append('dockerfile_content', dockerfileContent.value);
+    fd.append('dockercommand_content', dockerCommand.value);
 
-    const formData = new FormData();
-    formData.append('id', props.javaProject.id);
-    formData.append('file', file);
-    formData.append('dockerfile_content', dockerfileContent.value);
-    formData.append('dockercommand_content', dockerCommand.value);
-
-    const response = await provideCurrentAgentProxyApi().deployJavaProject(formData, {
-      onUploadProgress: (event: AxiosProgressEvent) => {
-        if (event.total) {
-          const percentCompleted = Math.round(
-            (event.loaded * 100) / event.total
-          );
-          uploadProgress.value = percentCompleted;
-        }
-      },
+    await provideCurrentAgentProxyApi().deployJavaProject(fd, {
+      onUploadProgress: (e: AxiosProgressEvent) => {
+        if (e.total) uploadProgress.value = Math.round((e.loaded / e.total) * 100);
+      }
     });
 
-    if (response.code === 200) {
-      uploadProgress.value = 100;
-      Notify.create({
-        type: 'positive',
-        message: '部署成功',
-        position: 'top',
-      });
-      setTimeout(() => {
-        isUploadDeployDialogOpen.value = false;
-      }, 1000);
-    } else {
-      Notify.create({
-        type: 'negative',
-        message: response.message || '部署失败',
-        position: 'top',
-      });
-      uploadProgress.value = 0;
-    }
-  } catch (error) {
-    Notify.create({
-      type: 'negative',
-      message: '上传失败：' + error,
-      position: 'top',
-    });
+    uploadProgress.value = 100;
+    Notify.create({ type: 'positive', message: '部署成功', position: 'top' });
+    isUploadDeployDialogOpen.value = false;
+    fetchContainerStatus();
+  } catch {
+    Notify.create({ type: 'negative', message: '部署失败', position: 'top' });
     uploadProgress.value = 0;
+  } finally {
+    isDeploying.value = false;
   }
 };
-// ==================== ↑↑↑↑↑ 部署相关↑↑↑↑↑ ====================
 
 const handleSecondConfirmDelete = async () => {
-  if (confirmText.value === '确定删除') {
-    try {
-      await provideCurrentAgentProxyApi().deleteJavaProject(props.javaProject.id)
-      Notify.create({
-        message: '删除成功',
-        type: 'positive',
-        position: 'top',
-      });
-      // 关闭对话框
-      isSecondConfirmDeleteDialogOpen.value = false;
-      isViewDetailDialogOpen.value = false;
-    } catch (error: any) {
-      Notify.create({
-        message: '删除失败: ' + error.message,
-        type: 'negative',
-        position: 'top',
-      });
-    } finally {
-      confirmText.value = '';
-    }
-  } else {
-    Notify.create({
-      message: '请输入"确定删除"',
-      type: 'negative',
-      position: 'top',
-    });
+  if (confirmText.value !== '确定删除') {
+    Notify.create({ type: 'negative', message: '请输入确认文字', position: 'top' });
+    return;
   }
+  try {
+    await provideCurrentAgentProxyApi().deleteJavaProject(props.javaProject.id);
+    Notify.create({ type: 'positive', message: '删除成功', position: 'top' });
+    isSecondConfirmDeleteDialogOpen.value = false;
+    isViewDetailDialogOpen.value = false;
+  } catch {
+    Notify.create({ type: 'negative', message: '删除失败', position: 'top' });
+  }
+  confirmText.value = '';
 };
+
+onMounted(() => { fetchContainerStatus(); });
 </script>
 
 <style scoped>
 .java-project-card {
   width: 100%;
-  height: 100%;
+  min-height: 418px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  border-radius: 20px;
+  overflow: visible;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+  transition: all 0.22s ease;
+}
+
+.java-project-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 44px rgba(15, 23, 42, 0.1);
+}
+
+.card-header {
+  padding: 18px 18px 10px;
+}
+
+.project-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 4px;
+}
+
+.project-header-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.project-header-right {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.project-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.project-submeta {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.project-submeta-type {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.runtime-status-inline {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.project-deploy-text {
+  font-size: 12px;
+  color: #9ca3af;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.info-list {
+  margin-top: 10px;
+}
+
+.info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  transition: background 0.18s ease;
+  cursor: pointer;
+}
+
+.info-row+.info-row {
+  border-top: 1px dashed #e5e7eb;
+}
+
+.info-row:hover {
+  background: rgba(248, 250, 252, 0.55);
+}
+
+.info-key {
+  width: 82px;
+  flex-shrink: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.info-main-value,
+.info-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #334155;
+  word-break: break-all;
+}
+
+.info-main-value {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.multi-line-value {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+.single-line {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.hover-copy {
+  cursor: pointer;
+  position: relative;
+  transition: color 0.18s ease;
+}
+
+.hover-copy:hover {
+  color: #2563eb;
+}
+
+.hover-copy::after {
+  content: "点此复制";
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: 1;
+  color: #f8fafc;
+  background: rgba(15, 23, 42, 0.92);
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.hover-copy:hover::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.card-actions {
+  padding: 10px 14px 14px;
+  gap: 4px;
+}
+
+:deep(.card-actions .q-btn) {
+  border-radius: 12px;
+  transition: all 0.18s ease;
+}
+
+:deep(.card-actions .q-btn:hover) {
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+:deep(.el-tag) {
+  border-radius: 999px;
+  font-weight: 600;
+  border: none;
+}
+
+@media (max-width: 640px) {
+  .project-header {
+    gap: 10px;
+  }
+
+  .project-title {
+    font-size: 18px;
+  }
+
+  .project-header-right {
+    gap: 4px;
+  }
+
+  .info-key {
+    width: 74px;
+  }
 }
 </style>

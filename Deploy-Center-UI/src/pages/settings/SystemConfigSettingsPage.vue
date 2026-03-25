@@ -143,7 +143,7 @@ onMounted(() => {
   color: #888;
 }
 
-.custom-config-table >>> .el-table__header th {
+:deep(.custom-config-table .el-table__header th) {
   font-weight: 600;
   background-color: #fafafa;
 }

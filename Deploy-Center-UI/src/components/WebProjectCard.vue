@@ -1,59 +1,109 @@
 <template>
   <q-card class="web-project-card">
-    <q-card-section>
-      <div class="text-h6">{{ webProject.project_name }}</div>
-      <div class="row items-center q-mt-sm">
-        <div class="col text-subtitle2">{{ webProject.project_type }}</div>
+    <q-card-section class="card-header">
+      <div class="project-header">
+        <div class="project-header-left">
+          <div class="project-title" :title="webProject.project_name || '-'">
+            {{ webProject.project_name || '-' }}
+          </div>
 
-        <div class="q-ml-sm">
-        <q-spinner
-          v-if="deploymentStatus === 'Checking'"
-          color="grey-5"
-          size="16px"
-        />
-        <el-tag v-else :type="getDeploymentStatusTagType(deploymentStatus)">
-          {{ deploymentStatus }}
-        </el-tag>
+          <div class="project-submeta">
+            <span class="project-submeta-type">Web</span>
+          </div>
+        </div>
+
+        <div class="project-header-right">
+          <div class="runtime-status-inline">
+            <template v-if="isCheckingStatus">
+              <q-spinner color="grey-5" size="16px" />
+            </template>
+            <template v-else>
+              <el-tag :type="deploymentStatusMeta.tagType" effect="light" round>
+                {{ deploymentStatusMeta.label }}
+              </el-tag>
+            </template>
+          </div>
+
+          <div class="project-deploy-text">
+            最近部署：{{ getDeployText(webProject.last_deployed_at) }}
+          </div>
+        </div>
       </div>
+
+      <div class="info-list q-mt-sm">
+        <div
+          class="info-row info-row-link"
+          :class="{ 'info-row-clickable': !!webProject.access_url }"
+          @click="openAccessUrl(webProject.access_url)"
+        >
+          <div class="info-key">访问地址</div>
+
+          <div
+            v-if="webProject.access_url"
+            class="info-value access-url-link two-line-fixed"
+            :title="webProject.access_url"
+          >
+            {{ webProject.access_url }}
+          </div>
+
+          <div v-else class="info-value access-empty two-line-fixed">
+            未配置
+          </div>
+        </div>
+
+        <div class="info-row" @click="copyValue(webProject.host_project_path)">
+          <div class="info-key">宿主机路径</div>
+          <div
+            class="info-value hover-copy multi-line-value"
+            :title="webProject.host_project_path || '-'"
+          >
+            {{ webProject.host_project_path || '-' }}
+          </div>
+        </div>
+
+        <div class="info-row" @click="copyValue(webProject.container_project_path)">
+          <div
+            class="info-key"
+            :title="webProject.container_project_path || '-'"
+          >
+            容器内路径
+          </div>
+          <div
+            class="info-value hover-copy multi-line-value"
+            :title="webProject.container_project_path || '-'"
+          >
+            {{ webProject.container_project_path || '-' }}
+          </div>
+        </div>
       </div>
     </q-card-section>
 
-    <q-separator />
-
-    <q-card-section>
-      <p>项目代号: {{ webProject.project_code }}</p>
-      <p v-if="webProject.access_url">访问地址: <a :href="webProject.access_url" target="_blank">{{ webProject.access_url }}</a></p>
-      <p>宿主机路径: {{ webProject.host_project_path }}</p>
-      <p>容器内路径: {{ webProject.container_project_path }}</p>
-    </q-card-section>
-
-    <q-card-actions align="right">
+    <q-card-actions align="right" class="card-actions">
       <q-btn flat color="primary" label="详情" @click="viewWebProjectDetail" />
-
       <q-btn flat dense color="info" icon="cloud" label="云构建部署" @click="openCloudBuildDeployDialog" />
-
       <q-btn flat dense color="positive" icon="cloud_upload" label="上传部署" @click="openUploadDeployDialog" />
     </q-card-actions>
   </q-card>
 
   <!-- 详情对话框 -->
-  <q-dialog v-model="isViewDetailDialogOpen">
-    <q-card style="width: 80%">
+  <q-dialog v-model="isViewDetailDialogOpen" persistent>
+    <q-card class="detail-dialog-card">
       <q-card-section>
-        <!-- 右上角关闭按钮 -->
         <q-btn icon="close" flat round dense class="float-right" v-close-popup />
         <div class="text-h6">项目详情</div>
       </q-card-section>
+
       <q-separator />
 
-      <!-- 数据表格 -->
-      <q-card-section>
-        <el-table :data="tableData" border>
+      <q-card-section class="detail-table-section">
+        <el-table :data="tableData" border stripe style="width: 100%" max-height="60vh">
           <el-table-column prop="key" label="字段" width="170" />
           <el-table-column prop="label" label="注释" width="130" />
           <el-table-column label="值">
             <template v-slot="scope">
-              <div v-if="!isEditing || !scope.row.editable">{{ scope.row.value }}</div>
+              <div v-if="!isEditing || !scope.row.editable" class="table-cell-value">
+                {{ scope.row.value }}
+              </div>
               <el-input v-else v-model="scope.row.value" placeholder="请输入内容" clearable />
             </template>
           </el-table-column>
@@ -62,7 +112,6 @@
 
       <q-separator />
 
-      <!-- 控制按钮 -->
       <q-card-actions>
         <q-btn flat color="negative" label="删除" @click="isSecondConfirmDeleteDialogOpen = true" />
         <q-space />
@@ -79,9 +128,18 @@
       <q-card-section>
         <div class="text-h6">上传部署文件（{{ webProject.project_name }}）</div>
       </q-card-section>
+
       <q-card-section>
-        <el-upload ref="uploadRef" drag :auto-upload="false" accept=".zip" :before-upload="handleBeforeUpload"
-          :on-change="handleFileChange" :file-list="fileList" :disabled="uploadProgress > 0">
+        <el-upload
+          ref="uploadRef"
+          drag
+          :auto-upload="false"
+          accept=".zip"
+          :before-upload="handleBeforeUpload"
+          :on-change="handleFileChange"
+          :file-list="fileList"
+          :disabled="uploadProgress > 0"
+        >
           <div class="el-upload__text">
             <i class="el-icon-upload"></i>
             <div class="el-upload__text">
@@ -95,94 +153,187 @@
           </template>
         </el-upload>
 
-        <!-- 进度条和进度百分比 -->
-        <el-progress v-if="uploadProgress > 0" color="#67c23a" :percentage="uploadProgress" :text-inside="true"
-          :stroke-width="13" status="success" />
+        <el-progress
+          v-if="uploadProgress > 0"
+          :percentage="uploadProgress"
+          :text-inside="true"
+          :stroke-width="13"
+          status="success"
+        />
 
         <div v-if="uploadProgress === 100" class="text-positive" style="margin-top: 10px">
           上传完成！
         </div>
       </q-card-section>
+
       <q-card-actions align="right">
         <q-btn flat label="取消" v-close-popup />
-        <q-btn flat label="开始部署" color="positive" @click="handleUploadDeploy"
-          :disabled="!fileList.length || uploadProgress > 0" />
+        <q-btn
+          flat
+          label="开始部署"
+          color="positive"
+          @click="handleUploadDeploy"
+          :disabled="!fileList.length || uploadProgress > 0"
+        />
       </q-card-actions>
     </q-card>
   </q-dialog>
 
   <!-- 二次确认删除对话框 -->
-  <q-dialog v-model="isSecondConfirmDeleteDialogOpen">
-    <q-card style="width: 30%">
-      <q-card-section class="text-h6"> 危险操作 </q-card-section>
+  <q-dialog v-model="isSecondConfirmDeleteDialogOpen" persistent>
+    <q-card class="delete-dialog-card">
+      <q-card-section class="text-h6 text-negative">危险操作</q-card-section>
 
       <q-card-section>
-        <div style="color: red; text-indent: 1rem">
+        <div class="delete-warning-text">
+          你正在删除项目：
+          <strong>{{ webProject.project_name || '-' }}</strong>
+        </div>
+
+        <div class="delete-warning-subtext q-mt-sm">
           请输入“确定删除”以进行删除操作。
         </div>
 
-        <q-input v-model="confirmText" />
+        <q-input
+          v-model="confirmText"
+          outlined
+          class="q-mt-md"
+          placeholder="请输入：确定删除"
+        />
       </q-card-section>
 
       <q-card-actions align="right">
-        <q-btn label="确定" @click="handleSecondConfirmDelete" />
+        <q-btn flat label="取消" v-close-popup />
+        <q-btn label="确定" color="negative" @click="handleSecondConfirmDelete" />
       </q-card-actions>
     </q-card>
   </q-dialog>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { Notify } from 'quasar';
+import { computed, onMounted, ref } from 'vue';
+import type { AxiosProgressEvent } from 'axios';
+import { Notify, copyToClipboard } from 'quasar';
 import { formatDate } from 'src/utils/dateFormatter';
 import { provideCurrentAgentProxyApi } from 'src/factory/agentProxyApiFactory';
 import { WebProject } from 'src/types/Project.types';
-import { UpdateWebProjectRequestDto } from "src/types/dto/UpdateWebProjectRequestDto";
+import { UpdateWebProjectRequestDto } from 'src/types/dto/UpdateWebProjectRequestDto';
 
 const props = defineProps<{
   webProject: WebProject;
 }>();
 
+const agentProxyApi = provideCurrentAgentProxyApi();
+
 const isViewDetailDialogOpen = ref(false);
+const isUploadDeployDialogOpen = ref(false);
+const isCloudBuildDeployDialogOpen = ref(false);
+const isSecondConfirmDeleteDialogOpen = ref(false);
 
-const tableData = ref<{ label: string; value: string; key: string, editable: boolean }[]>([]);
+const isCheckingStatus = ref(true);
+const isEditing = ref(false);
 
-// 打开详情对话框
+const tableData = ref<{ label: string; value: string; key: string; editable: boolean }[]>([]);
+
+const formatDateSafe = (value: any) => {
+  if (!value) return '-';
+  try {
+    return formatDate(value);
+  } catch {
+    return String(value);
+  }
+};
+
+const getDeployText = (time?: any) => {
+  if (!time) return '未部署';
+
+  try {
+    const now = Date.now();
+    const t = new Date(time).getTime();
+    if (Number.isNaN(t)) return '未部署';
+
+    const diff = Math.floor((now - t) / 1000);
+
+    if (diff < 60) return '刚刚';
+    if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
+    return `${Math.floor(diff / 86400)}天前`;
+  } catch {
+    return '未部署';
+  }
+};
+
+const copyValue = async (text?: string) => {
+  const value = text?.trim();
+  if (!value || value === '-') return;
+
+  try {
+    await copyToClipboard(value);
+    Notify.create({
+      type: 'positive',
+      message: '复制成功',
+      position: 'top',
+      timeout: 1000,
+    });
+  } catch {
+    Notify.create({
+      type: 'negative',
+      message: '复制失败',
+      position: 'top',
+      timeout: 1000,
+    });
+  }
+};
+
+const openAccessUrl = (url?: string) => {
+  const value = url?.trim();
+  if (!value || value === '-') return;
+
+  window.open(value, '_blank', 'noopener,noreferrer');
+};
+
 const viewWebProjectDetail = () => {
   tableData.value = [
-    { label: '项目Id', key: 'id', value: props.webProject.id, editable: false },
-    { label: '项目代号', key: 'project_code', value: props.webProject.project_code, editable: true },
-    { label: '项目名称', key: 'project_name', value: props.webProject.project_name, editable: true },
-    { label: '项目分组', key: 'project_group', value: props.webProject.project_group, editable: true },
-    { label: '宿主机路径', key: 'host_project_path', value: props.webProject.host_project_path, editable: true },
-    { label: '容器内路径', key: 'container_project_path', value: props.webProject.container_project_path, editable: true },
-    { label: 'Git地址', key: 'git_repository', value: props.webProject.git_repository, editable: true },
-    { label: '访问地址', key: 'access_url', value: props.webProject.access_url, editable: true },
-    { label: '创建时间', key: 'created_at', value: formatDate(props.webProject.created_at), editable: false },
-    { label: '更新时间', key: 'updated_at', value: formatDate(props.webProject.updated_at), editable: false },
-    { label: '最近部署时间', key: 'last_deployed_at', value: formatDate(props.webProject.last_deployed_at), editable: false }
+    { label: '项目Id', key: 'id', value: String(props.webProject.id ?? ''), editable: false },
+    { label: '项目代号', key: 'project_code', value: String(props.webProject.project_code ?? ''), editable: true },
+    { label: '项目名称', key: 'project_name', value: String(props.webProject.project_name ?? ''), editable: true },
+    { label: '项目分组', key: 'project_group', value: String(props.webProject.project_group ?? ''), editable: true },
+    { label: '宿主机路径', key: 'host_project_path', value: String(props.webProject.host_project_path ?? ''), editable: true },
+    { label: '容器内路径', key: 'container_project_path', value: String(props.webProject.container_project_path ?? ''), editable: true },
+    { label: 'Git地址', key: 'git_repository', value: String(props.webProject.git_repository ?? ''), editable: true },
+    { label: '访问地址', key: 'access_url', value: String(props.webProject.access_url ?? ''), editable: true },
+    { label: '创建时间', key: 'created_at', value: formatDateSafe(props.webProject.created_at), editable: false },
+    { label: '更新时间', key: 'updated_at', value: formatDateSafe(props.webProject.updated_at), editable: false },
+    { label: '最近部署时间', key: 'last_deployed_at', value: formatDateSafe(props.webProject.last_deployed_at), editable: false }
   ];
   isViewDetailDialogOpen.value = true;
 };
 
 const deploymentStatus = ref<'Deployed' | 'Awaiting Deployment' | 'Checking' | 'Unknown'>('Checking');
 
-onMounted(async () => {
-  try {
-    const response = await provideCurrentAgentProxyApi().checkWebProjectDeploymentStatus(props.webProject.id);
-    deploymentStatus.value = response.deployment_status;
-  } catch (error) {
-    deploymentStatus.value = 'Unknown';
+const deploymentStatusMeta = computed(() => {
+  if (deploymentStatus.value === 'Deployed') {
+    return { label: 'Deployed', tagType: 'success' };
   }
+  if (deploymentStatus.value === 'Awaiting Deployment') {
+    return { label: 'Awaiting Deployment', tagType: 'info' };
+  }
+  if (deploymentStatus.value === 'Unknown') {
+    return { label: 'Status Unknown', tagType: 'warning' };
+  }
+  return { label: deploymentStatus.value, tagType: 'info' };
 });
 
-const getDeploymentStatusTagType = (status: string): string => {
-  if (status == "Deployed") return "success"; 
-  if (status == "Awaiting Deployment") return "info"; 
-  return "default";
-};
-
-const isEditing = ref(false);
+onMounted(async () => {
+  try {
+    const response = await agentProxyApi.checkWebProjectDeploymentStatus(props.webProject.id);
+    deploymentStatus.value = response.deployment_status;
+  } catch {
+    deploymentStatus.value = 'Unknown';
+  } finally {
+    isCheckingStatus.value = false;
+  }
+});
 
 const startEdit = () => {
   isEditing.value = true;
@@ -203,13 +354,10 @@ const saveEdit = async () => {
     }
   });
 
-  // 确保包含 ID
-  updateData['id'] = props.webProject.id;
-
-  console.log('[编辑保存] 构造的更新数据：', updateData);
+  updateData.id = props.webProject.id;
 
   try {
-    await provideCurrentAgentProxyApi().updateWebProject(updateData as UpdateWebProjectRequestDto);
+    await agentProxyApi.updateWebProject(updateData as UpdateWebProjectRequestDto);
 
     Notify.create({
       type: 'positive',
@@ -217,7 +365,7 @@ const saveEdit = async () => {
     });
     isEditing.value = false;
     isViewDetailDialogOpen.value = false;
-  } catch (error) {
+  } catch {
     Notify.create({
       type: 'negative',
       message: '保存失败',
@@ -225,9 +373,6 @@ const saveEdit = async () => {
   }
 };
 
-// ==================== ↓↓↓↓↓ 部署相关 ↓↓↓↓↓ ====================
-// 云构建部署对话框开关
-const isCloudBuildDeployDialogOpen = ref(false);
 const openCloudBuildDeployDialog = () => {
   isCloudBuildDeployDialogOpen.value = true;
   Notify.create({
@@ -237,17 +382,14 @@ const openCloudBuildDeployDialog = () => {
   });
 };
 
-// 上传部署对话框开关
-const isUploadDeployDialogOpen = ref(false);
-// 打开文件选择框
 const openUploadDeployDialog = async () => {
   isUploadDeployDialogOpen.value = true;
-  // 初始化文件列表和进度
   fileList.value = [];
   uploadProgress.value = 0;
 };
-const uploadProgress = ref(0); // 上传进度
-const fileList = ref<any[]>([]); // 文件列表
+
+const uploadProgress = ref(0);
+const fileList = ref<any[]>([]);
 
 const handleBeforeUpload = (file: File): boolean => {
   const isZip = file.type === 'application/zip' || file.name.endsWith('.zip');
@@ -263,11 +405,11 @@ const handleBeforeUpload = (file: File): boolean => {
 };
 
 const handleFileChange = (file: any) => {
-  fileList.value = [file]; // 限制只能上传一个文件
+  fileList.value = [file];
 };
 
 const handleUploadDeploy = async () => {
-  const file = fileList.value[0]?.raw; // 获取文件对象
+  const file = fileList.value[0]?.raw;
   if (!file) {
     Notify.create({
       type: 'negative',
@@ -278,35 +420,31 @@ const handleUploadDeploy = async () => {
   }
 
   try {
-    uploadProgress.value = 0; // 初始化进度
+    uploadProgress.value = 0;
 
     const formData = new FormData();
-    formData.append('id', props.webProject.id);
+    formData.append('id', String(props.webProject.id));
     formData.append('file', file);
 
-    // 调用 deployWebProject API
-    const response = await provideCurrentAgentProxyApi().deployWebProject(formData, {
-      onUploadProgress: (event) => {
+    const response = await agentProxyApi.deployWebProject(formData, {
+      onUploadProgress: (event: AxiosProgressEvent) => {
         if (event.total) {
-          const percentCompleted = Math.round(
-            (event.loaded * 100) / event.total
-          );
+          const percentCompleted = Math.round((event.loaded * 100) / event.total);
           uploadProgress.value = percentCompleted;
         }
       },
     });
 
     if (response.code === 200) {
-      uploadProgress.value = 100; // 标记上传完成
+      uploadProgress.value = 100;
       Notify.create({
         type: 'positive',
         message: '部署成功',
         position: 'top',
       });
 
-      // 部署成功后 延迟关闭对话框
       setTimeout(() => {
-        isUploadDeployDialogOpen.value = false; // 延迟关闭对话框
+        isUploadDeployDialogOpen.value = false;
       }, 1000);
     } else {
       Notify.create({
@@ -314,33 +452,31 @@ const handleUploadDeploy = async () => {
         message: '部署失败：' + response.msg,
         position: 'top',
       });
-      uploadProgress.value = 0; // 重置进度
+      uploadProgress.value = 0;
     }
   } catch (error) {
-    console.error('Upload error:', error);
     Notify.create({
       type: 'negative',
       message: '上传失败：' + error,
       position: 'top',
     });
-    uploadProgress.value = 0; // 重置进度
+    uploadProgress.value = 0;
   }
 };
-// ==================== ↑↑↑↑↑ 部署相关↑↑↑↑↑ ====================
-const isSecondConfirmDeleteDialogOpen = ref(false);
+
 const confirmText = ref('');
 const handleSecondConfirmDelete = async () => {
   if (confirmText.value === '确定删除') {
     try {
-      await provideCurrentAgentProxyApi().deleteWebProject(props.webProject.id)
+      await agentProxyApi.deleteWebProject(props.webProject.id);
       Notify.create({
         message: '删除成功',
         type: 'positive',
         position: 'top',
       });
 
-      isSecondConfirmDeleteDialogOpen.value = false; // 关闭删除确认对话框
-      isViewDetailDialogOpen.value = false; // 关闭详情对话框
+      isSecondConfirmDeleteDialogOpen.value = false;
+      isViewDetailDialogOpen.value = false;
     } catch (error: any) {
       Notify.create({
         message: '删除失败: ' + error.message,
@@ -348,7 +484,7 @@ const handleSecondConfirmDelete = async () => {
         position: 'top',
       });
     } finally {
-      confirmText.value = ''; // 清空输入框
+      confirmText.value = '';
     }
   } else {
     Notify.create({
@@ -357,15 +493,273 @@ const handleSecondConfirmDelete = async () => {
       position: 'top',
     });
   }
-}
+};
 </script>
 
 <style scoped>
 .web-project-card {
   width: 100%;
-  height: 100%;
+  min-height: 418px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  border-radius: 20px;
+  overflow: visible;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+  transition: all 0.22s ease;
+}
+
+.web-project-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 44px rgba(15, 23, 42, 0.1);
+}
+
+.card-header {
+  padding: 18px 18px 10px;
+}
+
+.project-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 4px;
+}
+
+.project-header-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.project-header-right {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.project-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.project-submeta {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.project-submeta-type {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.runtime-status-inline {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.project-deploy-text {
+  font-size: 12px;
+  color: #9ca3af;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.info-list {
+  margin-top: 10px;
+}
+
+.info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  transition: background 0.18s ease;
+  cursor: pointer;
+}
+
+.info-row + .info-row {
+  border-top: 1px dashed #e5e7eb;
+}
+
+.info-row:hover {
+  background: rgba(248, 250, 252, 0.55);
+}
+
+.info-row-clickable:hover .access-url-link {
+  color: #1d4ed8;
+}
+
+.info-key {
+  width: 82px;
+  flex-shrink: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.info-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #334155;
+  word-break: break-all;
+}
+
+.access-url-link {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.access-empty {
+  color: #94a3b8;
+}
+
+.two-line-fixed {
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: calc(1.6em * 2);
+}
+
+.multi-line-value {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+.single-line {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.hover-copy {
+  cursor: pointer;
+  position: relative;
+  transition: color 0.18s ease;
+}
+
+.hover-copy:hover {
+  color: #2563eb;
+}
+
+.hover-copy::after {
+  content: "点此复制";
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: 1;
+  color: #f8fafc;
+  background: rgba(15, 23, 42, 0.92);
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.hover-copy:hover::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.card-actions {
+  padding: 10px 14px 14px;
+  gap: 4px;
+}
+
+.detail-dialog-card {
+  width: 88vw;
+  max-width: 1100px;
+  border-radius: 18px;
+}
+
+.detail-table-section {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.table-cell-value {
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #334155;
+}
+
+.delete-dialog-card {
+  width: 420px;
+  max-width: 92vw;
+  border-radius: 18px;
+}
+
+.delete-warning-text {
+  color: #1f2937;
+  line-height: 1.7;
+}
+
+.delete-warning-subtext {
+  color: #dc2626;
+  font-size: 14px;
+}
+
+:deep(.card-actions .q-btn) {
+  border-radius: 12px;
+  transition: all 0.18s ease;
+}
+
+:deep(.card-actions .q-btn:hover) {
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+:deep(.el-tag) {
+  border-radius: 999px;
+  font-weight: 600;
+  border: none;
+}
+
+@media (max-width: 640px) {
+  .project-header {
+    gap: 10px;
+  }
+
+  .project-title {
+    font-size: 18px;
+  }
+
+  .project-header-right {
+    gap: 4px;
+  }
+
+  .info-key {
+    width: 74px;
+  }
 }
 </style>
