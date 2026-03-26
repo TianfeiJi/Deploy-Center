@@ -32,7 +32,7 @@
 > 更多说明文档请见 [A-docs/](./A-docs/) 目录  
 
 ## 在线演示
-**演示地址：** [https://jitianfei.com/demo/deploy-center-ui](https://jitianfei.com/demo/deploy-center-ui)  
+**演示地址：** [http://jitianfei.com/demo/deploy-center-ui/](http://jitianfei.com/demo/deploy-center-ui/)  
 **用户名：** admin  
 **密码：** admin  
 
@@ -145,8 +145,8 @@ Deploy Center 最初是一个简化部署操作的小工具，后来发现还能
 当然，愿意打赏我一杯咖啡，那更不白写了 ☕️😌
 
 <p align="center">
-  <img src="http://jitianfei.com/resource/images/sponsor-wechat.png" width="150" alt="微信" style="margin-right: 100px;"/>
-  <img src="http://jitianfei.com/resource/images/sponsor-alipay.jpg" width="150" alt="支付宝"/>
+  <img src="http://jitianfei.com/oss/portfolio/images/sponsor-wechat.png" width="150" alt="微信" style="margin-right: 100px;"/>
+  <img src="http://jitianfei.com/oss/portfolio/images/sponsor-alipay.jpg" width="150" alt="支付宝"/>
 </p>
 
 <p align="center">你的支持不仅是对这个项目的认可，也是对我个人的巨大鼓励。</p>
