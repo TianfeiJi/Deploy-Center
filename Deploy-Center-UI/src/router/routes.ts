@@ -28,6 +28,11 @@ const routes: RouteRecordRaw[] = [
     children: [{ path: '', component: () => import('pages/ProjectDeployPage.vue') }],
   },
   {
+    path: '/project/deploy/:id',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [{ path: '', component: () => import('pages/ProjectDeployConsolePage.vue') }],
+  },
+  {
     path: '/deployHistory',
     component: () => import('layouts/MainLayout.vue'),
     children: [{ path: '', component: () => import('pages/DeployHistoryPage.vue') }],

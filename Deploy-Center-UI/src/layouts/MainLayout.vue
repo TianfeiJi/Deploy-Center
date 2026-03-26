@@ -200,7 +200,24 @@ const router = useRouter();
 const agentStore = useAgentStore();
 const { agentList, currentAgent, agentRuntimeInfoMap } = storeToRefs(agentStore);
 
-const selectAgent = (agentId: number) => {
+const selectAgent = async (agentId: number) => {
+  const oldAgentId = currentAgent.value?.id;
+
+  if (!agentId || agentId === oldAgentId) return;
+
+  // 如果当前在项目部署控制台页，切换 Agent 后直接返回项目列表
+  const isDeployPage = route.path.startsWith('/project/deploy/')
+  if (isDeployPage) {
+    Notify.create({
+      type: 'info',
+      message: '已切换 Agent，请重新选择项目',
+      position: 'top',
+      timeout: 1200,
+    })
+
+    await router.replace('/project')
+  }
+
   agentStore.setCurrentAgentById(agentId);
   sessionStorage.setItem('selectedAgentId', String(agentId));
 };

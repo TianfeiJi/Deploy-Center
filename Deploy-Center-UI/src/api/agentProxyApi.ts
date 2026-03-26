@@ -137,7 +137,7 @@ export class AgentProxyApi {
 
   // 获取项目详情
   async fetchProjectDetail(id: string): Promise<any> {
-    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(this.agentId, `/api/deploy-agent/project/id=${id}`, 'GET');
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(this.agentId, `/api/deploy-agent/project?id=${id}`, 'GET');
     return httpResult.data.data;
   }
 

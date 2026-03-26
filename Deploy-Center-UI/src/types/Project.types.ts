@@ -9,9 +9,11 @@ export interface WebProject {
   container_project_path: string; // 容器项目路径
   git_repository: string; // Git地址
   access_url: string; // 访问地址
+  framework?: string;
+  node_version?: string; // Node版本
   created_at: string;
-  updated_at: string;
-  last_deployed_at: string;
+  updated_at?: string;
+  last_deployed_at?: string;
 }
 
 // 定义 Java 项目类型

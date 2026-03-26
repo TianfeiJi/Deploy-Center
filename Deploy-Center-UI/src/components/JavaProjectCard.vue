@@ -1,6 +1,5 @@
 <template>
   <q-card class="java-project-card">
-    <!-- 顶部 -->
     <q-card-section class="card-header">
       <div class="project-header">
         <div class="project-header-left">
@@ -10,6 +9,10 @@
 
           <div class="project-submeta">
             <span class="project-submeta-type">Java</span>
+            <span v-if="javaProject.project_group" class="project-submeta-divider">·</span>
+            <span v-if="javaProject.project_group" class="project-submeta-group">
+              {{ javaProject.project_group }}
+            </span>
           </div>
         </div>
 
@@ -22,7 +25,12 @@
               <el-tag type="warning" effect="light" round>Status Unknown</el-tag>
             </template>
             <template v-else>
-              <el-tag :closable="false" :type="getContainerStatusTagType(containerStatus)" effect="light" round>
+              <el-tag
+                :closable="false"
+                :type="getContainerStatusTagType(containerStatus)"
+                effect="light"
+                round
+              >
                 {{ containerStatus }}
               </el-tag>
             </template>
@@ -34,18 +42,25 @@
         </div>
       </div>
 
-      <!-- 直接平铺信息，不再套内部 card -->
       <div class="info-list q-mt-sm">
-        <div class="info-row" @click="copyValue(javaProject.container_name)">
+        <div class="info-row">
           <div class="info-key">容器名称</div>
-          <div class="info-main-value hover-copy" :title="javaProject.container_name || '-'">
+          <div
+            class="info-main-value hover-copy"
+            :title="javaProject.container_name || '-'"
+            @click.stop="copyValue(javaProject.container_name)"
+          >
             {{ javaProject.container_name || '-' }}
           </div>
         </div>
 
-        <div class="info-row" @click="copyValue(dockerImageText)">
+        <div class="info-row">
           <div class="info-key">镜像名称</div>
-          <div class="info-value hover-copy" :title="dockerImageText">
+          <div
+            class="info-value hover-copy"
+            :title="dockerImageText"
+            @click.stop="copyValue(dockerImageText)"
+          >
             {{ dockerImageText }}
           </div>
         </div>
@@ -57,38 +72,52 @@
           </div>
         </div>
 
-        <div class="info-row" @click="copyValue(javaProject.network)">
+        <div class="info-row">
           <div class="info-key">Docker 网络</div>
-          <div class="info-value hover-copy" :title="javaProject.network || '-'">
+          <div
+            class="info-value hover-copy"
+            :title="javaProject.network || '-'"
+            @click.stop="copyValue(javaProject.network)"
+          >
             {{ javaProject.network || '-' }}
           </div>
         </div>
 
-        <div class="info-row" @click="copyValue(javaProject.host_project_path)">
+        <div class="info-row">
           <div class="info-key">宿主机路径</div>
-          <div class="info-value hover-copy multi-line-value" :title="javaProject.host_project_path || '-'">
+          <div
+            class="info-value hover-copy multi-line-value"
+            :title="javaProject.host_project_path || '-'"
+            @click.stop="copyValue(javaProject.host_project_path)"
+          >
             {{ javaProject.host_project_path || '-' }}
           </div>
         </div>
 
-        <div class="info-row" @click="copyValue(javaProject.container_project_path)">
+        <div class="info-row">
           <div class="info-key">容器内路径</div>
-          <div class="info-value hover-copy multi-line-value" :title="javaProject.container_project_path || '-'">
+          <div
+            class="info-value hover-copy multi-line-value"
+            :title="javaProject.container_project_path || '-'"
+            @click.stop="copyValue(javaProject.container_project_path)"
+          >
             {{ javaProject.container_project_path || '-' }}
           </div>
         </div>
       </div>
     </q-card-section>
 
-    <!-- 底部 -->
-    <q-card-actions align="right" class="card-actions">
-      <q-btn flat color="primary" label="详情" @click="viewJavaProjectDetail" />
-      <q-btn flat dense color="info" icon="cloud" label="云构建部署" @click="openCloudBuildDeployDialog" />
-      <q-btn flat dense color="positive" icon="cloud_upload" label="上传部署" @click="openUploadDeployDialog" />
+    <q-card-actions class="card-actions split-actions">
+      <div class="actions-left">
+        <q-btn flat dense color="primary" label="详情" @click="viewJavaProjectDetail" />
+      </div>
+
+      <div class="actions-right">
+        <q-btn flat dense color="positive" label="部署" @click="goToDeployConsole(javaProject.id)" />
+      </div>
     </q-card-actions>
   </q-card>
 
-  <!-- 弹窗完全不动 -->
   <q-dialog v-model="isViewDetailDialogOpen">
     <q-card style="width: 100%">
       <q-card-section>
@@ -119,43 +148,6 @@
     </q-card>
   </q-dialog>
 
-  <q-dialog v-model="isUploadDeployDialogOpen">
-    <q-card style="width: 100%; max-width: 70vw;">
-      <q-card-section>
-        <div class="text-h5">上传部署（{{ javaProject.project_name }}）</div>
-      </q-card-section>
-      <q-separator />
-      <q-card-section>
-        <div class="text-h6">上传Jar包</div>
-        <el-upload ref="uploadRef" drag :auto-upload="false" accept=".jar" :on-change="handleFileChange"
-          :file-list="fileList" :disabled="uploadProgress > 0 || isDeploying">
-          <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-          <template #tip>
-            <div class="el-upload__tip" style="text-align: right; color: #909399">只能上传 .jar 文件，且一次仅允许一个文件</div>
-          </template>
-        </el-upload>
-        <el-progress v-if="uploadProgress > 0" :percentage="uploadProgress" :text-inside="true"
-          :stroke-width="13" status="success" />
-        <div v-if="uploadProgress === 100" class="text-positive" style="margin-top: 10px">上传完成！</div>
-      </q-card-section>
-      <q-card-section>
-        <div class="text-h6">设置Dockerfile</div>
-        <q-input v-model="dockerfileContent" type="textarea" outlined rows="16"
-          style="margin-top: 10px; font-family: Console;" :disable="isDeploying" />
-      </q-card-section>
-      <q-card-section>
-        <div class="text-h6">设置Docker命令</div>
-        <q-input v-model="dockerCommand" type="textarea" outlined rows="10"
-          style="margin-top: 10px; font-family: Console;" :disable="isDeploying" />
-      </q-card-section>
-      <q-card-actions align="right">
-        <q-btn flat label="取消" v-close-popup />
-        <q-btn flat label="开始部署" color="positive" @click="handleUploadDeploy"
-          :disabled="!fileList.length || uploadProgress > 0 || isDeploying" />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-
   <q-dialog v-model="isSecondConfirmDeleteDialogOpen">
     <q-card style="width: 30%">
       <q-card-section class="text-h6">危险操作</q-card-section>
@@ -177,27 +169,30 @@ import { provideCurrentAgentProxyApi } from 'src/factory/agentProxyApiFactory';
 import { formatDate } from 'src/utils/dateFormatter';
 import { JavaProject } from 'src/types/Project.types';
 import { UpdateJavaProjectRequestDto } from 'src/types/dto/UpdateJavaProjectRequestDto';
-import type { AxiosProgressEvent } from 'axios';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 const props = defineProps<{ javaProject: JavaProject }>();
 
 const isViewDetailDialogOpen = ref(false);
-const isUploadDeployDialogOpen = ref(false);
-const isCloudBuildDeployDialogOpen = ref(false);
 const isSecondConfirmDeleteDialogOpen = ref(false);
-const dockerfileContent = ref('');
-const dockerCommand = ref('');
 const confirmText = ref('');
-const uploadProgress = ref(0);
-const fileList = ref<any[]>([]);
 const tableData = ref<{ label: string; value: string; key: string; editable: boolean }[]>([]);
 const containerStatus = ref('Checking');
 const isEditing = ref(false);
-const isDeploying = ref(false);
+
+const goToDeployConsole = (id: string) => {
+  if (!id) return;
+  router.push({
+    path: `/project/deploy/${id}`,
+  });
+};
 
 const dockerImageText = computed(() => {
   return `${props.javaProject.docker_image_name || '-'}:${props.javaProject.docker_image_tag || 'latest'}`;
 });
+
 const portMappingText = computed(() => {
   return `${props.javaProject.external_port || '-'} → ${props.javaProject.internal_port || '-'}`;
 });
@@ -267,7 +262,9 @@ const viewJavaProjectDetail = () => {
 const fetchContainerStatus = async () => {
   containerStatus.value = 'Checking';
   try {
-    const res = await provideCurrentAgentProxyApi().fetchDockerContainerStatus(props.javaProject.container_name || '');
+    const res = await provideCurrentAgentProxyApi().fetchDockerContainerStatus(
+      props.javaProject.container_name || ''
+    );
     containerStatus.value = res?.container_status || 'Unknown';
   } catch {
     containerStatus.value = 'Unknown';
@@ -285,69 +282,24 @@ const getContainerStatusTagType = (status: string) => {
   return 'info';
 };
 
-const startEdit = () => { isEditing.value = true; };
-const cancelEdit = () => { isEditing.value = false; };
+const startEdit = () => {
+  isEditing.value = true;
+};
+
+const cancelEdit = () => {
+  isEditing.value = false;
+};
+
 const saveEdit = async () => {
   try {
-    await provideCurrentAgentProxyApi().updateJavaProject({ id: props.javaProject.id } as UpdateJavaProjectRequestDto);
+    await provideCurrentAgentProxyApi().updateJavaProject({
+      id: props.javaProject.id,
+    } as UpdateJavaProjectRequestDto);
     Notify.create({ type: 'positive', message: '保存成功', position: 'top' });
     isViewDetailDialogOpen.value = false;
     isEditing.value = false;
   } catch {
     Notify.create({ type: 'negative', message: '保存失败', position: 'top' });
-  }
-};
-
-const openCloudBuildDeployDialog = () => {
-  isCloudBuildDeployDialogOpen.value = true;
-  Notify.create({ message: '尚未实现，敬请期待！', type: 'warning', position: 'top' });
-};
-
-const openUploadDeployDialog = async () => {
-  isUploadDeployDialogOpen.value = true;
-  fileList.value = [];
-  uploadProgress.value = 0;
-  const api = provideCurrentAgentProxyApi();
-  const d = await api.fetchSystemConfig('default_java_dockerfile_template');
-  const c = await api.fetchSystemConfig('default_java_dockercommand_template');
-  dockerfileContent.value = await api.renderTemplateContent(props.javaProject.id, d.config_value);
-  dockerCommand.value = await api.renderTemplateContent(props.javaProject.id, c.config_value);
-};
-
-const handleFileChange = (file: any) => { fileList.value = [file]; };
-
-const handleUploadDeploy = async () => {
-  const file = fileList.value[0]?.raw;
-  if (!file) {
-    Notify.create({ type: 'negative', message: '请选择文件', position: 'top' });
-    return;
-  }
-
-  isDeploying.value = true;
-  uploadProgress.value = 0;
-
-  try {
-    const fd = new FormData();
-    fd.append('id', props.javaProject.id);
-    fd.append('file', file);
-    fd.append('dockerfile_content', dockerfileContent.value);
-    fd.append('dockercommand_content', dockerCommand.value);
-
-    await provideCurrentAgentProxyApi().deployJavaProject(fd, {
-      onUploadProgress: (e: AxiosProgressEvent) => {
-        if (e.total) uploadProgress.value = Math.round((e.loaded / e.total) * 100);
-      }
-    });
-
-    uploadProgress.value = 100;
-    Notify.create({ type: 'positive', message: '部署成功', position: 'top' });
-    isUploadDeployDialogOpen.value = false;
-    fetchContainerStatus();
-  } catch {
-    Notify.create({ type: 'negative', message: '部署失败', position: 'top' });
-    uploadProgress.value = 0;
-  } finally {
-    isDeploying.value = false;
   }
 };
 
@@ -367,7 +319,9 @@ const handleSecondConfirmDelete = async () => {
   confirmText.value = '';
 };
 
-onMounted(() => { fetchContainerStatus(); });
+onMounted(() => {
+  fetchContainerStatus();
+});
 </script>
 
 <style scoped>
@@ -438,10 +392,17 @@ onMounted(() => { fetchContainerStatus(); });
   flex-wrap: wrap;
 }
 
-.project-submeta-type {
-  font-size: 13px;
+.project-submeta-type,
+.project-submeta-group {
+  font-size: 14px;
   font-weight: 600;
   color: #6b7280;
+}
+
+.project-submeta-divider {
+  font-size: 20px;
+  font-weight: 600;
+  color: #cbd5e1;
 }
 
 .runtime-status-inline {
@@ -467,10 +428,9 @@ onMounted(() => { fetchContainerStatus(); });
   gap: 12px;
   padding: 10px 0;
   transition: background 0.18s ease;
-  cursor: pointer;
 }
 
-.info-row+.info-row {
+.info-row + .info-row {
   border-top: 1px dashed #e5e7eb;
 }
 
@@ -508,12 +468,6 @@ onMounted(() => { fetchContainerStatus(); });
   text-overflow: unset;
 }
 
-.single-line {
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
 .hover-copy {
   cursor: pointer;
   position: relative;
@@ -549,9 +503,18 @@ onMounted(() => { fetchContainerStatus(); });
   transform: translateY(0);
 }
 
-.card-actions {
+.card-actions.split-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 10px 14px 14px;
-  gap: 4px;
+  gap: 12px;
+}
+
+.actions-left,
+.actions-right {
+  display: flex;
+  align-items: center;
 }
 
 :deep(.card-actions .q-btn) {

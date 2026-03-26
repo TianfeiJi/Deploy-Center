@@ -9,17 +9,31 @@
 
           <div class="project-submeta">
             <span class="project-submeta-type">Python</span>
+             <span v-if="pythonProject.project_group" class="project-submeta-divider">·</span>
+            <span v-if="pythonProject.project_group" class="project-submeta-group">
+              {{ pythonProject.project_group }}
+            </span>
           </div>
         </div>
 
         <div class="project-header-right">
           <div class="runtime-status-inline">
-            <template v-if="isCheckingStatus">
+            <template v-if="containerStatus === 'Checking'">
               <q-spinner color="grey-5" size="16px" />
             </template>
+
+            <template v-else-if="containerStatus === 'Unknown'">
+              <el-tag type="warning" effect="light" round>Status Unknown</el-tag>
+            </template>
+
             <template v-else>
-              <el-tag :type="statusMeta.tagType" effect="light" round>
-                {{ statusMeta.label }}
+              <el-tag
+                :closable="false"
+                :type="getContainerStatusTagType(containerStatus)"
+                effect="light"
+                round
+              >
+                {{ formatContainerStatusLabel(containerStatus) }}
               </el-tag>
             </template>
           </div>
@@ -31,16 +45,24 @@
       </div>
 
       <div class="info-list q-mt-sm">
-        <div class="info-row" @click="copyValue(pythonProject.container_name)">
+        <div class="info-row">
           <div class="info-key">容器名称</div>
-          <div class="info-main-value hover-copy" :title="pythonProject.container_name || '-'">
+          <div
+            class="info-main-value hover-copy"
+            :title="pythonProject.container_name || '-'"
+            @click.stop="copyValue(pythonProject.container_name)"
+          >
             {{ pythonProject.container_name || '-' }}
           </div>
         </div>
 
-        <div class="info-row" @click="copyValue(dockerImageText)">
+        <div class="info-row">
           <div class="info-key">镜像名称</div>
-          <div class="info-value hover-copy" :title="dockerImageText">
+          <div
+            class="info-value hover-copy"
+            :title="dockerImageText"
+            @click.stop="copyValue(dockerImageText)"
+          >
             {{ dockerImageText }}
           </div>
         </div>
@@ -52,65 +74,63 @@
           </div>
         </div>
 
-        <div class="info-row" @click="copyValue(pythonProject.network)">
+        <div class="info-row">
           <div class="info-key">Docker 网络</div>
-          <div class="info-value hover-copy" :title="pythonProject.network || '-'">
+          <div
+            class="info-value hover-copy"
+            :title="pythonProject.network || '-'"
+            @click.stop="copyValue(pythonProject.network)"
+          >
             {{ pythonProject.network || '-' }}
           </div>
         </div>
 
-        <div
-          v-if="pythonProject.access_url"
-          class="info-row info-row-link"
-          @click="openAccessUrl(pythonProject.access_url)"
-        >
+        <div v-if="pythonProject.access_url" class="info-row">
           <div class="info-key">访问地址</div>
-          <div class="info-value access-url-link" :title="pythonProject.access_url">
+          <div
+            class="info-value access-url-link"
+            :title="pythonProject.access_url"
+            @click.stop="openAccessUrl(pythonProject.access_url)"
+          >
             {{ pythonProject.access_url }}
           </div>
         </div>
 
-        <div class="info-row" @click="copyValue(pythonProject.host_project_path)">
+        <div class="info-row">
           <div class="info-key">宿主机路径</div>
-          <div class="info-value hover-copy multi-line-value" :title="pythonProject.host_project_path || '-'">
+          <div
+            class="info-value hover-copy multi-line-value"
+            :title="pythonProject.host_project_path || '-'"
+            @click.stop="copyValue(pythonProject.host_project_path)"
+          >
             {{ pythonProject.host_project_path || '-' }}
           </div>
         </div>
 
-        <div class="info-row" @click="copyValue(pythonProject.container_project_path)">
+        <div class="info-row">
           <div class="info-key">容器内路径</div>
-          <div class="info-value hover-copy multi-line-value" :title="pythonProject.container_project_path || '-'">
+          <div
+            class="info-value hover-copy multi-line-value"
+            :title="pythonProject.container_project_path || '-'"
+            @click.stop="copyValue(pythonProject.container_project_path)"
+          >
             {{ pythonProject.container_project_path || '-' }}
           </div>
         </div>
       </div>
     </q-card-section>
 
-    <q-card-actions align="right" class="card-actions">
-      <q-btn flat color="primary" label="详情" @click="viewPythonProjectDetail" />
+    <q-card-actions class="card-actions split-actions">
+      <div class="actions-left">
+        <q-btn flat dense color="primary" label="详情" @click="viewPythonProjectDetail" />
+      </div>
 
-      <q-btn
-        flat
-        dense
-        color="info"
-        icon="cloud"
-        label="云构建部署"
-        @click="openCloudBuildDeployDialog"
-      />
-
-      <q-btn
-        flat
-        dense
-        color="positive"
-        icon="cloud_upload"
-        label="上传部署"
-        :loading="isPreparingDeploy"
-        @click="openUploadDeployDialog"
-      />
+      <div class="actions-right">
+        <q-btn flat dense color="positive" label="部署" @click="goToDeployConsole(pythonProject.id)" />
+      </div>
     </q-card-actions>
   </q-card>
 
-  <!-- 详情对话框 -->
   <q-dialog v-model="isViewDetailDialogOpen">
     <q-card class="detail-dialog-card">
       <q-card-section class="row items-center">
@@ -190,110 +210,6 @@
     </q-card>
   </q-dialog>
 
-  <!-- 上传部署对话框 -->
-  <q-dialog v-model="isUploadDeployDialogOpen">
-    <q-card class="deploy-dialog-card">
-      <q-card-section class="row items-center">
-        <div class="text-h5">上传部署</div>
-        <q-space />
-        <q-btn icon="close" flat round dense :disable="isDeploying" v-close-popup />
-      </q-card-section>
-
-      <q-separator />
-
-      <q-card-section>
-        <div class="deploy-project-name">
-          {{ pythonProject.project_name }}
-        </div>
-      </q-card-section>
-
-      <q-card-section>
-        <div class="section-title">上传 ZIP 文件</div>
-
-        <el-upload
-          ref="uploadRef"
-          drag
-          :auto-upload="false"
-          accept=".zip"
-          :before-upload="handleBeforeUpload"
-          :on-change="handleFileChange"
-          :file-list="fileList"
-          :limit="1"
-          :disabled="isDeploying"
-        >
-          <div class="el-upload__text">
-            将文件拖到此处，或<em>点击上传</em>
-          </div>
-
-          <template #tip>
-            <div class="el-upload__tip upload-tip">
-              只能上传 .zip 文件，且一次仅允许一个文件
-            </div>
-          </template>
-        </el-upload>
-
-        <div class="q-mt-md">
-          <el-progress
-            v-if="uploadProgress > 0"
-            :percentage="uploadProgress"
-            :text-inside="true"
-            :stroke-width="14"
-            status="success"
-          />
-        </div>
-
-        <div
-          v-if="uploadProgress === 100 && !isDeploying"
-          class="deploy-success-tip"
-        >
-          上传完成
-        </div>
-      </q-card-section>
-
-      <q-card-section>
-        <div class="section-title">Dockerfile 内容（可选）</div>
-        <q-input
-          v-model="dockerfileContent"
-          type="textarea"
-          outlined
-          rows="12"
-          class="mono-input"
-          :disable="isDeploying"
-        />
-      </q-card-section>
-
-      <q-card-section>
-        <div class="section-title">Docker 命令（可选）</div>
-        <q-input
-          v-model="dockerCommand"
-          type="textarea"
-          outlined
-          rows="8"
-          class="mono-input"
-          :disable="isDeploying"
-        />
-      </q-card-section>
-
-      <q-card-actions align="right" class="q-px-md q-pb-md">
-        <q-btn
-          flat
-          label="取消"
-          :disable="isDeploying"
-          v-close-popup
-        />
-        <q-btn
-          flat
-          label="开始部署"
-          color="positive"
-          :disable="!fileList.length"
-          :loading="isDeploying"
-          @click="handleUploadDeploy"
-        />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-
-  <!-- 二次确认删除对话框 -->
   <q-dialog v-model="isSecondConfirmDeleteDialogOpen" persistent>
     <q-card class="delete-dialog-card">
       <q-card-section class="text-h6 text-negative">
@@ -305,6 +221,7 @@
           你正在删除项目：
           <strong>{{ pythonProject.project_name || '-' }}</strong>
         </div>
+
         <div class="delete-warning-subtext q-mt-sm">
           请输入“确定删除”以继续操作。
         </div>
@@ -339,114 +256,110 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import type { AxiosProgressEvent } from 'axios';
-import { Notify, copyToClipboard } from 'quasar';
-import { formatDate } from 'src/utils/dateFormatter';
-import { provideCurrentAgentProxyApi } from 'src/factory/agentProxyApiFactory';
-import type { PythonProject } from 'src/types/Project.types';
-import type { UpdatePythonProjectRequestDto } from 'src/types/dto/UpdatePythonProjectRequestDto';
+import { computed, onMounted, ref, watch } from 'vue'
+import { Notify, copyToClipboard } from 'quasar'
+import { formatDate } from 'src/utils/dateFormatter'
+import { provideCurrentAgentProxyApi } from 'src/factory/agentProxyApiFactory'
+import type { PythonProject } from 'src/types/Project.types'
+import type { UpdatePythonProjectRequestDto } from 'src/types/dto/UpdatePythonProjectRequestDto'
+import { useRouter } from 'vue-router'
 
 type DetailRow = {
-  label: string;
-  value: string;
-  key: string;
-  editable: boolean;
-};
+  label: string
+  value: string
+  key: string
+  editable: boolean
+}
+
+const router = useRouter()
 
 const props = defineProps<{
-  pythonProject: PythonProject;
-}>();
+  pythonProject: PythonProject
+}>()
 
-const agentProxyApi = provideCurrentAgentProxyApi();
+const agentProxyApi = provideCurrentAgentProxyApi()
 
-const isViewDetailDialogOpen = ref(false);
-const isUploadDeployDialogOpen = ref(false);
-const isCloudBuildDeployDialogOpen = ref(false);
-const isSecondConfirmDeleteDialogOpen = ref(false);
+const isViewDetailDialogOpen = ref(false)
+const isSecondConfirmDeleteDialogOpen = ref(false)
 
-const isCheckingStatus = ref(true);
-const isEditing = ref(false);
-const isSaving = ref(false);
-const isDeleting = ref(false);
-const isPreparingDeploy = ref(false);
-const isDeploying = ref(false);
+const isEditing = ref(false)
+const isSaving = ref(false)
+const isDeleting = ref(false)
 
-const dockerfileContent = ref('');
-const dockerCommand = ref('');
-const confirmText = ref('');
-const uploadProgress = ref(0);
-const fileList = ref<any[]>([]);
+const confirmText = ref('')
+const containerStatus = ref('Checking')
+const tableData = ref<DetailRow[]>([])
+const originalTableDataSnapshot = ref<DetailRow[]>([])
 
-const containerStatus = ref('Unknown');
-const tableData = ref<DetailRow[]>([]);
-const originalTableDataSnapshot = ref<DetailRow[]>([]);
+const goToDeployConsole = (id?: string | number) => {
+  if (!id) return
+  router.push({
+    path: `/project/deploy/${id}`,
+  })
+}
 
 const dockerImageText = computed(() => {
-  return `${props.pythonProject.docker_image_name || '-'}:${props.pythonProject.docker_image_tag || 'latest'}`;
-});
+  return `${props.pythonProject.docker_image_name || '-'}:${props.pythonProject.docker_image_tag || 'latest'}`
+})
 
 const portMappingText = computed(() => {
-  return `${props.pythonProject.external_port || '-'} → ${props.pythonProject.internal_port || '-'}`;
-});
+  return `${props.pythonProject.external_port || '-'} → ${props.pythonProject.internal_port || '-'}`
+})
 
 const formatDateSafe = (value: any): string => {
-  if (!value) return '-';
+  if (!value) return '-'
   try {
-    return formatDate(value);
+    return formatDate(value)
   } catch {
-    return String(value);
+    return String(value)
   }
-};
+}
 
 const getDeployText = (time?: any) => {
-  if (!time) return '未部署';
-
+  if (!time) return '未部署'
   try {
-    const now = Date.now();
-    const t = new Date(time).getTime();
-    if (Number.isNaN(t)) return '-';
+    const now = Date.now()
+    const t = new Date(time).getTime()
+    if (Number.isNaN(t)) return '-'
 
-    const diff = Math.floor((now - t) / 1000);
+    const diff = Math.floor((now - t) / 1000)
 
-    if (diff < 60) return '刚刚';
-    if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
-    if (diff < 86400 * 7) return `${Math.floor(diff / 86400)}天前`;
-
-    return formatDate(time);
+    if (diff < 60) return '刚刚'
+    if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`
+    if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`
+    return `${Math.floor(diff / 86400)}天前`
   } catch {
-    return '-';
+    return '未部署'
   }
-};
+}
 
 const copyValue = async (text?: string) => {
-  const value = text?.trim();
-  if (!value || value === '-') return;
+  const value = text?.trim()
+  if (!value || value === '-') return
 
   try {
-    await copyToClipboard(value);
+    await copyToClipboard(value)
     Notify.create({
       type: 'positive',
       message: '复制成功',
       position: 'top',
       timeout: 1000,
-    });
+    })
   } catch {
     Notify.create({
       type: 'negative',
       message: '复制失败',
       position: 'top',
       timeout: 1000,
-    });
+    })
   }
-};
+}
 
 const openAccessUrl = (url?: string) => {
-  const value = url?.trim();
-  if (!value || value === '-') return;
-  window.open(value, '_blank', 'noopener,noreferrer');
-};
+  const value = url?.trim()
+  if (!value || value === '-') return
+  window.open(value, '_blank', 'noopener,noreferrer')
+}
 
 const buildDetailTableData = (): DetailRow[] => {
   return [
@@ -469,310 +382,112 @@ const buildDetailTableData = (): DetailRow[] => {
     { label: '创建时间', key: 'created_at', value: formatDateSafe(props.pythonProject.created_at), editable: false },
     { label: '更新时间', key: 'updated_at', value: formatDateSafe(props.pythonProject.updated_at), editable: false },
     { label: '最近部署', key: 'last_deployed_at', value: formatDateSafe(props.pythonProject.last_deployed_at), editable: false },
-  ];
-};
+  ]
+}
 
-const statusMeta = computed(() => {
-  const raw = String(containerStatus.value || '').toLowerCase();
+const formatContainerStatusLabel = (status: string) => {
+  const raw = String(status || '').toLowerCase()
 
-  if (!raw || raw === 'unknown') {
-    return {
-      label: 'Status Unknown',
-      tagType: 'warning',
-    };
-  }
-
-  if (raw.startsWith('up')) {
-    return {
-      label: containerStatus.value,
-      tagType: 'success',
-    };
-  }
-
-  if (raw.startsWith('exited (0)')) {
-    return {
-      label: containerStatus.value,
-      tagType: 'info',
-    };
-  }
-
-  if (raw.startsWith('exited')) {
-    return {
-      label: containerStatus.value,
-      tagType: 'danger',
-    };
-  }
-
-  if (raw.startsWith('restarting')) {
-    return {
-      label: containerStatus.value,
-      tagType: 'warning',
-    };
-  }
-
-  if (raw.startsWith('paused')) {
-    return {
-      label: containerStatus.value,
-      tagType: 'warning',
-    };
-  }
-
-  if (raw.startsWith('created')) {
-    return {
-      label: containerStatus.value,
-      tagType: 'info',
-    };
-  }
-
-  if (raw.startsWith('dead')) {
-    return {
-      label: containerStatus.value,
-      tagType: 'danger',
-    };
-  }
-
-  if (raw.includes('not found')) {
-    return {
-      label: 'Container Not Found',
-      tagType: 'danger',
-    };
-  }
-
-  if (raw.includes('awaiting deployment')) {
-    return {
-      label: 'Awaiting Deployment',
-      tagType: 'info',
-    };
-  }
-
-  return {
-    label: containerStatus.value,
-    tagType: 'info',
-  };
-});
+  if (!raw) return 'Unknown'
+  if (raw.includes('awaiting deployment')) return '未部署'
+  if (raw === 'unknown') return 'Unknown'
+  return status
+}
 
 const fetchContainerStatus = async () => {
-  if (!props.pythonProject.container_name) {
-    containerStatus.value = 'Unknown';
-    isCheckingStatus.value = false;
-    return;
-  }
+  containerStatus.value = 'Checking'
 
-  isCheckingStatus.value = true;
+  if (!props.pythonProject.container_name) {
+    containerStatus.value = 'Unknown'
+    return
+  }
 
   try {
     const response = await agentProxyApi.fetchDockerContainerStatus(
       String(props.pythonProject.container_name)
-    );
-    containerStatus.value = response?.container_status || 'Unknown';
+    )
+    containerStatus.value = response?.container_status || 'Unknown'
   } catch {
-    containerStatus.value = 'Unknown';
-  } finally {
-    isCheckingStatus.value = false;
+    containerStatus.value = 'Unknown'
   }
-};
+}
+
+const getContainerStatusTagType = (status: string) => {
+  const s = status.toLowerCase()
+
+  if (s.includes('awaiting deployment')) return 'info'
+  if (s.startsWith('up')) return 'success'
+  if (s.startsWith('exited (0)')) return 'info'
+  if (s.startsWith('exited')) return 'danger'
+  if (s.startsWith('restarting') || s.startsWith('paused')) return 'warning'
+  if (s.startsWith('created')) return 'info'
+  if (s.startsWith('dead')) return 'danger'
+  if (s === 'unknown') return 'warning'
+  return 'info'
+}
 
 const viewPythonProjectDetail = () => {
-  const rows = buildDetailTableData();
-  tableData.value = rows;
-  originalTableDataSnapshot.value = JSON.parse(JSON.stringify(rows));
-  isEditing.value = false;
-  isViewDetailDialogOpen.value = true;
-};
+  const rows = buildDetailTableData()
+  tableData.value = rows
+  originalTableDataSnapshot.value = JSON.parse(JSON.stringify(rows))
+  isEditing.value = false
+  isViewDetailDialogOpen.value = true
+}
 
 const startEdit = () => {
-  originalTableDataSnapshot.value = JSON.parse(JSON.stringify(tableData.value));
-  isEditing.value = true;
-};
+  originalTableDataSnapshot.value = JSON.parse(JSON.stringify(tableData.value))
+  isEditing.value = true
+}
 
 const cancelEdit = () => {
-  tableData.value = JSON.parse(JSON.stringify(originalTableDataSnapshot.value));
-  isEditing.value = false;
-};
+  tableData.value = JSON.parse(JSON.stringify(originalTableDataSnapshot.value))
+  isEditing.value = false
+}
 
 const saveEdit = async () => {
-  isSaving.value = true;
+  isSaving.value = true
 
   try {
     const updateData: Partial<UpdatePythonProjectRequestDto> = {
       id: props.pythonProject.id,
-    };
+    }
 
-    const skipKeys = ['created_at', 'updated_at', 'last_deployed_at', 'project_type'];
-    const numberFields = ['external_port', 'internal_port'];
+    const skipKeys = ['created_at', 'updated_at', 'last_deployed_at', 'project_type']
+    const numberFields = ['external_port', 'internal_port']
 
     tableData.value.forEach((item) => {
-      if (skipKeys.includes(item.key)) return;
+      if (skipKeys.includes(item.key)) return
 
-      const rawValue = item.value ?? '';
+      const rawValue = item.value ?? ''
 
       if (numberFields.includes(item.key)) {
         updateData[item.key as keyof UpdatePythonProjectRequestDto] =
-          rawValue === '' ? undefined as any : Number(rawValue) as any;
+          rawValue === '' ? undefined as any : Number(rawValue) as any
       } else {
-        updateData[item.key as keyof UpdatePythonProjectRequestDto] = rawValue as any;
+        updateData[item.key as keyof UpdatePythonProjectRequestDto] = rawValue as any
       }
-    });
+    })
 
-    await agentProxyApi.updatePythonProject(updateData as UpdatePythonProjectRequestDto);
+    await agentProxyApi.updatePythonProject(updateData as UpdatePythonProjectRequestDto)
 
     Notify.create({
       type: 'positive',
       message: '保存成功',
       position: 'top',
-    });
+    })
 
-    isEditing.value = false;
-    isViewDetailDialogOpen.value = false;
+    isEditing.value = false
+    isViewDetailDialogOpen.value = false
   } catch (error: any) {
     Notify.create({
       type: 'negative',
       message: `保存失败${error?.message ? '：' + error.message : ''}`,
       position: 'top',
-    });
+    })
   } finally {
-    isSaving.value = false;
+    isSaving.value = false
   }
-};
-
-const resetDeployDialogState = () => {
-  fileList.value = [];
-  uploadProgress.value = 0;
-  dockerfileContent.value = '';
-  dockerCommand.value = '';
-  isDeploying.value = false;
-};
-
-const openUploadDeployDialog = async () => {
-  isPreparingDeploy.value = true;
-  resetDeployDialogState();
-
-  try {
-    isUploadDeployDialogOpen.value = true;
-
-    const [dockerfileConfig, dockerCommandConfig] = await Promise.all([
-      agentProxyApi.fetchSystemConfig('default_python_dockerfile_template'),
-      agentProxyApi.fetchSystemConfig('default_python_dockercommand_template'),
-    ]);
-
-    const [renderedDockerfile, renderedDockerCommand] = await Promise.all([
-      agentProxyApi.renderTemplateContent(
-        props.pythonProject.id,
-        dockerfileConfig.config_value
-      ),
-      agentProxyApi.renderTemplateContent(
-        props.pythonProject.id,
-        dockerCommandConfig.config_value
-      ),
-    ]);
-
-    dockerfileContent.value = renderedDockerfile || '';
-    dockerCommand.value = renderedDockerCommand || '';
-  } catch (error: any) {
-    Notify.create({
-      type: 'negative',
-      message: `初始化部署信息失败${error?.message ? '：' + error.message : ''}`,
-      position: 'top',
-    });
-  } finally {
-    isPreparingDeploy.value = false;
-  }
-};
-
-const openCloudBuildDeployDialog = () => {
-  isCloudBuildDeployDialogOpen.value = true;
-  Notify.create({
-    message: '尚未实现，敬请期待',
-    type: 'warning',
-    position: 'top',
-  });
-};
-
-const handleBeforeUpload = (file: File): boolean => {
-  const isZip = file.type === 'application/zip' || file.name.toLowerCase().endsWith('.zip');
-
-  if (!isZip) {
-    Notify.create({
-      type: 'negative',
-      message: '只能上传 .zip 文件',
-      position: 'top',
-    });
-    return false;
-  }
-
-  return true;
-};
-
-const handleFileChange = (file: any, files: any[]) => {
-  if (files?.length) {
-    fileList.value = [files[files.length - 1]];
-  } else if (file) {
-    fileList.value = [file];
-  } else {
-    fileList.value = [];
-  }
-};
-
-const handleUploadDeploy = async () => {
-  const file = fileList.value[0]?.raw;
-
-  if (!file) {
-    Notify.create({
-      type: 'negative',
-      message: '请选择一个 ZIP 文件',
-      position: 'top',
-    });
-    return;
-  }
-
-  isDeploying.value = true;
-  uploadProgress.value = 0;
-
-  try {
-    const formData = new FormData();
-    formData.append('id', String(props.pythonProject.id));
-    formData.append('file', file);
-    formData.append('dockerfile_content', dockerfileContent.value || '');
-    formData.append('dockercommand_content', dockerCommand.value || '');
-
-    const response = await agentProxyApi.deployPythonProject(formData, {
-      onUploadProgress: (event: AxiosProgressEvent) => {
-        if (event.total) {
-          uploadProgress.value = Math.round((event.loaded * 100) / event.total);
-        }
-      },
-    });
-
-    if (response?.code === 200) {
-      uploadProgress.value = 100;
-
-      Notify.create({
-        type: 'positive',
-        message: '部署成功',
-        position: 'top',
-      });
-
-      isUploadDeployDialogOpen.value = false;
-      await fetchContainerStatus();
-    } else {
-      uploadProgress.value = 0;
-      Notify.create({
-        type: 'negative',
-        message: `部署失败：${response?.msg || '未知错误'}`,
-        position: 'top',
-      });
-    }
-  } catch (error: any) {
-    uploadProgress.value = 0;
-    Notify.create({
-      type: 'negative',
-      message: `上传失败${error?.message ? '：' + error.message : ''}`,
-      position: 'top',
-    });
-  } finally {
-    isDeploying.value = false;
-  }
-};
+}
 
 const handleSecondConfirmDelete = async () => {
   if (confirmText.value !== '确定删除') {
@@ -780,57 +495,51 @@ const handleSecondConfirmDelete = async () => {
       message: '请输入“确定删除”',
       type: 'negative',
       position: 'top',
-    });
-    return;
+    })
+    return
   }
 
-  isDeleting.value = true;
+  isDeleting.value = true
 
   try {
-    await agentProxyApi.deletePythonProject(props.pythonProject.id);
+    await agentProxyApi.deletePythonProject(props.pythonProject.id)
 
     Notify.create({
       message: '删除成功',
       type: 'positive',
       position: 'top',
-    });
+    })
 
-    isSecondConfirmDeleteDialogOpen.value = false;
-    isViewDetailDialogOpen.value = false;
-    confirmText.value = '';
+    isSecondConfirmDeleteDialogOpen.value = false
+    isViewDetailDialogOpen.value = false
+    confirmText.value = ''
   } catch (error: any) {
     Notify.create({
       message: `删除失败${error?.message ? ': ' + error.message : ''}`,
       type: 'negative',
       position: 'top',
-    });
+    })
   } finally {
-    isDeleting.value = false;
+    isDeleting.value = false
   }
-};
-
-watch(isUploadDeployDialogOpen, (val) => {
-  if (!val) {
-    resetDeployDialogState();
-  }
-});
+}
 
 watch(isSecondConfirmDeleteDialogOpen, (val) => {
   if (!val) {
-    confirmText.value = '';
+    confirmText.value = ''
   }
-});
+})
 
 watch(
   () => props.pythonProject.container_name,
   () => {
-    fetchContainerStatus();
+    fetchContainerStatus()
   }
-);
+)
 
 onMounted(() => {
-  fetchContainerStatus();
-});
+  fetchContainerStatus()
+})
 </script>
 
 <style scoped>
@@ -901,10 +610,17 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 
-.project-submeta-type {
-  font-size: 13px;
+.project-submeta-type,
+.project-submeta-group {
+  font-size: 14px;
   font-weight: 600;
   color: #6b7280;
+}
+
+.project-submeta-divider {
+  font-size: 20px;
+  font-weight: 600;
+  color: #cbd5e1;
 }
 
 .runtime-status-inline {
@@ -930,7 +646,6 @@ onMounted(() => {
   gap: 12px;
   padding: 10px 0;
   transition: background 0.18s ease;
-  cursor: pointer;
 }
 
 .info-row + .info-row {
@@ -939,10 +654,6 @@ onMounted(() => {
 
 .info-row:hover {
   background: rgba(248, 250, 252, 0.55);
-}
-
-.info-row-link:hover .access-url-link {
-  color: #1d4ed8;
 }
 
 .info-key {
@@ -972,18 +683,17 @@ onMounted(() => {
 .access-url-link {
   color: #2563eb;
   font-weight: 600;
+  cursor: pointer;
+}
+
+.access-url-link:hover {
+  color: #1d4ed8;
 }
 
 .multi-line-value {
   white-space: normal;
   overflow: visible;
   text-overflow: unset;
-}
-
-.single-line {
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
 }
 
 .hover-copy {
@@ -1021,8 +731,18 @@ onMounted(() => {
   transform: translateY(0);
 }
 
-.card-actions {
+.card-actions.split-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 10px 14px 14px;
+  gap: 12px;
+}
+
+.actions-left,
+.actions-right {
+  display: flex;
+  align-items: center;
 }
 
 .detail-dialog-card {
@@ -1042,36 +762,6 @@ onMounted(() => {
   color: #334155;
 }
 
-.deploy-dialog-card {
-  width: 92vw;
-  max-width: 1100px;
-  border-radius: 18px;
-}
-
-.deploy-project-name {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.section-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #334155;
-  margin-bottom: 10px;
-}
-
-.upload-tip {
-  text-align: right;
-  color: #909399;
-}
-
-.deploy-success-tip {
-  color: #16a34a;
-  font-size: 13px;
-  margin-top: 10px;
-}
-
 .delete-dialog-card {
   width: 420px;
   max-width: 92vw;
@@ -1088,12 +778,14 @@ onMounted(() => {
   font-size: 14px;
 }
 
-:deep(.mono-input textarea) {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+:deep(.card-actions .q-btn) {
+  border-radius: 12px;
+  transition: all 0.18s ease;
 }
 
-:deep(.q-card__section--vert) {
-  word-break: break-word;
+:deep(.card-actions .q-btn:hover) {
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
 }
 
 :deep(.el-tag) {
