@@ -119,16 +119,39 @@ class PythonProjectDeployer:
         logger.info("4 - START - 删除临时 ZIP 文件")
         os.remove(zip_path)
         logger.info("4 - FINISH - ZIP 文件已删除")
-
-    def _create_dockerfile(self, dockerfile_content: str):
+    
+    def _create_dockerfile(self, dockerfile_content: str) -> str:
+        """
+        5 - 写入 Dockerfile
+        
+        如果 Dockerfile 已存在且内容完全一致，则跳过写入
+        仅在内容发生变化时才覆盖文件，尽量利用 Docker 构建缓存
+        """
         logger.info("5 - START - 写入 Dockerfile")
-        dockerfile_path = os.path.join(self.python_project.get('container_project_path'), "Dockerfile")
+        
+        dockerfile_path = os.path.join(self.python_project.get("container_project_path"), "Dockerfile")
+        
         if os.path.exists(dockerfile_path):
-            logger.warning(f"5 - PROCESS - 检测到已存在 Dockerfile，将进行覆盖: {dockerfile_path}")
-        with open(dockerfile_path, "w") as f:
+            try:
+                with open(dockerfile_path, "r", encoding="utf-8") as f:
+                    old_content = f.read()
+
+                if old_content == dockerfile_content:
+                    logger.info(f"5 - SKIP - 检测到已存在 Dockerfile，且内容未变化，跳过写入: {dockerfile_path}")
+                    self.dockerfile_path = dockerfile_path
+                    logger.info(f"5 - FINISH - Dockerfile 无需更新: {dockerfile_path}")
+                    return dockerfile_path
+
+                logger.warning(f"5 - PROCESS - 检测到已存在 Dockerfile，但内容已变化，将进行覆盖: {dockerfile_path}")
+            except Exception as e:
+                logger.warning(f"5 - WARNING - 读取旧 Dockerfile 失败，将直接覆盖: {dockerfile_path}, 错误: {e}")
+
+        with open(dockerfile_path, "w", encoding="utf-8") as f:
             f.write(dockerfile_content)
+
         logger.info(f"5 - FINISH - Dockerfile 写入完成: {dockerfile_path}")
         self.dockerfile_path = dockerfile_path
+        return dockerfile_path
 
     def _create_dockerignore(self):
         """
@@ -136,7 +159,7 @@ class PythonProjectDeployer:
         如果文件不存在则创建，避免将不必要的文件打包进 Docker 构建上下文。
         """
         logger.info("6 - START - 写入 .dockerignore")
-        dockerignore_path = os.path.join(self.java_project.get('container_project_path'), ".dockerignore")
+        dockerignore_path = os.path.join(self.python_project.get('container_project_path'), ".dockerignore")
         ignore_rules = [
             "logs/",
             "*.log",

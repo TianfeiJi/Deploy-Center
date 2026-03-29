@@ -105,20 +105,36 @@ class JavaProjectDeployer:
         os.makedirs(f"{container_project_path}/jars", exist_ok=True)
         logger.info(f"1 - FINISH - 项目目录结构已准备完成: {container_project_path}")
 
-    def _create_dockerfile(self, dockerfile_content) -> str:
+    def _create_dockerfile(self, dockerfile_content: str) -> str:
         """
-        2 - 写入 Dockerfile
-
-        写入或替换 Dockerfile。
-        如果已存在旧版本，会打印替换提示。
+        5 - 写入 Dockerfile
+        
+        如果 Dockerfile 已存在且内容完全一致，则跳过写入
+        仅在内容发生变化时才覆盖文件，尽量利用 Docker 构建缓存
         """
-        logger.info("2 - START - 写入 Dockerfile")
-        dockerfile_path = os.path.join(self.java_project.get('container_project_path'), "Dockerfile")
+        logger.info("5 - START - 写入 Dockerfile")
+        
+        dockerfile_path = os.path.join(self.java_project.get("container_project_path"), "Dockerfile")
+        
         if os.path.exists(dockerfile_path):
-            logger.warning(f"2 - PROCESS - 检测到已存在 Dockerfile，将进行覆盖: {dockerfile_path}")
-        with open(dockerfile_path, "w") as f:
+            try:
+                with open(dockerfile_path, "r", encoding="utf-8") as f:
+                    old_content = f.read()
+
+                if old_content == dockerfile_content:
+                    logger.info(f"5 - SKIP - 检测到已存在 Dockerfile，且内容未变化，跳过写入: {dockerfile_path}")
+                    self.dockerfile_path = dockerfile_path
+                    logger.info(f"5 - FINISH - Dockerfile 无需更新: {dockerfile_path}")
+                    return dockerfile_path
+
+                logger.warning(f"5 - PROCESS - 检测到已存在 Dockerfile，但内容已变化，将进行覆盖: {dockerfile_path}")
+            except Exception as e:
+                logger.warning(f"5 - WARNING - 读取旧 Dockerfile 失败，将直接覆盖: {dockerfile_path}, 错误: {e}")
+
+        with open(dockerfile_path, "w", encoding="utf-8") as f:
             f.write(dockerfile_content)
-        logger.info(f"2 - FINISH - Dockerfile 写入完成: {dockerfile_path}")
+
+        logger.info(f"5 - FINISH - Dockerfile 写入完成: {dockerfile_path}")
         self.dockerfile_path = dockerfile_path
         return dockerfile_path
 
