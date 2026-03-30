@@ -550,7 +550,6 @@ async function handleImmediateUploadDeploy() {
   uploadProgress.value = 0
   logLines.value = []
   appendLog(`开始部署：${file.name}`)
-  appendLog('已校验：源码 ZIP 内需包含 Dockerfile')
 
   try {
     const fd = new FormData()
@@ -558,7 +557,7 @@ async function handleImmediateUploadDeploy() {
     fd.append('file', file)
     fd.append('dockercommand_content', dockerCommand.value || '')
 
-    appendLog('上传源码 ZIP 中...')
+    appendLog('部署中...')
 
     await getAgentApi().deployPythonProject(fd, {
       onUploadProgress: (e: AxiosProgressEvent) => {
@@ -568,8 +567,6 @@ async function handleImmediateUploadDeploy() {
       },
     })
 
-    appendLog('上传完成', 'success')
-    appendLog('开始执行部署', 'info')
     appendLog('部署成功', 'success')
 
     uploadProgress.value = 100

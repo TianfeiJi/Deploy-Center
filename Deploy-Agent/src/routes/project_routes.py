@@ -306,11 +306,10 @@ async def update_python_project(update_dto: UpdatePythonProjectRequestDto):
 async def deploy_python_project(
     id: str = Form(..., title="项目ID"),
     file: UploadFile = File(..., title="ZIP 文件", description="上传要部署的 Python 项目压缩包"),
-    dockerfile_content: str = Form(None, title="Dockerfile内容", description="可选，若解压包中无 Dockerfile 则使用该内容"),
     dockercommand_content: str = Form(..., title="Docker命令")
 ):
     try:
-        msg = PythonProjectDeployer().deploy(id, file, dockerfile_content, dockercommand_content)
+        msg = PythonProjectDeployer().deploy(id, file, dockercommand_content)
         return HttpResult[None](code=200, status="success", msg=msg, data=None)
     except Exception as e:
         import traceback
