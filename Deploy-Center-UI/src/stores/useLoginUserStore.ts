@@ -4,7 +4,6 @@ import { User } from 'src/types/User';
 import { getUser } from 'src/api/userApi';
 import { useAuthStore } from './useAuthStore';
 import { useAgentStore } from './useAgentStore';
-import { useServerStore } from './useServerStore';
 import { useSystemConfigStore } from './useSystemConfigStore';
 
 export const useLoginUserStore = defineStore('loginUserStore', {
@@ -40,7 +39,6 @@ export const useLoginUserStore = defineStore('loginUserStore', {
       useLoginUserStore().$reset();
       useAuthStore().$reset();
       useAgentStore().$reset();
-      useServerStore().$reset();
       useSystemConfigStore().$reset();
     },
   }
