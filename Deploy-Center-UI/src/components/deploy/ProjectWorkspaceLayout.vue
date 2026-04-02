@@ -8,9 +8,6 @@
             {{ projectName }}<span class="dot">·</span>{{ projectGroup }}
           </div>
         </div>
-        <button class="ui-btn ui-btn-secondary" @click="$emit('refresh')">
-          刷新
-        </button>
       </div>
 
       <div class="tab-bar">
@@ -39,7 +36,7 @@ defineProps({
   activeTab: String,
   tabs: { type: Array, required: true },
 })
-defineEmits(['update:active', 'refresh'])
+defineEmits(['update:active'])
 </script>
 
 <style scoped>
@@ -54,7 +51,4 @@ defineEmits(['update:active', 'refresh'])
 .tab-btn.active { color:#0284c7; background:rgba(14,165,233,0.06); }
 .tab-btn.active::after { content:''; position:absolute; left:12px; right:12px; bottom:0; height:2px; border-radius:999px; background:#0ea5e9; }
 .workspace-body { flex:1; min-height:0; padding:16px; }
-
-.ui-btn { border:none; border-radius:12px; height:38px; padding:0 14px; font-size:13px; font-weight:700; }
-.ui-btn-secondary { background:#fff; color:#334155; border:1px solid #dbe4ee; }
 </style>

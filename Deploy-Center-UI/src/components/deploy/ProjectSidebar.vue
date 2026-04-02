@@ -21,8 +21,19 @@
               <q-spinner color="grey-5" size="16px" />
             </template>
 
+            <template v-else-if="runtimeStatus === 'Unknown'">
+              <el-tag type="warning" effect="light" round class="runtime-status-tag">
+                Status Unknown
+              </el-tag>
+            </template>
+
             <template v-else>
-              <el-tag :type="runtimeStatusTagType" effect="light" round class="runtime-status-tag">
+              <el-tag
+                :type="runtimeStatusTagType"
+                effect="light"
+                round
+                class="runtime-status-tag"
+              >
                 {{ runtimeStatusLabel }}
               </el-tag>
             </template>
@@ -67,13 +78,16 @@
             @click.stop="field.copyable ? copyVal(props.project[field.key]) : undefined"
           >
             <div class="info-key">{{ field.label }}</div>
+
             <div
               class="info-value"
               :class="{
                 ellipsis: field.ellipsis,
-                'is-copyable': field.copyable
+                'is-copyable': field.copyable,
+                'is-link': field.key === 'access_url' && !!props.project.access_url
               }"
               :title="String(formatDisplayValue(field.key, props.project[field.key]))"
+              @click.stop="handleFieldClick(field.key, props.project[field.key])"
             >
               {{ formatDisplayValue(field.key, props.project[field.key]) }}
             </div>
@@ -111,9 +125,10 @@
 import { computed, ref, watch } from 'vue'
 import { Notify, copyToClipboard } from 'quasar'
 import { provideCurrentAgentProxyApi } from 'src/factory/agentProxyApiFactory'
+import { formatDate, formatTimeAgo } from 'src/utils/dateFormatter'
 
 type ProjectSidebarForm = {
-  id?: string | number
+  id?: string
   project_type?: string
   project_name?: string
   project_code?: string
@@ -167,10 +182,13 @@ defineEmits<{
   (e: 'save-edit'): void
 }>()
 
-const runtimeStatus = ref('Checking')
+const agentProxyApi = provideCurrentAgentProxyApi()
+const runtimeStatus = ref<'Checking' | 'Unknown' | string>('Checking')
+
+const projectType = computed(() => String(props.project.project_type || '').toLowerCase())
 
 const typeLabel = computed(() => {
-  const t = String(props.project.project_type || '').toLowerCase()
+  const t = projectType.value
   if (t === 'web' || t === 'frontend') return 'Web'
   if (t === 'java') return 'Java'
   if (t === 'python') return 'Python'
@@ -179,7 +197,7 @@ const typeLabel = computed(() => {
 })
 
 const badgeClass = computed(() => {
-  const t = String(props.project.project_type || '').toLowerCase()
+  const t = projectType.value
   if (t === 'java') return 'badge-java'
   if (t === 'web' || t === 'frontend') return 'badge-web'
   if (t === 'python') return 'badge-python'
@@ -190,95 +208,99 @@ const badgeClass = computed(() => {
 const deployText = computed(() => {
   const t = props.project.last_deployed_at
   if (!t) return '未部署'
-  try {
-    const diff = Math.floor((Date.now() - new Date(t).getTime()) / 1000)
-    if (diff < 60) return '刚刚'
-    if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`
-    if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`
-    return `${Math.floor(diff / 86400)}天前`
-  } catch {
-    return '未部署'
-  }
+  const ago = formatTimeAgo(t)
+  return ago === '-' ? '未部署' : ago
 })
 
 const runtimeStatusLabel = computed(() => {
-  const status = String(runtimeStatus.value || '')
-  if (status === 'Awaiting Deployment') return '未部署'
-  if (!status || status === 'Unknown') return 'Status Unknown'
-  return status
+  const raw = String(runtimeStatus.value || '').toLowerCase()
+
+  if (!raw) return 'Status Unknown'
+  if (raw.includes('awaiting deployment')) return '未部署'
+  if (raw === 'deployed') return '已部署'
+  if (raw === 'unknown') return 'Status Unknown'
+  return runtimeStatus.value
 })
 
 const runtimeStatusTagType = computed(() => {
-  const status = String(runtimeStatus.value || '').toLowerCase()
+  const s = String(runtimeStatus.value || '').toLowerCase()
 
-  if (status === 'unknown') return 'warning'
-  if (status.startsWith('up')) return 'success'
-  if (status.startsWith('exited (0)')) return 'info'
-  if (status.startsWith('exited')) return 'danger'
-  if (status.startsWith('restarting') || status.startsWith('paused')) return 'warning'
-  if (status.startsWith('created')) return 'info'
-  if (status.startsWith('dead')) return 'danger'
-  if (status === 'deployed' || status === '已部署') return 'success'
-  if (status === 'awaiting deployment') return 'info'
+  if (s === 'deployed') return 'success'
+  if (s.includes('awaiting deployment')) return 'info'
+  if (s.startsWith('up')) return 'success'
+  if (s.startsWith('exited (0)')) return 'info'
+  if (s.startsWith('exited')) return 'danger'
+  if (s.startsWith('restarting') || s.startsWith('paused')) return 'warning'
+  if (s.startsWith('created')) return 'info'
+  if (s.startsWith('dead')) return 'danger'
+  if (s === 'unknown') return 'warning'
   return 'info'
 })
 
 function displayValue(v: unknown) {
   if (v === null || v === undefined || v === '') return '-'
-  return v
-}
-
-function formatDateValue(v: unknown) {
-  if (!v) return '-'
-  try {
-    return new Date(String(v)).toLocaleString()
-  } catch {
-    return String(v)
-  }
+  return String(v)
 }
 
 function formatDisplayValue(key: string, value: unknown) {
   if (key === 'created_at' || key === 'updated_at' || key === 'last_deployed_at') {
-    return formatDateValue(value)
+    return formatDate(value as string | null | undefined)
   }
+
+  if (key === 'docker_image_name') {
+    const imageName = displayValue(props.project.docker_image_name)
+    const imageTag = displayValue(props.project.docker_image_tag)
+    if (imageName === '-' && imageTag === '-') return '-'
+    if (imageName !== '-' && imageTag !== '-') return `${imageName}:${imageTag}`
+    return imageName
+  }
+
+  if (key === 'port_mapping') {
+    const externalPort = displayValue(props.project.external_port)
+    const internalPort = displayValue(props.project.internal_port)
+    if (externalPort === '-' && internalPort === '-') return '-'
+    return `${externalPort} → ${internalPort}`
+  }
+
   return displayValue(value)
 }
 
 const commonFields: FieldConfig[] = [
   { key: 'project_name', label: '项目名称' },
-  { key: 'project_code', label: '项目代号' },
+  { key: 'project_code', label: '项目代号', copyable: true },
   { key: 'project_group', label: '项目分组' },
-  { key: 'access_url', label: '访问地址' },
+  { key: 'access_url', label: '访问地址', ellipsis: true },
   { key: 'created_at', label: '创建时间', editable: false, readonly: true },
 ]
 
 const commonContainerFields: FieldConfig[] = [
-  { key: 'container_name', label: '容器名称' },
-  { key: 'docker_image_name', label: '镜像名称' },
-  { key: 'docker_image_tag', label: '镜像标签' },
-  { key: 'network', label: 'Docker网络' },
-  { key: 'external_port', label: '外部端口' },
-  { key: 'internal_port', label: '内部端口' },
+  { key: 'container_name', label: '容器名称', copyable: true },
+  { key: 'docker_image_name', label: '镜像', copyable: true, ellipsis: true },
+  { key: 'network', label: 'Docker网络', copyable: true },
+  { key: 'port_mapping', label: '端口映射' },
 ]
 
 const webFields: FieldConfig[] = [
-  { key: 'framework', label: '框架', editable: false, readonly: true },
-  { key: 'node_version', label: 'Node版本', editable: false, readonly: true },
+  { key: 'host_project_path', label: '宿主机路径', copyable: true },
+  { key: 'container_project_path', label: '容器内路径', copyable: true },
 ]
 
 const javaFields: FieldConfig[] = [
-  { key: 'git_repository', label: 'Git仓库' },
-  { key: 'host_project_path', label: '宿主机路径' },
-  { key: 'container_project_path', label: '容器内路径' },
+  { key: 'git_repository', label: 'Git仓库', copyable: true, ellipsis: true },
+  { key: 'host_project_path', label: '宿主机路径', copyable: true },
+  { key: 'container_project_path', label: '容器内路径', copyable: true },
   { key: 'jdk_version', label: 'JDK版本', editable: false, readonly: true },
 ]
 
 const pythonFields: FieldConfig[] = [
+  { key: 'git_repository', label: 'Git仓库', copyable: true, ellipsis: true },
+  { key: 'host_project_path', label: '宿主机路径', copyable: true },
+  { key: 'container_project_path', label: '容器内路径', copyable: true },
   { key: 'python_version', label: 'Python版本', editable: false, readonly: true },
 ]
 
 const detailFields = computed<FieldConfig[]>(() => {
-  const t = String(props.project.project_type || '').toLowerCase()
+  const t = projectType.value
 
   if (t === 'java') {
     return [...commonFields, ...commonContainerFields, ...javaFields]
@@ -288,17 +310,23 @@ const detailFields = computed<FieldConfig[]>(() => {
     return [...commonFields, ...commonContainerFields, ...pythonFields]
   }
 
-  return [...commonFields, ...webFields]
+  if (t === 'web' || t === 'frontend') {
+    return [...commonFields, ...webFields]
+  }
+
+  return [...commonFields]
 })
 
 const editableDetailFields = computed(() => {
-  return detailFields.value.filter((field) => field.key !== 'created_at')
+  return detailFields.value.filter((field) => field.key !== 'created_at' && field.key !== 'port_mapping')
 })
 
 async function copyVal(v: unknown) {
-  if (!v || v === '-') return
+  const text = String(v || '').trim()
+  if (!text || text === '-') return
+
   try {
-    await copyToClipboard(String(v))
+    await copyToClipboard(text)
     Notify.create({
       type: 'positive',
       message: '已复制',
@@ -315,30 +343,52 @@ async function copyVal(v: unknown) {
   }
 }
 
-async function fetchRuntimeStatus() {
-  const containerName = String(props.project.container_name || '').trim()
+function openAccessUrl(url?: string) {
+  const value = String(url || '').trim()
+  if (!value || value === '-') return
+  window.open(value, '_blank', 'noopener,noreferrer')
+}
 
-  if (containerName) {
-    runtimeStatus.value = 'Checking'
-    try {
-      const api = provideCurrentAgentProxyApi()
-      const res = await api.fetchDockerContainerStatus(containerName)
-      runtimeStatus.value = res?.container_status || 'Unknown'
-      return
-    } catch (error) {
-      console.error('fetchRuntimeStatus error:', error)
-      runtimeStatus.value = 'Unknown'
-      return
-    }
-  }
-
-  const deploymentStatus = String(props.project.deployment_status || '').trim()
-  if (deploymentStatus) {
-    runtimeStatus.value = deploymentStatus
+function handleFieldClick(key: string, value: unknown) {
+  if (key === 'access_url' && props.project.access_url) {
+    openAccessUrl(props.project.access_url)
     return
   }
+}
 
-  runtimeStatus.value = 'Unknown'
+async function fetchRuntimeStatus() {
+  runtimeStatus.value = 'Checking'
+
+  try {
+    const t = projectType.value
+
+    // Web 项目走专用部署状态接口
+    if (t === 'web' || t === 'frontend') {
+      if (!props.project.id) {
+        runtimeStatus.value = 'Unknown'
+        return
+      }
+
+      const response = await agentProxyApi.checkWebProjectDeploymentStatus(props.project.id)
+      runtimeStatus.value = response?.deployment_status || 'Unknown'
+      return
+    }
+
+    // 容器型项目走 Docker 容器状态
+    const containerName = String(props.project.container_name || '').trim()
+    if (containerName) {
+      const response = await agentProxyApi.fetchDockerContainerStatus(containerName)
+      runtimeStatus.value = response?.container_status || 'Unknown'
+      return
+    }
+
+    // 最后兜底
+    const deploymentStatus = String(props.project.deployment_status || '').trim()
+    runtimeStatus.value = deploymentStatus || 'Unknown'
+  } catch (error) {
+    console.error('fetchRuntimeStatus error:', error)
+    runtimeStatus.value = 'Unknown'
+  }
 }
 
 watch(
@@ -347,6 +397,7 @@ watch(
     props.project.project_type,
     props.project.container_name,
     props.project.deployment_status,
+    props.project.last_deployed_at,
   ],
   async () => {
     await fetchRuntimeStatus()
@@ -550,6 +601,15 @@ watch(
 
 .is-copyable:hover {
   color: #2563eb;
+}
+
+.is-link {
+  color: #2563eb;
+  cursor: pointer;
+}
+
+.is-link:hover {
+  color: #1d4ed8;
 }
 
 .sidebar-form-wrap {

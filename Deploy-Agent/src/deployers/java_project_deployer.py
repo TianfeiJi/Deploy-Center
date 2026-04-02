@@ -1,292 +1,365 @@
-"""
-@File           : java_project_deployer.py
-@Author         : Tianfei Ji
-@Description    :  Java 项目部署器，用于将上传的 JAR 包构建为 Docker 镜像并部署为服务容器。
-"""
 import os
 import re
 import shutil
 import subprocess
 from datetime import datetime
-import uuid
+from typing import Optional
+
 from loguru import logger
-from fastapi import UploadFile
-from models.common.http_result import HttpResult
-from models.enum.status_enum import StatusEnum
-from manager import PROJECT_DATA_MANAGER, DEPLOY_HISTORY_DATA_MANAGER
-from utils.user_context import get_current_user
+
+from context.deploy_context import DeployContext
+from manager import PROJECT_DATA_MANAGER
+from models.entity.deploy_task import DeployTask
+from models.enum.deploy_strategy_enum import DeployStrategyEnum
+from utils.deploy_validator import DeployValidator
 
 
 class JavaProjectDeployer:
     """
-    JavaProjectDeployer
+    Java 项目部署执行器。
 
-    执行 Java 项目从构建到部署的完整流程，包含以下步骤：
-        1. 准备部署目录
-        2. 写入或覆盖 Dockerfile 文件
-        3. 写入或覆盖 Dockerignore 文件
-        4. 拷贝Jar包
-        5. 清理同名旧容器与旧镜像（如存在）
-        6. 构建 Docker 镜像
-        7. 启动 Docker 容器
-        8. 更新部署记录、项目信息
-
-    支持异常处理、部署状态记录、日志输出，适用于后端自动化部署系统。
+    基于 DeployTask 执行部署流程，负责构建镜像并启动容器。
+    仅处理部署逻辑，不涉及任务调度与状态管理。
     """
-
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(JavaProjectDeployer, cls).__new__(cls)
-        return cls._instance
 
     def __init__(self):
         self.java_project = None
-        self.dockerfile_path = None
+        self.deploy_task: Optional[DeployTask] = None
 
-    def deploy(self, id: str, jar_file: UploadFile, dockerfile_content: str, dockercommand_content: str):
+    def deploy(
+        self,
+        deploy_task: DeployTask,
+        strategy: str = DeployStrategyEnum.default()
+    ):
         """
-        部署 Java 项目主流程。
-        """
-        logger.info("==================== Java 项目部署：开始 ====================")
+        部署入口。
 
-        self.user = get_current_user()
-        safe_user_info = {
-            "id": self.user.get("id"),
-            "username": self.user.get("username"),
-            "nickname": self.user.get("nickname")
-        }
-        logger.info(f"当前用户（简要）：{safe_user_info}")
-        
-        self.deploy_status = StatusEnum.START
-        self.java_project = PROJECT_DATA_MANAGER.get_project(id)
+        参数说明：
+            deploy_task:
+                当前部署任务对象，包含 project_id、upload_file_path、
+                dockerfile_content、dockercommand_content 等任务输入。
+            strategy:
+                部署策略，默认使用系统默认值。
+        """
+        self.deploy_task = deploy_task
+
+        if strategy == DeployStrategyEnum.RECREATE:
+            return self._recreate_deploy(deploy_task)
+
+        if strategy == DeployStrategyEnum.BLUE_GREEN:
+            return self._blue_green_deploy(deploy_task)
+
+        raise ValueError(f"不支持的部署策略: {strategy}")
+
+    def _recreate_deploy(self, deploy_task: DeployTask):
+        """
+        单实例重建式部署（Recreate Deployment）
+
+        流程说明：
+            1. 准备部署目录
+            2. 将任务输入中的 JAR 文件复制到部署目录
+            3. 准备并校验 Dockerfile
+            4. 写入或覆盖 .dockerignore
+            5. 清理旧容器与镜像
+            6. 构建 Docker 镜像
+            7. 启动 Docker 容器
+            8. 更新部署记录与项目信息
+        """
+        strategy = DeployStrategyEnum.RECREATE.value
+
+        self.java_project = PROJECT_DATA_MANAGER.get_project(deploy_task.project_id)
         if self.java_project is None:
-            return HttpResult[None](code=400, status="failed", msg=f"没有 id 为 {id} 的 Java 项目", data=None)
+            raise ValueError(f"没有 id 为 {deploy_task.project_id} 的 Java 项目")
 
-        logger.info(f"开始部署项目：{self.java_project}")
-        # 生成部署历史id
-        self.deploy_history_id = str(uuid.uuid4()).replace("-", "")[:8]
+        project_id = deploy_task.project_id
+        project_code = self.java_project.get("project_code")
+        project_name = self.java_project.get("project_name")
 
-        self._create_project_directory()
-        self._create_dockerfile(dockerfile_content)
-        self._create_dockerignore()
-        self._copy_jar_to_directory(jar_file)
-        self._cleanup_old_container_and_image()
-        self._build_image(id, self.dockerfile_path)
-        self._start_container(id, dockercommand_content)
-        self._update_java_project_data(id)
+        ctx = DeployContext()
+        ctx.container_name = deploy_task.container_name or self.java_project.get("container_name") or project_code
 
-        logger.info("==================== Java 项目部署：完成 ====================")
-        success_msg = (
-            f"项目 {self.java_project.get('project_code')}（{self.java_project.get('project_name')}）部署成功，"
-            f"容器 {self.java_project.get('container_name')} 已启动（基于镜像 {self.java_project.get('docker_image_name')}:{self.java_project.get('docker_image_tag')}）"
+        logger.info(f"[{deploy_task.id}][{strategy}] START - {project_code} ({project_name})")
+        logger.info(
+            f"[{deploy_task.id}][{strategy}][OPERATOR] - "
+            f"id={deploy_task.operator_id}, name={deploy_task.operator_name}"
         )
-        return success_msg
 
-    def _create_project_directory(self):
-        """
-        1 - 准备项目目录
+        steps = [
+            ("DIR", "准备部署目录", lambda: self._ensure_project_directory(ctx)),
+            ("PREPARE_JAR", "准备 JAR 到部署目录", lambda: self._prepare_jar_file(ctx, deploy_task)),
+            ("DOCKERFILE", "准备并校验 Dockerfile", lambda: self._prepare_and_validate_dockerfile(ctx, deploy_task)),
+            ("IGNORE", "生成 .dockerignore", lambda: self._create_dockerignore(ctx)),
+            ("CLEAN", "清理旧容器与镜像", lambda: self._cleanup_old_container_and_image(ctx, deploy_task)),
+            ("BUILD", "构建镜像", lambda: self._build_image(ctx, deploy_task)),
+            ("RUN", "启动容器", lambda: self._start_container(ctx, deploy_task)),
+            ("UPDATE", "更新部署记录", lambda: self._update_java_project_data(project_id)),
+        ]
 
-        创建项目所需的基础目录结构。
-        如果项目目录已存在，则提示继续使用原目录；
-        logs 子目录永远保留，jars 子目录若不存在则创建。
-        """
-        logger.info("1 - START - 准备项目目录")
-        container_project_path = self.java_project.get('container_project_path')
+        try:
+            self._execute_steps(deploy_task.id, steps, strategy, ctx)
+            logger.info(f"[{deploy_task.id}][{strategy}] SUCCESS - {project_code}")
+        except Exception:
+            logger.error(f"[{deploy_task.id}][{strategy}] FAILED")
+            raise
 
-        if os.path.exists(container_project_path):
-            logger.info(f"1 - PROCESS - 检测到项目目录已存在，将继续使用原目录: {container_project_path}")
-        else:
-            os.makedirs(container_project_path)
-            logger.info(f"1 - PROCESS - 已创建新的项目目录: {container_project_path}")
+        image_name = deploy_task.build_image_name or self.java_project.get("docker_image_name")
+        image_tag = deploy_task.build_image_tag or self.java_project.get("docker_image_tag")
+        container_name = ctx.container_name
 
-        os.makedirs(f"{container_project_path}/logs", exist_ok=True)
-        os.makedirs(f"{container_project_path}/jars", exist_ok=True)
-        logger.info(f"1 - FINISH - 项目目录结构已准备完成: {container_project_path}")
+        return (
+            f"项目 {project_code}（{project_name}）部署成功，"
+            f"容器 {container_name} 已启动（基于镜像 {image_name}:{image_tag}）"
+        )
 
-    def _create_dockerfile(self, dockerfile_content: str) -> str:
-        """
-        5 - 写入 Dockerfile
-        
-        如果 Dockerfile 已存在且内容完全一致，则跳过写入
-        仅在内容发生变化时才覆盖文件，尽量利用 Docker 构建缓存
-        """
-        logger.info("5 - START - 写入 Dockerfile")
-        
-        dockerfile_path = os.path.join(self.java_project.get("container_project_path"), "Dockerfile")
-        
-        if os.path.exists(dockerfile_path):
+    def _blue_green_deploy(self, deploy_task: DeployTask):
+        """蓝绿部署"""
+        raise NotImplementedError("blue_green strategy is not implemented yet")
+
+    def _execute_steps(self, deploy_task_id, steps, strategy, ctx: DeployContext):
+        total = len(steps)
+
+        for idx, (code, desc, func) in enumerate(steps, 1):
+            ctx.current_step = code
+            prefix = f"[{idx}/{total}][{code}]"
+
+            logger.info(f"[{deploy_task_id}][{strategy}]{prefix} START - {desc}")
+
             try:
-                with open(dockerfile_path, "r", encoding="utf-8") as f:
-                    old_content = f.read()
+                func()
+                logger.info(f"[{deploy_task_id}][{strategy}]{prefix} SUCCESS")
+            except Exception:
+                logger.exception(f"[{deploy_task_id}][{strategy}]{prefix} FAILED - {desc}")
+                raise
 
-                if old_content == dockerfile_content:
-                    logger.info(f"5 - SKIP - 检测到已存在 Dockerfile，且内容未变化，跳过写入: {dockerfile_path}")
-                    self.dockerfile_path = dockerfile_path
-                    logger.info(f"5 - FINISH - Dockerfile 无需更新: {dockerfile_path}")
-                    return dockerfile_path
+    # ==============================
+    # STEPS
+    # ==============================
 
-                logger.warning(f"5 - PROCESS - 检测到已存在 Dockerfile，但内容已变化，将进行覆盖: {dockerfile_path}")
-            except Exception as e:
-                logger.warning(f"5 - WARNING - 读取旧 Dockerfile 失败，将直接覆盖: {dockerfile_path}, 错误: {e}")
+    def _ensure_project_directory(self, ctx: DeployContext):
+        """
+        确保项目部署目录存在。
+        """
+        base = self.java_project.get("container_project_path")
+        logs_dir = os.path.join(base, "logs")
+        jars_dir = os.path.join(base, "jars")
+
+        if not os.path.exists(base):
+            os.makedirs(base)
+            logger.info(f"创建项目目录: {base}")
+
+        os.makedirs(logs_dir, exist_ok=True)
+        os.makedirs(jars_dir, exist_ok=True)
+
+        logger.info(f"部署目录已就绪: jars={jars_dir}, logs={logs_dir}")
+
+    def _prepare_jar_file(self, ctx: DeployContext, deploy_task: DeployTask):
+        """
+        将任务中的上传 JAR 文件准备到部署目录。
+        """
+        if not deploy_task.upload_file_path:
+            raise RuntimeError("deploy_task.upload_file_path 为空，无法继续部署")
+
+        source_jar_path = deploy_task.upload_file_path
+        if not os.path.isfile(source_jar_path):
+            raise RuntimeError(f"上传文件不存在: {source_jar_path}")
+
+        target_jar_path = os.path.join(
+            self.java_project.get("container_project_path"),
+            "jars",
+            f"{self.java_project.get('project_code')}.jar"
+        )
+
+        shutil.copy2(source_jar_path, target_jar_path)
+        ctx.artifact_path = target_jar_path
+
+        logger.info(f"JAR 已准备到部署目录: {target_jar_path}")
+
+    def _prepare_and_validate_dockerfile(self, ctx: DeployContext, deploy_task: DeployTask):
+        """
+        准备并校验 Dockerfile。
+
+        规则：
+            - Java 项目要求 deploy_task.dockerfile_content 必须存在
+            - 写入到项目根目录 Dockerfile
+        """
+        project_root_path = self.java_project.get("container_project_path")
+        if not project_root_path:
+            raise RuntimeError("container_project_path 缺失，无法准备 Dockerfile")
+
+        dockerfile_path = os.path.join(project_root_path, "Dockerfile")
+
+        if not deploy_task.dockerfile_content:
+            raise RuntimeError("deploy_task.dockerfile_content 为空，Java 项目无法继续部署")
 
         with open(dockerfile_path, "w", encoding="utf-8") as f:
-            f.write(dockerfile_content)
+            f.write(deploy_task.dockerfile_content)
 
-        logger.info(f"5 - FINISH - Dockerfile 写入完成: {dockerfile_path}")
-        self.dockerfile_path = dockerfile_path
-        return dockerfile_path
+        try:
+            with open(dockerfile_path, "r", encoding="utf-8") as f:
+                dockerfile_content = f.read()
+            DeployValidator.validate_dockerfile(dockerfile_content)
+        except Exception as e:
+            raise RuntimeError(f"Dockerfile 校验失败: {e}")
 
-    def _create_dockerignore(self):
+        ctx.project_root_path = project_root_path
+        ctx.dockerfile_path = dockerfile_path
+
+        logger.info(f"Dockerfile 校验通过: {dockerfile_path}")
+
+    def _create_dockerignore(self, ctx: DeployContext):
         """
-        3 - 写入.dockerignore
-        如果文件不存在则创建，避免将不必要的文件打包进 Docker 构建上下文。
+        创建默认的 .dockerignore。
         """
-        logger.info("3 - START - 写入 .dockerignore")
-        dockerignore_path = os.path.join(self.java_project.get('container_project_path'), ".dockerignore")
+        if not ctx.project_root_path:
+            raise RuntimeError("project_root_path 未初始化")
+
+        path = os.path.join(ctx.project_root_path, ".dockerignore")
+
+        if os.path.exists(path):
+            logger.info(f".dockerignore 已存在: {path}")
+            return
+
         ignore_rules = [
             "logs/",
             "*.log",
             "*.tmp",
-            ".DS_Store"
+            ".DS_Store",
         ]
-        try:
-            # 检查是否已有文件
-            if os.path.exists(dockerignore_path):
-                logger.info(f"3 - PROCESS - 检测到已有 .dockerignore 文件，跳过创建: {dockerignore_path}")
-            else:
-                logger.info("3 - PROCESS - 未检测到 .dockerignore 文件，准备创建")
-                # 创建文件并写入内容
-                with open(dockerignore_path, "w") as f:
-                    f.write("\n".join(ignore_rules) + "\n")
-                logger.info(f"3 - PROCESS - 创建并写入 .dockerignore 完成: {dockerignore_path}")
-            logger.info("3 - FINISH - .dockerignore 检查与写入流程完成")
-        except Exception as e:
-            logger.warning(f"3 - ERROR - 写入 .dockerignore 失败: {e}")
-        
-    def _copy_jar_to_directory(self, jar_file: UploadFile):
-        """
-        4 - 拷贝 JAR 包
 
-        拷贝上传的 JAR 文件到目标目录。
-        """
-        logger.info("4 - START - 拷贝 JAR 包")
-        target_path = f"{self.java_project.get('container_project_path')}/jars/{self.java_project.get('project_code')}.jar"
-        if os.path.exists(target_path):
-            logger.warning(f"4 - PROCESS - 检测到旧 JAR 文件，将进行覆盖: {target_path}")
-        with open(target_path, "wb") as buffer:
-            shutil.copyfileobj(jar_file.file, buffer)
-        logger.info(f"4 - FINISH - JAR 文件已拷贝至: {target_path}")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("\n".join(ignore_rules) + "\n")
 
-    def _cleanup_old_container_and_image(self):
-        """
-        5 - 检测并删除旧容器与镜像
-        """
-        container_name = self.java_project.get('project_code')
-        image_name = f"{self.java_project.get('docker_image_name')}:{self.java_project.get('docker_image_tag')}"
+        logger.info(f"已创建 .dockerignore: {path}")
 
-        logger.info(f"5 - START - 检测并删除旧容器与镜像: {container_name} / {image_name}")
+    def _cleanup_old_container_and_image(self, ctx: DeployContext, deploy_task: DeployTask):
+        """
+        删除旧容器和旧镜像。
+        """
+        container_name = ctx.container_name
+        if not container_name:
+            raise RuntimeError("container_name 未初始化")
 
-        # 清理旧容器
-        try:
-            check_container = subprocess.run(
-                f"docker ps -a --format '{{{{.Names}}}}' | grep -w {container_name}",
-                shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        image_name = self._resolve_image_name(deploy_task)
+
+        check_container_cmd = [
+            "docker", "ps", "-a",
+            "--filter", f"name={container_name}",
+            "--format", "{{.Names}}"
+        ]
+
+        result = subprocess.run(
+            check_container_cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+
+        if container_name in result.stdout:
+            logger.info(f"[CMD] docker rm -f {container_name}")
+            subprocess.run(
+                ["docker", "rm", "-f", container_name],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False
             )
-            if check_container.returncode == 0:
-                logger.info(f"5.1 - PROCESS - 检测到旧容器 {container_name}，执行删除...")
-                subprocess.run(f"docker rm -f {container_name}", shell=True, check=False)
-                logger.info(f"5.1 - FINISH - 旧容器已删除: {container_name}")
-            else:
-                logger.info(f"5.1 - SKIP - 未检测到旧容器: {container_name}")
-        except Exception as e:
-            logger.warning(f"5.1 - ERROR - 清理容器异常: {e}")
-        
-        # 清理旧镜像
-        try:
-            check_image = subprocess.run(
-                f"docker images -q {image_name}",
-                shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            )
-            image_id = check_image.stdout.decode().strip()
-            if image_id:
-                logger.info(f"5.2 - PROCESS - 检测到旧镜像 {image_name}，执行删除...")
-                subprocess.run(f"docker rmi -f {image_name}", shell=True, check=False)
-                logger.info(f"5.2 - SUCCESS - 旧镜像已删除: {image_name}")
-            else:
-                logger.info(f"5.2 - SKIP - 未检测到旧镜像: {image_name}")
-        except Exception as e:
-            logger.warning(f"5.2 - ERROR - 清理镜像异常: {e}")
-        logger.info("5 - FINISH - 旧容器与镜像检测与清理流程完成")
-        
-    def _build_image(self, id, dockerfile_path: str):
-        """
-        6 - 构建镜像
+            logger.info(f"已删除旧容器: {container_name}")
 
-        执行镜像构建。
+        check_image_cmd = ["docker", "images", "-q", image_name]
+
+        result = subprocess.run(
+            check_image_cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+
+        if result.stdout.strip():
+            logger.info(f"[CMD] docker rmi -f {image_name}")
+            subprocess.run(
+                ["docker", "rmi", "-f", image_name],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False
+            )
+            logger.info(f"已删除旧镜像: {image_name}")
+
+    def _build_image(self, ctx: DeployContext, deploy_task: DeployTask):
         """
-        logger.info("6 - START - 构建镜像")
-        dockerfile_folder = os.path.dirname(dockerfile_path)
-        os.chdir(dockerfile_folder)
-        image_name = f"{self.java_project.get('docker_image_name')}:{self.java_project.get('docker_image_tag')}"
-        command = ["docker", "build", "-t", image_name, "."]
+        构建 Docker 镜像。
+        """
+        if not ctx.project_root_path:
+            raise RuntimeError("project_root_path 未初始化，无法构建镜像")
+
+        image = self._resolve_image_name(deploy_task)
+        ctx.image_name = image
+
+        command = ["docker", "build", "-t", image, "."]
+        logger.info(f"开始构建镜像: {image}")
+        logger.debug(f"构建目录: {ctx.project_root_path}")
+        logger.info(f"[CMD] {' '.join(command)}")
+
         try:
-            logger.info(f"6 - PROCESS - 执行构建命令: {' '.join(command)}")
-            subprocess.run(command, check=True)
-            logger.info(f"6 - FINISH - 镜像构建成功: {image_name}")
+            subprocess.run(
+                command,
+                cwd=ctx.project_root_path,
+                check=True
+            )
         except subprocess.CalledProcessError as e:
-            self.deploy_status = StatusEnum.FAILED
-            err_msg = f"6 - ERROR - 镜像构建失败: {image_name}, 错误: {e}"
-            logger.error(err_msg)
-            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, "failed", err_msg, self.user)
-            raise RuntimeError(err_msg)
+            raise RuntimeError(f"镜像构建失败: {image}, 错误: {e}")
 
-    def _start_container(self, id: str, dockercommand_content: str):
+        logger.info(f"镜像构建完成: {image}")
+
+    def _start_container(self, ctx: DeployContext, deploy_task: DeployTask):
         """
-        7 - 启动容器
-
         启动 Docker 容器。
         """
-        logger.info("7 - START - 启动容器")
-        container_name = self.java_project.get('project_code')
+        if not ctx.container_name:
+            raise RuntimeError("container_name 未初始化")
+
+        if not deploy_task.dockercommand_content:
+            raise RuntimeError("deploy_task.dockercommand_content 为空，无法启动容器")
+
+        cmd = re.sub(r'\\\s*\r?\n', ' ', deploy_task.dockercommand_content).strip()
+
         try:
-            dockercommand_content = re.sub(r'\\\s*\r?\n', ' ', dockercommand_content).strip()
-            subprocess.run(dockercommand_content, shell=True, check=True)
-            logger.info(f"7 - FINISH - 容器启动成功: {container_name}")
+            DeployValidator.validate_docker_command(cmd)
         except Exception as e:
-            self.deploy_status = StatusEnum.FAILED
-            err_msg = f"7 - ERROR - 容器启动失败: {container_name}, 错误: {e}"
-            logger.error(err_msg)
-            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, self.deploy_status, err_msg, self.user)
-            raise RuntimeError(err_msg)
+            raise RuntimeError(f"docker run 命令校验失败: {e}")
 
-    def _update_java_project_data(self, id):
-        """
-        8 - 更新项目部署时间和部署记录
+        logger.info(f"开始启动容器: {ctx.container_name}")
+        logger.info(f"[CMD] {cmd}")
 
-        更新部署成功后的项目部署时间和部署记录数据。
+        try:
+            subprocess.run(cmd, shell=True, check=True)
+        except Exception as e:
+            raise RuntimeError(f"容器启动失败: {ctx.container_name}, 错误: {e}")
+
+        logger.info(f"容器启动完成: {ctx.container_name}")
+
+    def _update_java_project_data(self, project_id: str):
         """
-        logger.info("8 - START - 更新项目部署时间和部署记录")
+        更新项目部署时间。
+        """
         updated_data = {
             "last_deployed_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         }
-        try:
-            PROJECT_DATA_MANAGER.update_project(id, updated_data)
-            logger.info("8.1 - FINISH - 项目部署时间更新成功")
-        except Exception as e:
-            self.deploy_status = StatusEnum.FAILED
-            err_msg = f"8.1 - ERROR - 项目部署时间更新失败: {e}"
-            logger.error(err_msg)
 
-        try:
-            self.deploy_status = StatusEnum.SUCCESS
-            DEPLOY_HISTORY_DATA_MANAGER.log_deploy_result(self.deploy_history_id, id, self.deploy_status, None, self.user)
-            logger.info("8.2 - FINISH - 部署记录更新成功")
-        except Exception as e:
-            self.deploy_status = StatusEnum.FAILED
-            err_msg = f"8.2 - ERROR - 部署记录更新失败: {e}"
-            logger.error(err_msg)
-        logger.info("8 - FINISH - 更新项目状态和部署记录完成")
-        
-        
+        PROJECT_DATA_MANAGER.update_project(project_id, updated_data)
+
+        logger.info("项目部署记录已更新")
+
+    def _resolve_image_name(self, deploy_task: DeployTask) -> str:
+        """
+        解析本次任务最终要使用的镜像名:标签。
+
+        优先级：
+            1. deploy_task.build_image_name/build_image_tag
+            2. project 静态配置中的 docker_image_name/docker_image_tag
+        """
+        image_name = deploy_task.build_image_name or self.java_project.get("docker_image_name")
+        image_tag = deploy_task.build_image_tag or self.java_project.get("docker_image_tag")
+
+        if not image_name or not image_tag:
+            raise RuntimeError("镜像名称或标签缺失，无法继续部署")
+
+        return f"{image_name}:{image_tag}"

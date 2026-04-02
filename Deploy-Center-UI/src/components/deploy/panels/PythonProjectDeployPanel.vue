@@ -311,10 +311,6 @@ const props = defineProps<{
   projectId: string
 }>()
 
-const emit = defineEmits<{
-  (e: 'deploy-success'): void
-}>()
-
 const uploadRef = ref()
 const deployMechanism = ref<DeployMechanism>('upload')
 const executionMode = ref<ExecutionMode>('manual')
@@ -550,16 +546,22 @@ async function handleImmediateUploadDeploy() {
   uploadProgress.value = 0
   logLines.value = []
   appendLog(`开始部署：${file.name}`)
+  appendLog(`部署机制：${deployMechanism.value === 'cloud' ? '云构建部署' : '上传部署'}`)
+  appendLog(`触发方式：${executionMode.value === 'schedule' ? '定时触发' : '手动触发'}`)
 
   try {
     const fd = new FormData()
-    fd.append('id', String(props.projectId))
     fd.append('file', file)
+
+    fd.append('project_id', String(props.projectId))
+    fd.append('task_name', 'Python 项目部署')
+    fd.append('trigger_type', executionMode.value === 'schedule' ? 'SCHEDULED' : 'MANUAL')
+    fd.append('deploy_mechanism', deployMechanism.value === 'cloud' ? 'CLOUD_BUILD' : 'UPLOAD')
     fd.append('dockercommand_content', dockerCommand.value || '')
 
-    appendLog('部署中...')
+    appendLog('上传部署请求中...')
 
-    await getAgentApi().deployPythonProject(fd, {
+    const result = await getAgentApi().deployPythonProject(fd, {
       onUploadProgress: (e: AxiosProgressEvent) => {
         if (e.total) {
           uploadProgress.value = Math.round((e.loaded / e.total) * 100)
@@ -567,17 +569,16 @@ async function handleImmediateUploadDeploy() {
       },
     })
 
-    appendLog('部署成功', 'success')
+    appendLog(`部署任务提交成功，任务ID：${result?.data?.task_id || '-'}`, 'success')
 
     uploadProgress.value = 100
 
     Notify.create({
       type: 'positive',
-      message: '部署成功',
+      message: '部署任务已提交',
       position: 'top',
     })
 
-    emit('deploy-success')
   } catch (e: any) {
     console.error(e)
     appendLog(e?.message || '部署失败', 'error')

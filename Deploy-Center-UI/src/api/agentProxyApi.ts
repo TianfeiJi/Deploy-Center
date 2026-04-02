@@ -6,8 +6,8 @@ import { AddJavaProjectRequestDto } from 'src/types/dto/AddJavaProjectRequestDto
 import { UpdateJavaProjectRequestDto } from "src/types/dto/UpdateJavaProjectRequestDto";
 import { UpdateWebProjectRequestDto } from "src/types/dto/UpdateWebProjectRequestDto";
 import { UpdatePythonProjectRequestDto } from "src/types/dto/UpdatePythonProjectRequestDto";
-import { DeployHistoryVo } from "src/types/vo/DeployHistoryVo";
 import { callAgentApi } from "./agentApi";
+import { DeployTask } from 'src/types/DeployTask';
 
 
 export class AgentProxyApi {
@@ -96,11 +96,17 @@ export class AgentProxyApi {
     return httpResult.data.data;
   }
 
-  // ========================== DeployHistory 管理 ==========================
+  // ========================== DeployTask 管理 ==========================
 
-  // 获取部署历史列表
-  async fetchDeployHistoryList(): Promise<DeployHistoryVo[]> {
-    const httpResult: HttpResult<HttpResult<DeployHistoryVo[]>> =  await callAgentApi(this.agentId, '/api/deploy-agent/deploy-history/list', 'GET');
+  // 获取部署任务列表
+  async fetchDeployTaskList(): Promise<DeployTask[]> {
+    const httpResult: HttpResult<HttpResult<DeployTask[]>> =  await callAgentApi(this.agentId, '/api/deploy-agent/deploy-task/list', 'GET');
+    return httpResult.data.data;
+  }
+
+  // 删除部署任务
+  async deleteDeployTask(id: string): Promise<any> {
+    const httpResult: HttpResult<HttpResult<any>> =  await callAgentApi(this.agentId, `/api/deploy-agent/deploy-task/delete/${id}`, 'DELETE');
     return httpResult.data.data;
   }
 

@@ -17,8 +17,9 @@ class DeployContext:
     """
 
     # ===== 文件相关 =====
+    artifact_path: Optional[str] = None
+    
     project_root_path: Optional[str] = None
-    zip_path: Optional[str] = None
     dockerfile_path: Optional[str] = None
 
     # ===== Docker相关 =====
@@ -30,9 +31,9 @@ class DeployContext:
     current_step: Optional[str] = None
 
     def __init__(self):
-        # 显式初始化（方便未来扩展）
+        self.artifact_path = None
+        
         self.project_root_path = None
-        self.zip_path = None
         self.dockerfile_path = None
 
         self.image_name = None

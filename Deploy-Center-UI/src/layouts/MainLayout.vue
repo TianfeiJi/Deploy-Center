@@ -106,12 +106,12 @@
             no-caps
             no-wrap
             :ripple="false"
-            to="/deployHistory"
+            to="/tasks"
             class="nav-btn"
-            :class="{ 'active-nav': route.path === '/deployHistory' }"
+            :class="{ 'active-nav': route.path === '/tasks' }"
           >
-            <q-icon name="history" size="20px" />
-            <span class="q-ml-sm nav-text">部署历史</span>
+            <q-icon name="task_alt" size="20px" />
+            <span class="q-ml-sm nav-text">部署任务</span>
           </q-btn>
 
           <q-btn

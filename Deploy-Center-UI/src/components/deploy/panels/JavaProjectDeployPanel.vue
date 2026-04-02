@@ -5,12 +5,21 @@
         <div class="panel-title">部署设置</div>
 
         <div class="panel-actions">
-          <button v-if="!isDeploying" class="ui-btn ui-btn-primary" :disabled="isPrimaryActionDisabled"
-            @click="handlePrimaryDeployAction">
+          <button
+            v-if="!isDeploying"
+            class="ui-btn ui-btn-primary"
+            :disabled="isPrimaryActionDisabled"
+            @click="handlePrimaryDeployAction"
+          >
             {{ primaryActionLabel }}
           </button>
 
-          <button v-else class="ui-btn ui-btn-primary is-deploying" @click="handleAbortDeploy" title="点击中止部署">
+          <button
+            v-else
+            class="ui-btn ui-btn-primary is-deploying"
+            @click="handleAbortDeploy"
+            title="点击中止部署"
+          >
             <span class="deploying-inner">
               <q-spinner size="14px" color="white" class="deploying-spinner" />
               <span class="deploying-text">部署中</span>
@@ -25,12 +34,18 @@
           <div class="control-block">
             <div class="control-label">部署机制</div>
             <div class="toggle-group">
-              <button class="toggle-btn" :class="{ active: deployMechanism === 'upload' }"
-                @click="setDeployMechanism('upload')">
+              <button
+                class="toggle-btn"
+                :class="{ active: deployMechanism === 'upload' }"
+                @click="setDeployMechanism('upload')"
+              >
                 上传部署
               </button>
-              <button class="toggle-btn" :class="{ active: deployMechanism === 'cloud' }"
-                @click="setDeployMechanism('cloud')">
+              <button
+                class="toggle-btn"
+                :class="{ active: deployMechanism === 'cloud' }"
+                @click="setDeployMechanism('cloud')"
+              >
                 云构建部署
               </button>
             </div>
@@ -39,12 +54,18 @@
           <div class="control-block">
             <div class="control-label">执行方式</div>
             <div class="toggle-group">
-              <button class="toggle-btn" :class="{ active: executionMode === 'manual' }"
-                @click="executionMode = 'manual'">
+              <button
+                class="toggle-btn"
+                :class="{ active: executionMode === 'manual' }"
+                @click="executionMode = 'manual'"
+              >
                 立即执行
               </button>
-              <button class="toggle-btn" :class="{ active: executionMode === 'schedule' }"
-                @click="executionMode = 'schedule'">
+              <button
+                class="toggle-btn"
+                :class="{ active: executionMode === 'schedule' }"
+                @click="executionMode = 'schedule'"
+              >
                 定时执行
               </button>
             </div>
@@ -82,8 +103,16 @@
             <div class="editor-block">
               <div class="inner-section-title">Jar 包</div>
 
-              <el-upload ref="uploadRef" drag :auto-upload="false" accept=".jar" :on-change="handleFileChange"
-                :file-list="fileList" :disabled="uploadProgress > 0 || isDeploying">
+              <el-upload
+                ref="uploadRef"
+                drag
+                :auto-upload="false"
+                accept=".jar"
+                :on-change="handleFileChange"
+                :file-list="fileList"
+                :limit="1"
+                :disabled="uploadProgress > 0 || isDeploying"
+              >
                 <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
 
                 <template #tip>
@@ -93,8 +122,14 @@
                 </template>
               </el-upload>
 
-              <el-progress v-if="uploadProgress > 0" class="q-mt-md" :percentage="uploadProgress" :text-inside="true"
-                :stroke-width="14" :status="uploadProgress === 100 ? 'success' : undefined" />
+              <el-progress
+                v-if="uploadProgress > 0"
+                class="q-mt-md"
+                :percentage="uploadProgress"
+                :text-inside="true"
+                :stroke-width="14"
+                :status="uploadProgress === 100 ? 'success' : undefined"
+              />
             </div>
 
             <div class="aligned-editor-grid">
@@ -104,14 +139,26 @@
                     <div class="inner-section-title">Dockerfile 模板</div>
 
                     <div class="template-actions">
-                      <el-select v-model="selectedDockerfileTemplateId" class="template-select" placeholder="选择模板"
-                        :disabled="isDeploying || dockerfileTemplateLoading" @change="handleDockerfileTemplateChange">
-                        <el-option v-for="item in dockerfileTemplates" :key="item.id" :label="item.template_name"
-                          :value="item.id" />
+                      <el-select
+                        v-model="selectedDockerfileTemplateId"
+                        class="template-select"
+                        placeholder="选择模板"
+                        :disabled="isDeploying || dockerfileTemplateLoading"
+                        @change="handleDockerfileTemplateChange"
+                      >
+                        <el-option
+                          v-for="item in dockerfileTemplates"
+                          :key="item.id"
+                          :label="item.template_name"
+                          :value="item.id"
+                        />
                       </el-select>
 
-                      <button class="text-action-btn" :disabled="isDeploying"
-                        @click="openCreateDockerfileTemplateDialog">
+                      <button
+                        class="text-action-btn"
+                        :disabled="isDeploying"
+                        @click="openCreateDockerfileTemplateDialog"
+                      >
                         新增模板
                       </button>
                     </div>
@@ -123,7 +170,12 @@
                 </div>
 
                 <div class="editor-column-body">
-                  <CodeEditorBox v-model="dockerfileContent" :disabled="isDeploying" :min-rows="16" :max-rows="16" />
+                  <CodeEditorBox
+                    v-model="dockerfileContent"
+                    :disabled="isDeploying"
+                    :min-rows="16"
+                    :max-rows="16"
+                  />
                 </div>
               </div>
 
@@ -133,15 +185,26 @@
                     <div class="inner-section-title">Docker Command 模板</div>
 
                     <div class="template-actions">
-                      <el-select v-model="selectedDockercommandTemplateId" class="template-select" placeholder="选择模板"
+                      <el-select
+                        v-model="selectedDockercommandTemplateId"
+                        class="template-select"
+                        placeholder="选择模板"
                         :disabled="isDeploying || dockercommandTemplateLoading"
-                        @change="handleDockercommandTemplateChange">
-                        <el-option v-for="item in dockercommandTemplates" :key="item.id" :label="item.template_name"
-                          :value="item.id" />
+                        @change="handleDockercommandTemplateChange"
+                      >
+                        <el-option
+                          v-for="item in dockercommandTemplates"
+                          :key="item.id"
+                          :label="item.template_name"
+                          :value="item.id"
+                        />
                       </el-select>
 
-                      <button class="text-action-btn" :disabled="isDeploying"
-                        @click="openCreateDockercommandTemplateDialog">
+                      <button
+                        class="text-action-btn"
+                        :disabled="isDeploying"
+                        @click="openCreateDockercommandTemplateDialog"
+                      >
                         新增模板
                       </button>
                     </div>
@@ -153,7 +216,12 @@
                 </div>
 
                 <div class="editor-column-body">
-                  <CodeEditorBox v-model="dockerCommand" :disabled="isDeploying" :min-rows="16" :max-rows="16" />
+                  <CodeEditorBox
+                    v-model="dockerCommand"
+                    :disabled="isDeploying"
+                    :min-rows="16"
+                    :max-rows="16"
+                  />
                 </div>
               </div>
             </div>
@@ -185,7 +253,12 @@
       </div>
 
       <div class="terminal-box">
-        <div v-for="(line, index) in logLines" :key="index" class="terminal-line" :class="`line-${line.type}`">
+        <div
+          v-for="(line, index) in logLines"
+          :key="index"
+          class="terminal-line"
+          :class="`line-${line.type}`"
+        >
           <span class="terminal-time">[{{ line.time }}]</span>
           <span class="terminal-text">{{ line.text }}</span>
         </div>
@@ -196,7 +269,12 @@
       </div>
     </section>
 
-    <el-dialog v-model="createDockerfileTemplateDialogVisible" title="新增 Dockerfile 模板" width="720px" destroy-on-close>
+    <el-dialog
+      v-model="createDockerfileTemplateDialogVisible"
+      title="新增 Dockerfile 模板"
+      width="720px"
+      destroy-on-close
+    >
       <el-form label-width="96px">
         <el-form-item label="模板名称">
           <el-input v-model="newDockerfileTemplate.template_name" placeholder="例如：SpringBoot 基础模板" />
@@ -217,15 +295,22 @@
         <button class="ui-btn ui-btn-secondary" @click="createDockerfileTemplateDialogVisible = false">
           取消
         </button>
-        <button class="ui-btn ui-btn-primary" :disabled="creatingDockerfileTemplate"
-          @click="confirmCreateDockerfileTemplate">
+        <button
+          class="ui-btn ui-btn-primary"
+          :disabled="creatingDockerfileTemplate"
+          @click="confirmCreateDockerfileTemplate"
+        >
           {{ creatingDockerfileTemplate ? '保存中...' : '保存模板' }}
         </button>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="createDockercommandTemplateDialogVisible" title="新增 Docker Command 模板" width="720px"
-      destroy-on-close>
+    <el-dialog
+      v-model="createDockercommandTemplateDialogVisible"
+      title="新增 Docker Command 模板"
+      width="720px"
+      destroy-on-close
+    >
       <el-form label-width="96px">
         <el-form-item label="模板名称">
           <el-input v-model="newDockercommandTemplate.template_name" placeholder="例如：标准启动命令模板" />
@@ -246,8 +331,11 @@
         <button class="ui-btn ui-btn-secondary" @click="createDockercommandTemplateDialogVisible = false">
           取消
         </button>
-        <button class="ui-btn ui-btn-primary" :disabled="creatingDockercommandTemplate"
-          @click="confirmCreateDockercommandTemplate">
+        <button
+          class="ui-btn ui-btn-primary"
+          :disabled="creatingDockercommandTemplate"
+          @click="confirmCreateDockercommandTemplate"
+        >
           {{ creatingDockercommandTemplate ? '保存中...' : '保存模板' }}
         </button>
       </template>
@@ -291,10 +379,6 @@ type Template = {
 
 const props = defineProps<{
   projectId: string
-}>()
-
-const emit = defineEmits<{
-  (e: 'deploy-success'): void
 }>()
 
 const uploadRef = ref()
@@ -647,21 +731,44 @@ async function handleImmediateUploadDeploy() {
     return
   }
 
+  if (!dockerfileContent.value?.trim()) {
+    Notify.create({
+      type: 'negative',
+      message: 'Dockerfile 内容不能为空',
+      position: 'top',
+    })
+    return
+  }
+
+  if (!dockerCommand.value?.trim()) {
+    Notify.create({
+      type: 'negative',
+      message: 'Docker Command 不能为空',
+      position: 'top',
+    })
+    return
+  }
+
   isDeploying.value = true
   uploadProgress.value = 0
   logLines.value = []
   appendLog(`开始部署：${file.name}`)
+  appendLog(`部署机制：${deployMechanism.value === 'cloud' ? '云构建部署' : '上传部署'}`)
+  appendLog(`触发方式：${executionMode.value === 'schedule' ? '定时触发' : '手动触发'}`)
 
   try {
     appendLog('上传 Jar 中...')
 
     const fd = new FormData()
-    fd.append('id', String(props.projectId))
     fd.append('file', file)
+    fd.append('project_id', String(props.projectId))
+    fd.append('task_name', 'Java 项目部署')
+    fd.append('trigger_type', executionMode.value === 'schedule' ? 'SCHEDULED' : 'MANUAL')
+    fd.append('deploy_mechanism', deployMechanism.value === 'cloud' ? 'CLOUD_BUILD' : 'UPLOAD')
     fd.append('dockerfile_content', dockerfileContent.value)
     fd.append('dockercommand_content', dockerCommand.value)
 
-    await getAgentApi().deployJavaProject(fd, {
+    const result = await getAgentApi().deployJavaProject(fd, {
       onUploadProgress: (e: AxiosProgressEvent) => {
         if (e.total) {
           uploadProgress.value = Math.round((e.loaded / e.total) * 100)
@@ -669,19 +776,16 @@ async function handleImmediateUploadDeploy() {
       },
     })
 
-    appendLog('上传完成', 'success')
-    appendLog('开始执行部署', 'info')
-    appendLog('部署成功', 'success')
+    appendLog(`部署任务提交成功，任务ID：${result?.data?.task_id || '-'}`, 'success')
 
     uploadProgress.value = 100
 
     Notify.create({
       type: 'positive',
-      message: '部署成功',
+      message: '部署任务已提交',
       position: 'top',
     })
 
-    emit('deploy-success')
   } catch (e: any) {
     console.error(e)
     appendLog(e?.message || '部署失败', 'error')
@@ -936,7 +1040,7 @@ onMounted(async () => {
   word-break: break-word;
 }
 
-.terminal-line+.terminal-line {
+.terminal-line + .terminal-line {
   margin-top: 4px;
 }
 

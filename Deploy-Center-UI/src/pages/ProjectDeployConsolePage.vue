@@ -9,15 +9,15 @@
         @update:active="handleActiveTabChange" @refresh="refreshAll">
         <template v-if="activeTab === 'deploy'">
           <component :is="currentProjectDeployPanel" v-if="projectDetail.id && currentProjectDeployPanel"
-            :project-id="projectDetail.id" @deploy-success="refreshAll" />
+            :project-id="projectDetail.id" />
 
           <div v-else class="unsupported-panel">
             不支持的项目类型：{{ projectDetail.project_type || '-' }}
           </div>
         </template>
 
-        <template v-else-if="activeTab === 'history'">
-          <ProjectDeployHistoryPanel v-if="projectDetail.id" :project-id="projectDetail.id" />
+        <template v-else-if="activeTab === 'tasks'">
+          <DeployTaskPanel v-if="projectDetail.id" :project-id="projectDetail.id" />
         </template>
       </ProjectWorkspaceLayout>
     </div>
@@ -42,9 +42,9 @@ import ProjectWorkspaceLayout from 'components/deploy/ProjectWorkspaceLayout.vue
 import WebProjectDeployPanel from 'components/deploy/panels/WebProjectDeployPanel.vue'
 import JavaProjectDeployPanel from 'components/deploy/panels/JavaProjectDeployPanel.vue'
 import PythonProjectDeployPanel from 'src/components/deploy/panels/PythonProjectDeployPanel.vue'
-import ProjectDeployHistoryPanel from 'components/deploy/panels/ProjectDeployHistoryPanel.vue'
+import DeployTaskPanel from 'src/components/deploy/panels/DeployTaskPanel.vue'
 
-type TabKey = 'deploy' | 'history'
+type TabKey = 'deploy' | 'tasks'
 
 const route = useRoute()
 const agentStore = useAgentStore()
@@ -68,7 +68,7 @@ const detailForm = ref<ProjectDetail>({} as ProjectDetail)
 
 const tabs = ref([
   { key: 'deploy', label: '部署' },
-  { key: 'history', label: '部署历史' }
+  { key: 'tasks', label: '部署任务' }
 ])
 
 function getAgentApi() {

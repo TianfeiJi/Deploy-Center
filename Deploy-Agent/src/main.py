@@ -18,7 +18,7 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from middleware.verify_user_middleware import VerifyUserMiddleware
 from middleware.user_injection_middleware import UserInjectionMiddleware
 from routes.project_routes import project_router
-from routes.deploy_history_routes import deploy_history_router
+from routes.deploy_task_routes import deploy_task_router
 from routes.deploy_log_routes import deploy_log_router
 from routes.docker_routes import docker_router
 from routes.server_routes import server_router
@@ -27,6 +27,9 @@ from routes.template_routes import template_router
 from routes.inspect_routes import inspect_router
 from routes.statistics_routes import statistics_router
 
+
+# 是否开启Swagger
+ENABLE_SWAGGER = True
 
 app = FastAPI(
     title="Deploy Agent",
@@ -37,8 +40,8 @@ app = FastAPI(
         "url": "http://jitianfei.com",
         "email": "ieacoder@foxmail.com",
     },
-    docs_url=None
-    # openapi_url=None    # 禁用API文档
+    docs_url="/docs" if ENABLE_SWAGGER else None,
+    openapi_url="/openapi.json" if ENABLE_SWAGGER else None,
 )
 
 # 更换国内 CDN
@@ -79,7 +82,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 
 app.include_router(project_router)
-app.include_router(deploy_history_router)
+app.include_router(deploy_task_router)
 app.include_router(deploy_log_router)
 app.include_router(docker_router)
 app.include_router(server_router)
