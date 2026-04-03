@@ -71,15 +71,7 @@
         </div>
 
         <div class="console-body">
-          <template v-if="activeTab === 'container_info'">
-            <ContainerInfoPanel :project="projectDetail" />
-          </template>
-
-          <template v-else-if="activeTab === 'container_inspect'">
-            <ContainerInspectPanel :project="projectDetail" />
-          </template>
-
-          <template v-else-if="activeTab === 'deploy'">
+          <template v-if="activeTab === 'deploy'">
             <component
               :is="currentProjectDeployPanel"
               v-if="projectDetail.id && currentProjectDeployPanel"
@@ -99,6 +91,18 @@
               v-if="projectDetail.id"
               :project-id="projectDetail.id"
             />
+          </template>
+
+          <template v-else-if="activeTab === 'container_info'">
+            <ContainerInfoPanel :project="projectDetail" />
+          </template>
+
+          <template v-else-if="activeTab === 'container_inspect'">
+            <ContainerInspectPanel :project="projectDetail" />
+          </template>
+
+          <template v-else-if="activeTab === 'container_log'">
+            <ContainerLogPanel :project="projectDetail"/>
           </template>
         </div>
       </section>
@@ -136,10 +140,11 @@ import JavaProjectDeployPanel from 'components/deploy/panels/JavaProjectDeployPa
 import PythonProjectDeployPanel from 'src/components/deploy/panels/PythonProjectDeployPanel.vue'
 import ContainerInfoPanel from 'src/components/deploy/panels/ContainerInfoPanel.vue'
 import ContainerInspectPanel from 'src/components/deploy/panels/ContainerInspectPanel.vue'
+import ContainerLogPanel from 'src/components/deploy/panels/ContainerLogPanel.vue'
 
 import { projectDetailDialogMap } from 'src/registry/projectDetailDialogRegistry'
 
-type TabKey = 'container_info' | 'container_inspect' | 'deploy' | 'tasks'
+type TabKey = 'deploy' | 'tasks' | 'container_info' | 'container_inspect' | 'container_log'
 type ProjectDetail = PythonProject | JavaProject | WebProject
 type ProjectType = keyof typeof projectDetailDialogMap
 
@@ -156,10 +161,11 @@ const projectDetail = ref<ProjectDetail>({} as ProjectDetail)
 const runtimeStatus = ref<string>('Checking')
 
 const tabs = ref<{ key: TabKey; label: string }[]>([
-  { key: 'container_info', label: '容器信息' },
-  { key: 'container_inspect', label: '容器 Inspect' },
   { key: 'deploy', label: '部署' },
   { key: 'tasks', label: '部署任务' },
+  { key: 'container_info', label: '容器信息' },
+  { key: 'container_inspect', label: '容器 Inspect' },
+  { key: 'container_log', label: '容器日志' },
 ])
 
 function getAgentApi() {

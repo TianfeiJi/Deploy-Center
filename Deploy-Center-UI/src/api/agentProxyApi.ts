@@ -160,16 +160,26 @@ export class AgentProxyApi {
     return httpResult.data.data
   }
 
-  // 运行受限 Docker 命令
-  async runAllowedDockerCommand(command: string): Promise<string> {
-    const httpResult: HttpResult<HttpResult<string>> = await callAgentApi(
+  // 获取指定容器日志
+  async fetchDockerContainerLogs(
+    payload: {
+      container_name: string
+      tail?: number
+      timestamps?: boolean
+      since?: string
+      until?: string
+    }
+  ): Promise<any> {
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(
       this.agentId,
-      `/api/deploy-agent/docker/commands/run`,
+      '/api/deploy-agent/docker/containers/logs',
       'POST',
-      { command }
+      payload
     )
+
     return httpResult.data.data
   }
+
 
   // ========================== DeployTask 管理 ==========================
 

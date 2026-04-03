@@ -7,7 +7,7 @@ from loguru import logger
 
 from models.common.http_result import HttpResult
 from utils.docker_util import run_docker_command
-
+from models.dto.docker_container_logs_request import DockerContainerLogsRequest
 
 docker_router = APIRouter()
 
@@ -272,34 +272,57 @@ async def get_docker_info():
         logger.error(f"获取 Docker 信息失败: {e}")
         return HttpResult[None](code=500, status="failed", msg=str(e), data=None)
 
-
 @docker_router.post(
-    "/api/deploy-agent/docker/commands/run",
-    summary="运行受限 Docker 命令"
+    "/api/deploy-agent/docker/containers/logs",
+    summary="查询指定容器日志"
 )
-async def run_allowed_docker_command(command: str):
-    """
-    受限运行单条 Docker 命令，只允许白名单命令。
-    """
-    allowed_commands = {"ps", "images", "info", "version"}
-
-    if command not in allowed_commands:
-        return HttpResult[None](
-            code=400,
-            status="failed",
-            msg="非法命令",
-            data=None
-        )
-
+async def get_docker_container_logs(
+    request: DockerContainerLogsRequest
+):
     try:
-        output = run_docker_command([command])
+        docker_command = ["logs", f"--tail={request.tail}"]
 
-        return HttpResult[str](
+        if request.timestamps:
+            docker_command.append("--timestamps")
+
+        if request.since:
+            docker_command.extend(["--since", request.since])
+
+        if request.until:
+            docker_command.extend(["--until", request.until])
+
+        docker_command.append(request.container_name)
+
+        logs_text = run_docker_command(docker_command)
+
+        return HttpResult[dict](
             code=200,
             status="success",
             msg=None,
-            data=output
+            data={
+                "container_name": request.container_name,
+                "tail": request.tail,
+                "timestamps": request.timestamps,
+                "since": request.since,
+                "until": request.until,
+                "logs": logs_text,
+            }
         )
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"查询容器日志失败: {e}")
+        return HttpResult[None](
+            code=500,
+            status="failed",
+            msg=str(e),
+            data=None
+        )
+
     except Exception as e:
-        logger.error(f"执行 Docker 命令失败: {e}")
-        return HttpResult[None](code=500, status="failed", msg=str(e), data=None)
+        logger.error(f"查询容器日志异常: {e}")
+        return HttpResult[None](
+            code=500,
+            status="failed",
+            msg=str(e),
+            data=None
+        )
