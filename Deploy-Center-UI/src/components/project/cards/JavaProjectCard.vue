@@ -21,9 +21,11 @@
             <template v-if="containerStatus === 'Checking'">
               <q-spinner color="grey-5" size="16px" />
             </template>
+
             <template v-else-if="containerStatus === 'Unknown'">
               <el-tag type="warning" effect="light" round>Status Unknown</el-tag>
             </template>
+
             <template v-else>
               <el-tag
                 :closable="false"
@@ -31,7 +33,7 @@
                 effect="light"
                 round
               >
-                {{ containerStatus }}
+                {{ formatContainerStatusLabel(containerStatus) }}
               </el-tag>
             </template>
           </div>
@@ -118,210 +120,142 @@
     </q-card-actions>
   </q-card>
 
-  <q-dialog v-model="isViewDetailDialogOpen">
-    <q-card style="width: 100%">
-      <q-card-section>
-        <q-btn icon="close" flat round dense class="float-right" v-close-popup />
-        <div class="text-h6">项目详情</div>
-      </q-card-section>
-      <q-separator />
-      <q-card-section>
-        <el-table :data="tableData" border>
-          <el-table-column prop="key" label="字段" width="170" />
-          <el-table-column prop="label" label="注释" width="130" />
-          <el-table-column label="值">
-            <template #default="scope">
-              <div v-if="!isEditing || !scope.row.editable">{{ scope.row.value }}</div>
-              <el-input v-else v-model="scope.row.value" placeholder="请输入内容" clearable />
-            </template>
-          </el-table-column>
-        </el-table>
-      </q-card-section>
-      <q-separator />
-      <q-card-actions>
-        <q-btn flat color="negative" label="删除" @click="isSecondConfirmDeleteDialogOpen = true" />
-        <q-space />
-        <q-btn v-if="isEditing" flat color="negative" label="取消" @click="cancelEdit" />
-        <q-btn v-if="isEditing" flat color="positive" label="保存" @click="saveEdit" />
-        <q-btn v-else flat color="secondary" label="编辑" @click="startEdit" />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-
-  <q-dialog v-model="isSecondConfirmDeleteDialogOpen">
-    <q-card style="width: 30%">
-      <q-card-section class="text-h6">危险操作</q-card-section>
-      <q-card-section>
-        <div style="color: red; text-indent: 1rem">请输入“确定删除”以进行删除操作。</div>
-        <q-input v-model="confirmText" />
-      </q-card-section>
-      <q-card-actions align="right">
-        <q-btn label="确定" @click="handleSecondConfirmDelete" />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+  <JavaProjectDetailDialog
+    v-model="isViewDetailDialogOpen"
+    :project="javaProject"
+    @saved="emit('refresh')"
+    @deleted="emit('refresh')"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import { Notify, copyToClipboard } from 'quasar';
-import { provideCurrentAgentProxyApi } from 'src/factory/agentProxyApiFactory';
-import { formatDate } from 'src/utils/dateFormatter';
-import { JavaProject } from 'src/types/Project.types';
-import { UpdateJavaProjectRequestDto } from 'src/types/dto/UpdateJavaProjectRequestDto';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, computed, watch } from 'vue'
+import { Notify, copyToClipboard } from 'quasar'
+import { provideCurrentAgentProxyApi } from 'src/factory/agentProxyApiFactory'
+import type { JavaProject } from 'src/types/Project.types'
+import { useRouter } from 'vue-router'
+import JavaProjectDetailDialog from 'src/components/project/dialogs/JavaProjectDetailDialog.vue'
 
-const router = useRouter();
+const router = useRouter()
 
-const props = defineProps<{ javaProject: JavaProject }>();
+const props = defineProps<{
+  javaProject: JavaProject
+}>()
 
-const isViewDetailDialogOpen = ref(false);
-const isSecondConfirmDeleteDialogOpen = ref(false);
-const confirmText = ref('');
-const tableData = ref<{ label: string; value: string; key: string; editable: boolean }[]>([]);
-const containerStatus = ref('Checking');
-const isEditing = ref(false);
+const emit = defineEmits<{
+  (e: 'refresh'): void
+}>()
 
-const goToDeployConsole = (id: string) => {
-  if (!id) return;
+const isViewDetailDialogOpen = ref(false)
+const containerStatus = ref('Checking')
+
+const goToDeployConsole = (id: string | number | undefined) => {
+  if (!id) return
   router.push({
     path: `/project/deploy/${id}`,
-  });
-};
+  })
+}
 
 const dockerImageText = computed(() => {
-  return `${props.javaProject.docker_image_name || '-'}:${props.javaProject.docker_image_tag || 'latest'}`;
-});
+  return `${props.javaProject.docker_image_name || '-'}:${props.javaProject.docker_image_tag || 'latest'}`
+})
 
 const portMappingText = computed(() => {
-  return `${props.javaProject.external_port || '-'} → ${props.javaProject.internal_port || '-'}`;
-});
+  return `${props.javaProject.external_port || '-'} → ${props.javaProject.internal_port || '-'}`
+})
 
 const getDeployText = (time?: any) => {
-  if (!time) return '未部署';
+  if (!time) return '未部署'
   try {
-    const now = Date.now();
-    const t = new Date(time).getTime();
-    if (Number.isNaN(t)) return '-';
-    const diff = Math.floor((now - t) / 1000);
-    if (diff < 60) return '刚刚';
-    if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
-    return `${Math.floor(diff / 86400)}天前`;
+    const now = Date.now()
+    const t = new Date(time).getTime()
+    if (Number.isNaN(t)) return '-'
+    const diff = Math.floor((now - t) / 1000)
+    if (diff < 60) return '刚刚'
+    if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`
+    if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`
+    return `${Math.floor(diff / 86400)}天前`
   } catch {
-    return '未部署';
+    return '未部署'
   }
-};
+}
 
 const copyValue = async (text?: string) => {
-  const value = text?.trim();
-  if (!value || value === '-') return;
+  const value = text?.trim()
+  if (!value || value === '-') return
 
   try {
-    await copyToClipboard(value);
+    await copyToClipboard(value)
     Notify.create({
       type: 'positive',
       message: '复制成功',
       position: 'top',
       timeout: 1000,
-    });
+    })
   } catch {
     Notify.create({
       type: 'negative',
       message: '复制失败',
       position: 'top',
       timeout: 1000,
-    });
+    })
   }
-};
-
-const viewJavaProjectDetail = () => {
-  tableData.value = [
-    { label: '项目Id', key: 'id', value: props.javaProject.id ?? '', editable: false },
-    { label: '项目代号', key: 'project_code', value: props.javaProject.project_code ?? '', editable: true },
-    { label: '项目名称', key: 'project_name', value: props.javaProject.project_name ?? '', editable: true },
-    { label: '项目分组', key: 'project_group', value: props.javaProject.project_group ?? '', editable: true },
-    { label: 'Docker 镜像名称', key: 'docker_image_name', value: props.javaProject.docker_image_name ?? '', editable: true },
-    { label: 'Docker 镜像标签', key: 'docker_image_tag', value: props.javaProject.docker_image_tag ?? '', editable: true },
-    { label: '容器名称', key: 'container_name', value: props.javaProject.container_name ?? '', editable: true },
-    { label: '外部端口', key: 'external_port', value: String(props.javaProject.external_port ?? ''), editable: true },
-    { label: '内部端口', key: 'internal_port', value: String(props.javaProject.internal_port ?? ''), editable: true },
-    { label: '宿主机路径', key: 'host_project_path', value: props.javaProject.host_project_path ?? '', editable: true },
-    { label: '容器内路径', key: 'container_project_path', value: props.javaProject.container_project_path ?? '', editable: true },
-    { label: '访问地址', key: 'access_url', value: props.javaProject.access_url ?? '', editable: true },
-    { label: 'Git地址', key: 'git_repository', value: props.javaProject.git_repository ?? '', editable: true },
-    { label: 'JDK版本', key: 'jdk_version', value: String(props.javaProject.jdk_version ?? ''), editable: false },
-    { label: '创建时间', key: 'created_at', value: formatDate(props.javaProject.created_at), editable: false },
-    { label: '更新时间', key: 'updated_at', value: formatDate(props.javaProject.updated_at), editable: false },
-    { label: '最近部署时间', key: 'last_deployed_at', value: formatDate(props.javaProject.last_deployed_at), editable: false },
-  ];
-  isEditing.value = false;
-  isViewDetailDialogOpen.value = true;
-};
+}
 
 const fetchContainerStatus = async () => {
-  containerStatus.value = 'Checking';
+  containerStatus.value = 'Checking'
+
+  if (!props.javaProject.container_name) {
+    containerStatus.value = 'Unknown'
+    return
+  }
+
   try {
     const res = await provideCurrentAgentProxyApi().fetchDockerContainerStatus(
       props.javaProject.container_name || ''
-    );
-    containerStatus.value = res?.container_status || 'Unknown';
+    )
+    containerStatus.value = res?.container_status || 'Unknown'
   } catch {
-    containerStatus.value = 'Unknown';
+    containerStatus.value = 'Unknown'
   }
-};
+}
+
+const formatContainerStatusLabel = (status: string) => {
+  const raw = String(status || '').toLowerCase()
+
+  if (!raw) return 'Unknown'
+  if (raw.includes('awaiting deployment')) return '未部署'
+  if (raw === 'unknown') return 'Unknown'
+  return status
+}
 
 const getContainerStatusTagType = (status: string) => {
-  const s = status.toLowerCase();
-  if (s.startsWith('up')) return 'success';
-  if (s.startsWith('exited (0)')) return 'info';
-  if (s.startsWith('exited')) return 'danger';
-  if (s.startsWith('restarting') || s.startsWith('paused')) return 'warning';
-  if (s.startsWith('created')) return 'info';
-  if (s.startsWith('dead')) return 'danger';
-  return 'info';
-};
+  const s = status.toLowerCase()
+  if (s.includes('awaiting deployment')) return 'info'
+  if (s.startsWith('up')) return 'success'
+  if (s.startsWith('exited (0)')) return 'info'
+  if (s.startsWith('exited')) return 'danger'
+  if (s.startsWith('restarting') || s.startsWith('paused')) return 'warning'
+  if (s.startsWith('created')) return 'info'
+  if (s.startsWith('dead')) return 'danger'
+  if (s === 'unknown') return 'warning'
+  return 'info'
+}
 
-const startEdit = () => {
-  isEditing.value = true;
-};
+const viewJavaProjectDetail = () => {
+  isViewDetailDialogOpen.value = true
+}
 
-const cancelEdit = () => {
-  isEditing.value = false;
-};
-
-const saveEdit = async () => {
-  try {
-    await provideCurrentAgentProxyApi().updateJavaProject({
-      id: props.javaProject.id,
-    } as UpdateJavaProjectRequestDto);
-    Notify.create({ type: 'positive', message: '保存成功', position: 'top' });
-    isViewDetailDialogOpen.value = false;
-    isEditing.value = false;
-  } catch {
-    Notify.create({ type: 'negative', message: '保存失败', position: 'top' });
+watch(
+  () => props.javaProject.container_name,
+  () => {
+    fetchContainerStatus()
   }
-};
-
-const handleSecondConfirmDelete = async () => {
-  if (confirmText.value !== '确定删除') {
-    Notify.create({ type: 'negative', message: '请输入确认文字', position: 'top' });
-    return;
-  }
-  try {
-    await provideCurrentAgentProxyApi().deleteJavaProject(props.javaProject.id);
-    Notify.create({ type: 'positive', message: '删除成功', position: 'top' });
-    isSecondConfirmDeleteDialogOpen.value = false;
-    isViewDetailDialogOpen.value = false;
-  } catch {
-    Notify.create({ type: 'negative', message: '删除失败', position: 'top' });
-  }
-  confirmText.value = '';
-};
+)
 
 onMounted(() => {
-  fetchContainerStatus();
-});
+  fetchContainerStatus()
+})
 </script>
 
 <style scoped>

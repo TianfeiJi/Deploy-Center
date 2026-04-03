@@ -89,11 +89,86 @@ export class AgentProxyApi {
   }
 
   // ========================== Docker 管理 ==========================
-  
-  // 获取容器状态
+
+  // 获取指定容器运行状态
   async fetchDockerContainerStatus(container_name: string): Promise<any> {
-    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(this.agentId, `/api/deploy-agent/docker/container-status?container_name=${container_name}`, 'GET');
-    return httpResult.data.data;
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(
+      this.agentId,
+      `/api/deploy-agent/docker/containers/status?container_name=${encodeURIComponent(container_name)}`,
+      'GET'
+    )
+    return httpResult.data.data
+  }
+
+  // 获取指定容器 ps -a 信息
+  async fetchDockerContainerInfo(container_name: string): Promise<any> {
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(
+      this.agentId,
+      `/api/deploy-agent/docker/containers/info?container_name=${encodeURIComponent(container_name)}`,
+      'GET'
+    )
+    return httpResult.data.data
+  }
+
+  // 获取指定容器 inspect 详细信息
+  async fetchDockerContainerInspect(container_name: string): Promise<any> {
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(
+      this.agentId,
+      `/api/deploy-agent/docker/containers/inspect?container_name=${encodeURIComponent(container_name)}`,
+      'GET'
+    )
+    return httpResult.data.data
+  }
+
+  // 获取 Docker 容器状态汇总
+  async fetchDockerContainerSummary(): Promise<any> {
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(
+      this.agentId,
+      `/api/deploy-agent/docker/containers/summary`,
+      'GET'
+    )
+    return httpResult.data.data
+  }
+
+  // 获取所有容器列表
+  async fetchDockerContainerList(): Promise<any[]> {
+    const httpResult: HttpResult<HttpResult<any[]>> = await callAgentApi(
+      this.agentId,
+      `/api/deploy-agent/docker/containers`,
+      'GET'
+    )
+    return httpResult.data.data || []
+  }
+
+  // 获取本地镜像列表
+  async fetchDockerImageList(): Promise<any[]> {
+    const httpResult: HttpResult<HttpResult<any[]>> = await callAgentApi(
+      this.agentId,
+      `/api/deploy-agent/docker/images`,
+      'GET'
+    )
+    return httpResult.data.data || []
+  }
+
+  // 获取 Docker 引擎信息
+  async fetchDockerInfo(): Promise<any> {
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(
+      this.agentId,
+      `/api/deploy-agent/docker/info`,
+      'GET'
+    )
+    return httpResult.data.data
+  }
+
+  // 运行受限 Docker 命令
+  async runAllowedDockerCommand(command: string): Promise<string> {
+    const httpResult: HttpResult<HttpResult<string>> = await callAgentApi(
+      this.agentId,
+      `/api/deploy-agent/docker/commands/run`,
+      'POST',
+      { command }
+    )
+    return httpResult.data.data
   }
 
   // ========================== DeployTask 管理 ==========================

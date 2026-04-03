@@ -213,9 +213,9 @@ import { useAgentStore } from 'src/stores/useAgentStore';
 import { provideCurrentAgentProxyApi } from 'src/factory/agentProxyApiFactory';
 import { AddWebProjectRequestDto } from 'src/types/dto/AddWebProjectRequestDto';
 import { AddJavaProjectRequestDto } from 'src/types/dto/AddJavaProjectRequestDto';
-import WebProjectCard from 'src/components/WebProjectCard.vue';
-import JavaProjectCard from 'src/components/JavaProjectCard.vue';
-import PythonProjectCard from 'src/components/PythonProjectCard.vue';
+import WebProjectCard from 'src/components/project/cards/WebProjectCard.vue';
+import JavaProjectCard from 'src/components/project/cards/JavaProjectCard.vue';
+import PythonProjectCard from 'src/components/project/cards/PythonProjectCard.vue';
 
 const agentStore = useAgentStore();
 
