@@ -51,7 +51,7 @@ async def get_deploy_task_list(
         reverse=True
     )
 
-    return HttpResult.ok()
+    return HttpResult.ok(result)
 
 # TODO：要做权限校验
 @deploy_task_router.delete("/api/deploy-agent/deploy-task/delete/{id}", summary="删除部署任务")

@@ -332,9 +332,7 @@ const selectedTask = ref<DeployTaskWithProject | null>(null);
 const statusOptions = [
   { label: '全部状态', value: 'ALL' },
   { label: '等待中', value: 'PENDING' },
-  { label: '上传中', value: 'UPLOADING' },
-  { label: '构建中', value: 'BUILDING' },
-  { label: '部署中', value: 'DEPLOYING' },
+  { label: '部署中', value: 'RUNNING' },
   { label: '成功', value: 'SUCCESS' },
   { label: '失败', value: 'FAILED' },
   { label: '已取消', value: 'CANCELLED' },
@@ -394,7 +392,7 @@ const groupedTasks = computed<DeployTaskGroup[]>(() => {
         project_name: first?.project_name,
         taskCount: sortedTasks.length,
         runningCount: sortedTasks.filter((task) =>
-          ['UPLOADING', 'BUILDING', 'DEPLOYING'].includes(task.status || '')
+          ['RUNNING'].includes(task.status || '')
         ).length,
         latestCreatedAt: first?.created_at,
         tasks: sortedTasks,
@@ -409,7 +407,7 @@ const groupedTasks = computed<DeployTaskGroup[]>(() => {
 
 const runningTaskCount = computed(() => {
   return filteredTasks.value.filter((task) =>
-    ['UPLOADING', 'BUILDING', 'DEPLOYING'].includes(task.status || '')
+    ['RUNNING'].includes(task.status || '')
   ).length;
 });
 
@@ -428,7 +426,7 @@ watch(
 async function loadDeployTasks() {
   loading.value = true;
   try {
-    deployTasks.value = await provideCurrentAgentProxyApi().fetchDeployTaskList();
+    deployTasks.value = await provideCurrentAgentProxyApi().fetchDeployTaskList() || [];
   } finally {
     loading.value = false;
   }
@@ -443,11 +441,7 @@ function getStatusText(status?: string) {
   switch (status) {
     case 'PENDING':
       return '等待中';
-    case 'UPLOADING':
-      return '上传中';
-    case 'BUILDING':
-      return '构建中';
-    case 'DEPLOYING':
+    case 'RUNNING':
       return '部署中';
     case 'SUCCESS':
       return '成功';
@@ -839,9 +833,7 @@ function timeAgo(timestampString?: string) {
   border-color: #e2e8f0;
 }
 
-.task-status-pill.is-uploading,
-.task-status-pill.is-building,
-.task-status-pill.is-deploying {
+.task-status-pill.is-running {
   color: #92400e;
   background: #fff7ed;
   border-color: #fed7aa;
