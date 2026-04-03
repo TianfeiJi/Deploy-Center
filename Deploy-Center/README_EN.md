@@ -5,7 +5,7 @@ The Deploy Center backend service handles frontend requests, managing authentica
 ## Project Structure
 
 ```bash
-Backend-Deploy-Center/
+Deploy-Center/
 ├── Dockerfile                     # Build image for the Deploy Center backend
 ├── README.md                      # This documentation file
 ├── data/                          # Runtime data storage

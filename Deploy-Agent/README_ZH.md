@@ -4,7 +4,7 @@
 
 ## 项目结构
 ```bash
-Backend-Deploy-Agent/
+Deploy-Agent/
 ├── Dockerfile
 ├── data
 ├── example

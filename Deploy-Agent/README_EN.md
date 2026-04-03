@@ -4,7 +4,7 @@ The Deploy Agent is a backend service built with FastAPI. It is responsible for 
 
 ## Project Structure
 ```bash
-Backend-Deploy-Agent/
+Deploy-Agent/
 ├── Dockerfile
 ├── data
 ├── example

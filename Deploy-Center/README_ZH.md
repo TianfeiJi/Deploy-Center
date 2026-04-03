@@ -5,7 +5,7 @@
 ## 项目结构
 
 ```bash
-Backend-Deploy-Center/
+Deploy-Center/
 ├── Dockerfile                     # 构建部署中心后端镜像
 ├── README.md                      # 本说明文件
 ├── data/                          # 系统运行数据存储
