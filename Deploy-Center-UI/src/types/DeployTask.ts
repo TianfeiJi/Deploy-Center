@@ -1,8 +1,6 @@
 export type DeployTaskStatus =
   | "PENDING"
-  | "UPLOADING"
-  | "BUILDING"
-  | "DEPLOYING"
+  | "RUNNING"
   | "SUCCESS"
   | "FAILED"
   | "CANCELLED";

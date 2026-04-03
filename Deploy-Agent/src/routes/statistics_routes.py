@@ -69,12 +69,12 @@ async def get_project_deployment_statistics():
                 if not matched:
                     status_summary["awaiting_deployment"] += 1
 
-        return HttpResult(code=200, status="success", msg=None, data={
+        return HttpResult.ok(data={
             **status_summary,
             "check_time": check_time
         })
 
     except subprocess.CalledProcessError as e:
-        return HttpResult(code=500, status="failed", msg=f"Docker command failed: {e}", data=None)
+        return HttpResult.fail(msg=f"Docker command failed: {e}")
     except Exception as e:
-        return HttpResult(code=500, status="failed", msg=str(e), data=None)
+        return HttpResult.fail(msg=str(e))

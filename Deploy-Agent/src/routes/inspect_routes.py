@@ -40,21 +40,21 @@ async def get_info():
             "docker_version": docker_version,
             "fetched_at": datetime.now().isoformat()
         }
-        return HttpResult[dict](code=200, status="success", msg=None, data=data)
+        return HttpResult.ok(data=data)
     except Exception as e:
         logger.error(f"获取 Agent 信息失败: {e}")
-        return HttpResult[dict](code=500, status="failed", msg=str(e), data=None)
+        return HttpResult.fail(msg=str(e))
 
 @inspect_router.get("/api/deploy-agent/health", summary="健康检查接口")
 async def health_check():
     """
     返回当前 Agent 健康状态。
     """
-    return HttpResult[str](code=200, status="success", msg=None, data="healthy")
+    return HttpResult.ok(data="healthy")
 
 @inspect_router.get("/api/deploy-agent/inspect/agent-version", summary="获取 Agent 版本")
 async def get_version():
     """
     返回当前 Agent 的版本信息。
     """
-    return HttpResult[str](code=200, status="success", msg=None, data=app_config.version)
+    return HttpResult.ok(data=app_config.version)

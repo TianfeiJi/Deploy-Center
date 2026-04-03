@@ -23,7 +23,7 @@ async def get_deploy_log_list():
     log_directory = os.path.join(parent_parent_directory, "logs")
 
     if not os.path.exists(log_directory):
-        return HttpResult(code=404, status="failed", msg="日志目录不存在", data=None)
+        return HttpResult(code=404, msg="日志目录不存在")
     
     deploy_logs = []
     for log_file in os.listdir(log_directory):
@@ -50,8 +50,8 @@ async def get_deploy_log_list():
                 )
                 deploy_logs.append(deploy_log)
             except Exception as e:
-                return HttpResult(code=500, status="error", msg=f"处理日志文件 {log_file} 时出错: {e}", data=None)
-    return HttpResult(code=200, status="success", msg=None, data=deploy_logs)
+                return HttpResult.fail(msg=f"处理日志文件 {log_file} 时出错: {e}")
+    return HttpResult.ok(data=deploy_logs)
 
 # 获取指定日志文件的内容
 @deploy_log_router.get("/api/deploy-agent/deploy-log/{filename}", summary="获取指定日志内容", description="根据日志文件名返回对应日志文件的内容。")
@@ -70,11 +70,11 @@ async def get_deploy_log_content(filename: str):
     log_file_path = os.path.join(log_directory, filename)
 
     if not os.path.exists(log_file_path):
-        return HttpResult(code=404, status="success", msg=f"Log file {filename} not found.", data=None)
+        return HttpResult.fail(code=404, msg=f"Log file {filename} not found.")
 
     try:
         with open(log_file_path, "r", encoding="utf-8") as file:
             log_content = file.read()
-        return HttpResult(code=200, status="success", msg=None, data=log_content)
+        return HttpResult.ok(data=log_content)
     except Exception as e:
-        return HttpResult(code=500, status="failed", msg=f"Failed to read log file: {str(e)}", data=None)
+        return HttpResult.fail(msg=f"Failed to read log file: {str(e)}")

@@ -51,12 +51,7 @@ async def get_deploy_task_list(
         reverse=True
     )
 
-    return HttpResult(
-        code=200,
-        status="success",
-        msg=None,
-        data=result
-    )
+    return HttpResult.ok()
 
 # TODO：要做权限校验
 @deploy_task_router.delete("/api/deploy-agent/deploy-task/delete/{id}", summary="删除部署任务")
@@ -66,23 +61,13 @@ async def delete_deploy_task(id: str):
     """
     task = DEPLOY_TASK_DATA_MANAGER.get_deploy_task(id)
     if task is None:
-        return HttpResult[None](
-            code=404,
-            status="failed",
-            msg=f"没有找到 id 为 {id} 的部署任务",
-            data=None
-        )
+        return HttpResult.fail(code=404, msg=f"没有找到 id 为 {id} 的部署任务")
         
     current_user = get_current_user()
     
     allowed_status = {"SUCCESS", "FAILED", "CANCELLED"}
     if task.status not in allowed_status:
-        return HttpResult[None](
-            code=400,
-            status="failed",
-            msg=f"当前任务状态为 {task.status}，不允许删除",
-            data=None
-        )
+        return HttpResult.fail(code=400, msg=f"当前任务状态为 {task.status}，不允许删除")
 
     DEPLOY_TASK_DATA_MANAGER.delete_deploy_task(id)
     
@@ -91,9 +76,4 @@ async def delete_deploy_task(id: str):
         f"operator={current_user.get('nickname') if current_user else None}"
     )
     
-    return HttpResult[None](
-        code=200,
-        status="success",
-        msg="删除部署任务成功",
-        data=None
-    )
+    return HttpResult.ok(msg="删除部署任务成功")

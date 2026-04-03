@@ -161,7 +161,7 @@ const onToggleUserStatus = async (row: User, newStatus: string) => {
 
   const ajaxResult = await changeUserStatus(row.id, newStatus);
 
-  if (ajaxResult.status == "success") {
+  if (ajaxResult.code == 200) {
     Notify.create({ type: 'positive', message: `${action}成功` });
   } else {
     // 取消操作，回滚状态

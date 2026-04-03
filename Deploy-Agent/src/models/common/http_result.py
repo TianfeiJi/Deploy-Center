@@ -1,11 +1,26 @@
 from pydantic import BaseModel, Field
 from typing import Generic, TypeVar, Optional
 
-# 定义一个类型变量 T，用于泛型
 T = TypeVar("T")
 
+
 class HttpResult(BaseModel, Generic[T]):
-    code: Optional[int] = Field(None, description="HTTP 状态码")
-    status: str = Field(..., description="状态描述")
-    msg: Optional[str] = Field(None, description="消息内容") 
-    data: Optional[T] = Field(None, description="返回数据")
+    """
+    Unified API response wrapper.
+
+    Attributes:
+        code: Business status code
+        msg: Optional message
+        data: Response payload
+    """
+    code: int = Field(..., description="Business status code")
+    msg: Optional[str] = Field(default=None, description="Message")
+    data: Optional[T] = Field(default=None, description="Payload")
+
+    @classmethod
+    def ok(cls, data: T = None, msg: Optional[str] = None):
+        return cls(code=200, msg=msg, data=data)
+
+    @classmethod
+    def fail(cls, code: int = 500, msg: str = "failed", data: T = None):
+        return cls(code=code, msg=msg, data=data)

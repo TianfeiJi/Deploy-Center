@@ -13,7 +13,7 @@ class VerifyUserMiddleware(BaseHTTPMiddleware):
         user = request.headers.get("X-User")
         # 检查是否携带 X-User 且用户合法（暂时只判断是否存在）
         if not user or not self.is_valid_user(user):
-            return HttpResult[None](code=status.HTTP_401_UNAUTHORIZED, status="failed", msg="用户缺失，非法访问", data=None)
+            return HttpResult[None](code=status.HTTP_401_UNAUTHORIZED, msg="用户缺失，非法访问", data=None)
 
         return await call_next(request)
     

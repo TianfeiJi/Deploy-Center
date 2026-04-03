@@ -52,7 +52,7 @@ def setup_2fa(username: str):
         }
         USER_DATA_MANAGER.update_user(user.id, updated_data)
 
-    return HttpResult[dict](code=200, status="success", msg=None, data={"secret": secret, "qr_code_base64": qr_base64})
+    return HttpResult.ok(data={"secret": secret, "qr_code_base64": qr_base64})
 
 
 class Verify2FARequestDto(BaseModel):
@@ -68,11 +68,11 @@ def verify_2fa(dto: Verify2FARequestDto):
     """
     user: User = USER_DATA_MANAGER.get_user_by_username(dto.username)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        return HttpResult.fail(code=404, msg="User not found")
 
     secret = user.two_factor_secret
     is_verified = tfa.verify_code(secret, dto.code, valid_window=1)
-    return HttpResult[bool](code=200, status="success", msg=None, data=bool(is_verified))
+    return HttpResult.ok(data=bool(is_verified))
 
 
 @skip_auth
@@ -83,6 +83,6 @@ def get_2fa_status(username: str) -> HttpResult[bool]:
     """
     user = USER_DATA_MANAGER.get_user_by_username(username)
     if not user:
-        raise HTTPException(status_code=404, detail="用户不存在")
+        return HttpResult.fail(code=404, msg="用户不存在")
 
-    return HttpResult[bool](code=200, status="success", msg=None, data=bool(user.two_factor_secret))
+    return HttpResult.ok(data=bool(user.two_factor_secret))

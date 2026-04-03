@@ -22,11 +22,11 @@ async def login(dto: UserLoginRequestDto):
 
     user: User = USER_DATA_MANAGER.get_user_by_username(username)
     if not user:
-        return HttpResult[None](code=400, status="failed", msg="用户不存在", data=None)
+        return HttpResult.fail(code=404, msg="用户不存在")
     if password != user.password:
-        return HttpResult[None](code=400, status="failed", msg="密码错误", data=None)
+        return HttpResult.fail(code=400, msg="密码错误")
     if user.status != "ENABLED":
-        return HttpResult[None](code=400, status="failed", msg="用户已被禁用", data=None)
+        return HttpResult.fail(code=400, msg="用户已被禁用")
     
     # 检查是否开启 2FA
     enable_2fa_config: SystemConfig = SYSTEM_CONFIG_DATA_MANAGER.get_config("enable_2fa")
@@ -34,14 +34,14 @@ async def login(dto: UserLoginRequestDto):
 
     if is_2fa_enabled:
         if not user.two_factor_secret:
-            return HttpResult[None](code=400, status="failed", msg="该用户未绑定双因素认证", data=None)
+            return HttpResult.fail(code=400, msg="该用户未绑定双因素认证")
 
         if not two_factor_code:
-            return HttpResult[None](code=400, status="failed", msg="请输入双因素验证码", data=None)
+            return HttpResult.fail(code=400, msg="请输入双因素验证码")
 
         tfa = TwoFactorAuth()
         if not tfa.verify_code(user.two_factor_secret, two_factor_code, valid_window=1):
-            return HttpResult[None](code=400, status="failed", msg="双因素验证码错误", data=None)
+            return HttpResult.fail(code=400, msg="双因素验证码错误")
         
     # 密码校验和2FA都通过 -> 生成token
     token = JWTUtil.generate_token(user.id, username)
@@ -49,11 +49,11 @@ async def login(dto: UserLoginRequestDto):
         "user_id": user.id,
         "token": token
     }
-    return HttpResult[dict](code=200, status="success", msg="登录成功", data=result_dict)
+    return HttpResult.ok(msg="登录成功", data=result_dict)
 
 
 @skip_auth
 @auth_router.post("/api/deploy-center/auth/logout")
 async def logout():
     # TODO: 考虑加一些别的逻辑
-    return HttpResult[None](code=200, status="success", msg="退出登录成功", data=None)
+    return HttpResult.ok(msg="退出登录成功")

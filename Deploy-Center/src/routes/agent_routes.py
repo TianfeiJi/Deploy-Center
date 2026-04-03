@@ -1,12 +1,13 @@
 import json
-from utils.jwt_util import JWTUtil
-from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
 import httpx
+from typing import Dict, List
+from fastapi import APIRouter, Request
+from utils.jwt_util import JWTUtil
+
 from models.entity.agent import Agent
 from models.dto.update_agent_request_dto import UpdateAgentRequestDto
 from manager.user_data_manager import UserDataManager
 from manager import AGENT_DATA_MANAGER
-from typing import Any, Dict, List, Optional
 from models.common.http_result import HttpResult
 from config.log_config import get_logger
 
@@ -18,9 +19,9 @@ logger = get_logger()
 async def get_agent_list():
     try:
         agent_list: List[Agent] = AGENT_DATA_MANAGER.list_agents()
-        return HttpResult[List[Agent]](code=200, status="success", msg=None, data=[agent for agent in agent_list])
+        return HttpResult.ok(data=[agent for agent in agent_list])
     except Exception as e:
-        return HttpResult[None](code=500, status="failed", msg=str(e), data=None)
+        return HttpResult.fail(msg=str(e))
 
 
 @agent_router.get("/api/deploy-center/agent/{agent_id}", summary="获取Agent详情")
@@ -28,10 +29,10 @@ async def get_agent(agent_id: int):
     try:
         agent = AGENT_DATA_MANAGER.get_agent(agent_id)
         if not agent:
-            raise HTTPException(status_code=404, detail="Agent not found")
-        return HttpResult(code=200, status="success", msg=None, data=agent)
+            return HttpResult.fail(code=404, msg="Agent not found")
+        return HttpResult.ok(data=agent)
     except Exception as e:
-        return HttpResult(code=500, status="failed", msg=str(e), data=None)
+        return HttpResult.fail(msg=str(e))
 
 
 @agent_router.post("/api/deploy-center/agent/register", summary="注册Agent")
@@ -42,29 +43,29 @@ async def agent_register(agent_data: dict):
         # 若验证通过 -> 执行注册逻辑
         # 若验证失败 -> 中止注册并返回失败信息
         AGENT_DATA_MANAGER.create_agent(agent_data)
-        return HttpResult[dict](code=200, status="success", msg=None, data=None)
+        return HttpResult.ok()
     except Exception as e:
-        return HttpResult[dict](code=500, status="failed", msg=str(e), data=None)
+        return HttpResult.fail(msg=str(e))
 
 
 @agent_router.put("/api/deploy-center/agent/{agent_id}", summary="更新Agent信息")
 async def update_agent(update_dto: UpdateAgentRequestDto):
     try:
         AGENT_DATA_MANAGER.update_agent(update_dto.id, update_dto.model_dump(exclude={"id"}))
-        return HttpResult[dict](code=200, status="success", msg=None, data=None)
+        return HttpResult.ok()
     except ValueError as ve:
-        return HttpResult[dict](code=404, status="failed", msg=str(ve), data=None)
+        return HttpResult.fail(code=404, msg=str(ve))
     except Exception as e:
-        return HttpResult[dict](code=500, status="failed", msg=str(e), data=None)
+        return HttpResult.fail(msg=str(e))
 
 
 @agent_router.delete("/api/deploy-center/agent/{agent_id}", summary="删除Agent")
 async def delete_agent(agent_id: int):
     try:
         AGENT_DATA_MANAGER.delete_agent(agent_id)
-        return HttpResult[dict](code=200, status="success", msg=None, data=None)
+        return HttpResult.ok()
     except Exception as e:
-        return HttpResult[dict](code=500, status="failed", msg=str(e), data=None)
+        return HttpResult.fail(msg=str(e))
 
 
 """
@@ -109,11 +110,11 @@ async def call_agent_api(agent_id: int, api_path: str, method: str, request: Req
     try:
         agent: Dict = AGENT_DATA_MANAGER.get_agent(agent_id)
         if not agent:
-            raise HTTPException(status_code=404, detail="Agent not found")
+            return HttpResult.fail(code=404, msg="Agent not found")
 
         service_url = agent.get("service_url")
         if not service_url:
-            raise HTTPException(status_code=400, detail="Agent 缺少 service_url")
+            return HttpResult.fail(code=400, msg="Agent 缺少 service_url")
 
         # 防止双斜杠或拼错路径
         url = f"{service_url.rstrip('/')}/{api_path.lstrip('/')}"
@@ -150,18 +151,12 @@ async def call_agent_api(agent_id: int, api_path: str, method: str, request: Req
             response.raise_for_status()
             content_type = response.headers.get("Content-Type", "")
             data = response.json() if "application/json" in content_type else response.text
-
-            return {
-                "code": 200,
-                "status": "success",
-                "msg": "Agent API调用成功",
-                "data": data
-            }
+            return HttpResult.ok(data=data, msg="Agent API调用成功")
     except httpx.RequestError as e:
         error_msg = f"[Center转发失败] 无法请求 Agent（id={agent_id}）的接口: {url}, 方法: {method.upper()}，异常类型：{e.__class__.__name__}，详情：{str(e)}"
         logger.error(error_msg)
-        return {"code": 500, "status": "failed", "msg": error_msg, "data": None}
+        return HttpResult.fail(msg=error_msg)
     except Exception as e:
         error_msg = f"[Center异常] 调用 Agent（id={agent_id}）的接口: {url}, 方法: {method.upper()} 出现未知错误，异常类型：{e.__class__.__name__}，详情：{str(e)}"
         logger.error(error_msg)
-        return {"code": 500, "status": "failed", "msg": error_msg, "data": None}
+        return HttpResult.fail(msg=error_msg)

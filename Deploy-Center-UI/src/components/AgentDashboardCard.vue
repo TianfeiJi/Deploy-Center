@@ -265,8 +265,8 @@ onMounted(async () => {
   agent.value = response.data;
 
   systemInfo.value = await provideCurrentAgentProxyApi().fetchServerSystemInfo();
-  projects.value = await provideCurrentAgentProxyApi().fetchProjectList();
-  deployTasks.value = await provideCurrentAgentProxyApi().fetchDeployTaskList();
+  projects.value = await provideCurrentAgentProxyApi().fetchProjectList() || [];
+  deployTasks.value = await provideCurrentAgentProxyApi().fetchDeployTaskList() || [];
 
   const statistics = await provideCurrentAgentProxyApi().fetchProjectStatusStatistics();
   totalProjectCount.value = statistics.total;
@@ -290,13 +290,13 @@ onUnmounted(() => {
 });
 
 const webProjectCount = computed(
-  () => projects.value.filter((p) => p.project_type === 'Web').length
+  () => (Array.isArray(projects.value) ? projects.value : []).filter((p) => p.project_type === 'Web').length
 );
 const javaProjectCount = computed(
-  () => projects.value.filter((p) => p.project_type === 'Java').length
+  () => (Array.isArray(projects.value) ? projects.value : []).filter((p) => p.project_type === 'Java').length
 );
 const pythonProjectCount = computed(
-  () => projects.value.filter((p) => p.project_type === 'Python').length
+  () => (Array.isArray(projects.value) ? projects.value : []).filter((p) => p.project_type === 'Python').length
 );
 
 const projectStats = computed(() => [
@@ -481,16 +481,83 @@ const initDiskUsageChart = () => {
 
   updateGaugeColor(diskUsageChartInstance.value, percent || 0);
 };
+const deployHistoryChartInstance = ref(null);
 
 const initDeployHistoryChart = () => {
-  const validTasks = deployTasks.value.filter(
-    (task) => task && task.created_at
-  );
+  if (!deployHistoryChart.value) return;
+
+  if (!deployHistoryChartInstance.value) {
+    deployHistoryChartInstance.value = echarts.init(deployHistoryChart.value);
+  }
+
+  const chart = deployHistoryChartInstance.value;
+  const taskList = Array.isArray(deployTasks.value) ? deployTasks.value : [];
+
+  const validTasks = taskList.filter(task => task && task.created_at);
+
+  if (validTasks.length === 0) {
+    chart.setOption({
+      title: {
+        text: 'No deploy tasks',
+        left: 'center',
+        top: 'middle',
+        textStyle: {
+          fontSize: 16,
+          fontWeight: 'normal',
+          color: '#999',
+        },
+      },
+      tooltip: { trigger: 'axis' },
+      legend: {
+        data: ['任务次数', '成功率'],
+      },
+      xAxis: [
+        {
+          type: 'category',
+          data: [],
+          axisTick: { alignWithLabel: true },
+        },
+      ],
+      yAxis: [
+        {
+          type: 'value',
+          name: '任务次数',
+          minInterval: 1,
+        },
+        {
+          type: 'value',
+          name: '成功率(%)',
+          max: 100,
+          interval: 10,
+          axisLabel: {
+            formatter: '{value}%',
+          },
+        },
+      ],
+      series: [
+        {
+          name: '任务次数',
+          type: 'line',
+          yAxisIndex: 0,
+          data: [],
+          smooth: true,
+        },
+        {
+          name: '成功率',
+          type: 'bar',
+          yAxisIndex: 1,
+          data: [],
+          barWidth: '30%',
+        },
+      ],
+    });
+    return;
+  }
 
   const days = validTasks
-    .map((task) => String(task.created_at).split('T')[0])
-    .filter((v, i, a) => a.indexOf(v) === i)
-    .sort((a, b) => new Date(a) - new Date(b))
+    .map(task => String(task.created_at).split('T')[0])
+    .filter((value, index, array) => array.indexOf(value) === index)
+    .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
     .slice(-7);
 
   const deployCounts = days.map(day =>
@@ -501,17 +568,23 @@ const initDeployHistoryChart = () => {
     const dayTasks = validTasks.filter(task => String(task.created_at).startsWith(day));
     const successCount = dayTasks.filter(task => task.status === 'SUCCESS').length;
     const totalCount = dayTasks.length;
-    return totalCount > 0 ? Number((successCount / totalCount * 100).toFixed(1)) : 0;
+    return totalCount > 0 ? Number(((successCount / totalCount) * 100).toFixed(1)) : 0;
   });
 
-  const chart = echarts.init(deployHistoryChart.value);
   chart.setOption({
+    title: {
+      text: '',
+    },
     tooltip: { trigger: 'axis' },
     legend: {
       data: ['任务次数', '成功率'],
     },
     xAxis: [
-      { type: 'category', data: days, axisTick: { alignWithLabel: true } }
+      {
+        type: 'category',
+        data: days,
+        axisTick: { alignWithLabel: true },
+      },
     ],
     yAxis: [
       {
@@ -525,9 +598,9 @@ const initDeployHistoryChart = () => {
         max: 100,
         interval: 10,
         axisLabel: {
-          formatter: '{value}%'
-        }
-      }
+          formatter: '{value}%',
+        },
+      },
     ],
     series: [
       {
@@ -549,7 +622,7 @@ const initDeployHistoryChart = () => {
             return rate >= 80
               ? 'rgba(103, 194, 58, 0.4)'
               : 'rgba(245, 108, 108, 0.4)';
-          }
+          },
         },
       },
     ],

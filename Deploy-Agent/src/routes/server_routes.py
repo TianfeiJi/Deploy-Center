@@ -46,9 +46,9 @@ async def get_server_system_info():
             "ip_address": ip_address or "无法获取",
         }
 
-        return HttpResult[dict](code=200, status="success", msg=None, data=system_info)
+        return HttpResult.ok(data=system_info)
     except Exception as e:
-        return HttpResult[dict](code=500, status="failed", msg=str(e), data=None)
+        return HttpResult.fail(msg=str(e))
     
 @server_router.get("/api/deploy-agent/server/memory_info", summary="获取服务器内存信息")
 async def get_server_memory_info():
@@ -65,9 +65,9 @@ async def get_server_memory_info():
             "percent": memory.percent,
         }
         
-        return HttpResult[dict](code=200, status="success", msg=None, data=memory_info)
+        return HttpResult.ok(data=memory_info)
     except Exception as e:
-        return HttpResult[dict](code=500, status="failed", msg=str(e), data=None)
+        return HttpResult.fail(msg=str(e))
 
 @server_router.get("/api/deploy-agent/server/cpu_usage", summary="获取服务器CPU 使用率")
 async def get_server_cpu_usage():
@@ -77,9 +77,9 @@ async def get_server_cpu_usage():
     try:
         # 获取 CPU 使用率
         cpu_usage = psutil.cpu_percent(interval=1)
-        return HttpResult(code=200, status="success", msg=None, data=cpu_usage)
+        return HttpResult.ok(data=cpu_usage)
     except Exception as e:
-        return HttpResult(code=500, status="failed", msg=str(e), data=None)
+        return HttpResult.fail(msg=str(e))
 
 @server_router.get("/api/deploy-agent/server/disk_info", summary="获取服务器磁盘信息")
 async def get_server_disk_info():
@@ -96,9 +96,9 @@ async def get_server_disk_info():
             "percent": disk.percent,
         }
 
-        return HttpResult[dict](code=200, status="success", msg=None, data=disk_info)
+        return HttpResult.ok(data=disk_info)
     except Exception as e:
-        return HttpResult[dict](code=500, status="failed", msg=str(e), data=None)
+        return HttpResult.fail(msg=str(e))
 
 @server_router.get("/api/deploy-agent/server/network_speed", summary="获取服务器实时网络速度")
 async def get_server_network_speed():
@@ -126,10 +126,10 @@ async def get_server_network_speed():
             "download_speed": round(download_speed, 2)   # 下载速度，保留2位小数
         }
 
-        return HttpResult[dict](code=200, status="success", msg=None, data=network_speed)
+        return HttpResult.ok(data=network_speed)
     except Exception as e:
         logger.error(f"获取服务器网络速度失败: {e}")
-        return HttpResult[dict](code=500, status="failed", msg=str(e), data=None)
+        return HttpResult.fail(msg=str(e))
 
 @server_router.get("/api/deploy-agent/server/network_info", summary="获取服务器网络信息")
 async def get_server_network_info():
@@ -176,6 +176,6 @@ async def get_server_network_info():
                 "packets_recv": counters.packets_recv
             })
 
-        return HttpResult[dict](code=200, status="success", msg=None, data=network_info)
+        return HttpResult.ok(data=network_info)
     except Exception as e:
-        return HttpResult[dict](code=500, status="failed", msg=str(e), data=None)
+        return HttpResult.fail(msg=str(e))
