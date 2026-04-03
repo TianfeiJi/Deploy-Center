@@ -215,7 +215,7 @@ const selectAgent = async (agentId: number) => {
       timeout: 1200,
     })
 
-    await router.replace('/project')
+    await router.replace('/projects')
   }
 
   agentStore.setCurrentAgentById(agentId);
