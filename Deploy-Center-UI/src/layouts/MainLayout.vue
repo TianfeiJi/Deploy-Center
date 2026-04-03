@@ -93,12 +93,12 @@
             no-caps
             no-wrap
             :ripple="false"
-            to="/project"
+            to="/projects"
             class="nav-btn"
-            :class="{ 'active-nav': route.path === '/project' }"
+            :class="{ 'active-nav': route.path === '/projects' }"
           >
-            <q-icon name="build" size="20px" />
-            <span class="q-ml-sm nav-text">项目部署</span>
+            <q-icon name="apps" size="20px" />
+            <span class="q-ml-sm nav-text">项目中心</span>
           </q-btn>
 
           <q-btn

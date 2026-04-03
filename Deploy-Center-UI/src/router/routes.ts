@@ -23,9 +23,9 @@ const routes: RouteRecordRaw[] = [
     children: [{ path: '', component: () => import('pages/TopologyPage.vue') }],
   },
   {
-    path: '/project',
+    path: '/projects',
     component: () => import('layouts/MainLayout.vue'),
-    children: [{ path: '', component: () => import('pages/ProjectDeployPage.vue') }],
+    children: [{ path: '', component: () => import('pages/ProjectCenterPage.vue') }],
   },
   {
     path: '/project/deploy/:id',
