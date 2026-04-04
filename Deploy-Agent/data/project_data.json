@@ -1,17 +1,16 @@
 [
-    {
-        "id": "a1b2c3d4",
-        "agent_id": 1,
-        "project_type": "Web",
-        "project_code": "test",
-        "project_name": "测试项目",
-        "project_group": "其他",
-        "host_project_path": "/data/docker/projects/webs/test",
-        "container_project_path": "/app/docker/projects/webs/test",
-        "access_url": "http://127.0.0.1/test/#/",
-        "git_repository": null,
-        "created_at": "2025-07-01T10:00:00",
-        "updated_at": null,
-        "last_deployed_at": null
-    }
+  {
+    "id": "a1b2c3d4",
+    "project_type": "Web",
+    "project_code": "test",
+    "project_name": "测试项目",
+    "project_group": "其他",
+    "host_project_path": "/data/docker/projects/web/test",
+    "container_project_path": "/app/projects/web/test",
+    "access_url": "http://127.0.0.1/test/#/",
+    "git_repository": null,
+    "created_at": "2025-07-01T10:00:00",
+    "updated_at": null,
+    "last_deployed_at": null
+  }
 ]

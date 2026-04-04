@@ -1,61 +1,61 @@
 [
   {
     "id": "48c0c97d",
-    "template_name": "template1",
-    "relative_path": "dockerfile/java_template1.j2",
+    "template_name": "java-springboot",
+    "relative_path": "dockerfile/java-springboot.j2",
     "template_type": "dockerfile",
     "project_type": "java",
-    "description": "",
+    "description": "通用 Spring Boot 项目容器构建模板，适用于标准 Java 服务快速打包部署",
     "created_at": "2025-04-27T12:00:00",
-    "updated_at": "2025-04-27T12:00:00"
+    "updated_at": null
   },
   {
     "id": "2fe4ebd2",
-    "template_name": "template2",
-    "relative_path": "dockerfile/java_template2.j2",
+    "template_name": "java-springboot-skywalking",
+    "relative_path": "dockerfile/java-springboot-skywalking.j2",
     "template_type": "dockerfile",
     "project_type": "java",
-    "description": "",
+    "description": "集成 SkyWalking 探针的 Spring Boot 构建模板，用于应用性能监控与链路追踪",
     "created_at": "2025-04-27T12:00:00",
-    "updated_at": "2025-04-27T12:00:00"
+    "updated_at": null
   },
   {
     "id": "154ff84f",
-    "template_name": "template1",
-    "relative_path": "dockercommand/java_template1.j2",
+    "template_name": "java-springboot",
+    "relative_path": "dockercommand/java-springboot.j2",
     "template_type": "dockercommand",
     "project_type": "java",
-    "description": "",
+    "description": "Spring Boot 容器运行命令模板",
     "created_at": "2025-04-27T12:00:00",
-    "updated_at": "2025-04-27T12:00:00"
+    "updated_at": null
   },
   {
     "id": "c965cdc8",
-    "template_name": "template2",
-    "relative_path": "dockercommand/java_template2.j2",
+    "template_name": "java-springboot-skywalking",
+    "relative_path": "dockercommand/java-springboot-skywalking.j2",
     "template_type": "dockercommand",
     "project_type": "java",
-    "description": "",
+    "description": "集成 SkyWalking 的 Spring Boot 容器启动命令模板",
     "created_at": "2025-04-27T12:00:00",
-    "updated_at": "2025-04-27T12:00:00"
+    "updated_at": null
   },
   {
     "id": "py00A001",
-    "template_name": "template1",
-    "relative_path": "dockerfile/python_template1.j2",
+    "template_name": "python-common",
+    "relative_path": "dockerfile/python-common.j2",
     "template_type": "dockerfile",
     "project_type": "python",
-    "description": "",
+    "description": "通用 Python 应用构建模板",
     "created_at": "2025-06-11T20:00:00",
     "updated_at": null
   },
   {
     "id": "py00B001",
-    "template_name": "template1",
-    "relative_path": "dockercommand/python_template1.j2",
     "template_type": "dockercommand",
+    "template_name": "python-common",
+    "relative_path": "dockercommand/python-common.j2",
     "project_type": "python",
-    "description": "",
+    "description": "Python 容器运行命令模板",
     "created_at": "2025-06-11T20:00:00",
     "updated_at": null
   }
