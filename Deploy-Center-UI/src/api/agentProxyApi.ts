@@ -180,6 +180,35 @@ export class AgentProxyApi {
     return httpResult.data.data
   }
 
+  // 启动容器
+  async startDockerContainer(container_name: string): Promise<any> {
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(
+      this.agentId,
+      `/api/deploy-agent/docker/containers/start?container_name=${encodeURIComponent(container_name)}`,
+      'POST'
+    )
+    return httpResult.data.data
+  }
+
+  // 停止容器
+  async stopDockerContainer(container_name: string): Promise<any> {
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(
+      this.agentId,
+      `/api/deploy-agent/docker/containers/stop?container_name=${encodeURIComponent(container_name)}`,
+      'POST'
+    )
+    return httpResult.data.data
+  }
+
+  // 重启容器
+  async restartDockerContainer(container_name: string): Promise<any> {
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(
+      this.agentId,
+      `/api/deploy-agent/docker/containers/restart?container_name=${encodeURIComponent(container_name)}`,
+      'POST'
+    )
+    return httpResult.data.data
+  }
 
   // ========================== DeployTask 管理 ==========================
 

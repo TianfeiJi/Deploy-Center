@@ -104,6 +104,14 @@
           <template v-else-if="activeTab === 'container_log'">
             <ContainerLogPanel :project="projectDetail"/>
           </template>
+
+          <template v-else-if="activeTab === 'container_action'">
+            <ContainerActionPanel
+              :project="projectDetail"
+              :runtime-status="runtimeStatus"
+              @action-success="handleContainerActionSuccess"
+            />
+        </template>
         </div>
       </section>
     </div>
@@ -141,10 +149,11 @@ import PythonProjectDeployPanel from 'src/components/deploy/panels/PythonProject
 import ContainerInfoPanel from 'src/components/deploy/panels/ContainerInfoPanel.vue'
 import ContainerInspectPanel from 'src/components/deploy/panels/ContainerInspectPanel.vue'
 import ContainerLogPanel from 'src/components/deploy/panels/ContainerLogPanel.vue'
+import ContainerActionPanel from 'src/components/deploy/panels/ContainerActionPanel.vue'
 
 import { projectDetailDialogMap } from 'src/registry/projectDetailDialogRegistry'
 
-type TabKey = 'deploy' | 'tasks' | 'container_info' | 'container_inspect' | 'container_log'
+type TabKey = 'deploy' | 'tasks' | 'container_info' | 'container_inspect' | 'container_log' | 'container_action'
 type ProjectDetail = PythonProject | JavaProject | WebProject
 type ProjectType = keyof typeof projectDetailDialogMap
 
@@ -166,6 +175,7 @@ const tabs = ref<{ key: TabKey; label: string }[]>([
   { key: 'container_info', label: '容器信息' },
   { key: 'container_inspect', label: '容器 Inspect' },
   { key: 'container_log', label: '容器日志' },
+  { key: 'container_action', label: '容器操作' },
 ])
 
 function getAgentApi() {
@@ -326,6 +336,10 @@ function openProjectDetailDialog() {
   }
 
   detailDialogVisible.value = true
+}
+
+async function handleContainerActionSuccess() {
+  await fetchRuntimeStatus()
 }
 
 async function refreshAll() {

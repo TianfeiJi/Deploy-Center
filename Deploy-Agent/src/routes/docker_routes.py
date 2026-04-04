@@ -1,13 +1,12 @@
-from typing import Any, Dict, List
+from typing import Any
 import subprocess
-import json
 
 from fastapi import APIRouter, Query
 from loguru import logger
 
 from models.common.http_result import HttpResult
-from utils.docker_util import run_docker_command
 from models.dto.docker_container_logs_request import DockerContainerLogsRequest
+from service.docker_service import DockerService
 
 docker_router = APIRouter()
 
@@ -21,45 +20,26 @@ async def get_docker_container_status(
     container_name: str = Query(..., description="容器名称")
 ):
     try:
-        docker_ps_output = run_docker_command([
-            "ps", "-a", "--format", "{{json .}}"
-        ])
+        container_status = DockerService.get_container_status(container_name)
 
-        for line in docker_ps_output.strip().split("\n"):
-            if not line:
-                continue
-
-            container_record = json.loads(line)
-
-            current_container_name = container_record.get("Names", "")
-            current_container_status = container_record.get("Status", "")
-
-            if current_container_name == container_name:
-                return HttpResult[dict](
-                    code=200,
-                    msg=None,
-                    data={
-                        "container_name": current_container_name,
-                        "container_status": current_container_status,
-                    }
-                )
-
-        return HttpResult[dict](
-            code=200,
-            msg="容器未找到",
-            data={
+        if container_status is None:
+            return HttpResult.ok(data={
                 "container_name": container_name,
                 "container_status": "Awaiting Deployment",
-            }
-        )
+            }, msg="容器未找到")
+
+        return HttpResult.ok(data={
+            "container_name": container_name,
+            "container_status": container_status,
+        })
 
     except subprocess.CalledProcessError as e:
         logger.error(f"查询容器状态失败: {e}")
         return HttpResult.fail(msg=str(e))
-
     except Exception as e:
         logger.error(f"查询容器状态异常: {e}")
         return HttpResult.fail(msg=str(e))
+
 
 @docker_router.get(
     "/api/deploy-agent/docker/containers/info",
@@ -72,17 +52,10 @@ async def get_docker_container_info(
     查询单个容器的 docker ps 视图信息。
     """
     try:
-        result = run_docker_command([
-            "ps", "-a",
-            "--filter", f"name={container_name}",
-            "--format", "{{json .}}"
-        ])
+        container_info = DockerService.get_container_ps_info(container_name)
 
-        result = result.strip()
-        if not result:
+        if container_info is None:
             return HttpResult.fail(code=404, msg="容器不存在")
-        
-        container_info = json.loads(result)
 
         return HttpResult.ok(data=container_info)
 
@@ -92,6 +65,7 @@ async def get_docker_container_info(
     except Exception as e:
         logger.error(f"查询容器信息异常: {e}")
         return HttpResult.fail(msg=str(e))
+
 
 @docker_router.get(
     "/api/deploy-agent/docker/containers/inspect",
@@ -105,13 +79,12 @@ async def get_docker_container_inspect(
     适合高级调试、挂载、网络、环境变量等详细信息分析。
     """
     try:
-        result = run_docker_command(["inspect", container_name])
+        inspect_info = DockerService.get_container_inspect_info(container_name)
 
-        inspect_list = json.loads(result)
-        if not inspect_list:
+        if inspect_info is None:
             return HttpResult.fail(code=404, msg="容器不存在")
 
-        return HttpResult.ok(data=inspect_list[0])
+        return HttpResult.ok(data=inspect_info)
 
     except subprocess.CalledProcessError as e:
         logger.error(f"查询容器 inspect 失败: {e}")
@@ -130,37 +103,9 @@ async def get_docker_container_summary():
     获取 Docker 容器状态概览。
     """
     try:
-        result = run_docker_command(["ps", "-a", "--format", "{{json .}}"])
-
-        running = 0
-        exited = 0
-        restarting = 0
-        containers: List[Dict[str, Any]] = []
-
-        for line in result.strip().split("\n"):
-            if not line:
-                continue
-
-            info = json.loads(line)
-            status = info.get("Status", "")
-
-            if "Up" in status:
-                running += 1
-            elif "Exited" in status:
-                exited += 1
-            elif "Restarting" in status:
-                restarting += 1
-
-            containers.append(info)
-
-        summary = {
-            "running": running,
-            "exited": exited,
-            "restarting": restarting,
-            "total": len(containers),
-        }
-
+        summary = DockerService.get_container_summary()
         return HttpResult.ok(data=summary)
+
     except Exception as e:
         logger.error(f"获取容器状态汇总失败: {e}")
         return HttpResult.fail(msg=str(e))
@@ -175,15 +120,9 @@ async def list_docker_containers():
     获取所有容器的 docker ps 视图信息列表。
     """
     try:
-        result = run_docker_command(["ps", "-a", "--format", "{{json .}}"])
+        containers = DockerService.list_containers()
+        return HttpResult.ok(data=containers)
 
-        containers = [
-            json.loads(line)
-            for line in result.strip().split("\n")
-            if line
-        ]
-
-        return HttpResult[list](data=containers)
     except Exception as e:
         logger.error(f"列出容器失败: {e}")
         return HttpResult.fail(msg=str(e))
@@ -198,15 +137,9 @@ async def list_docker_images():
     获取本地所有 Docker 镜像信息。
     """
     try:
-        result = run_docker_command(["images", "--format", "{{json .}}"])
-
-        images = [
-            json.loads(line)
-            for line in result.strip().split("\n")
-            if line
-        ]
-
+        images = DockerService.list_images()
         return HttpResult.ok(data=images)
+
     except Exception as e:
         logger.error(f"列出镜像失败: {e}")
         return HttpResult.fail(msg=str(e))
@@ -221,13 +154,13 @@ async def get_docker_info():
     获取 Docker 基本信息。
     """
     try:
-        result = run_docker_command(["info", "--format", "{{json .}}"])
-        info = json.loads(result)
-
+        info = DockerService.get_docker_info()
         return HttpResult.ok(data=info)
+
     except Exception as e:
         logger.error(f"获取 Docker 信息失败: {e}")
         return HttpResult.fail(msg=str(e))
+
 
 @docker_router.post(
     "/api/deploy-agent/docker/containers/logs",
@@ -235,34 +168,94 @@ async def get_docker_info():
 )
 async def get_docker_container_logs(request: DockerContainerLogsRequest):
     try:
-        docker_command = ["logs", f"--tail={request.tail}"]
+        logs_data = DockerService.get_container_logs(
+            container_name=request.container_name,
+            tail=request.tail,
+            timestamps=request.timestamps,
+            since=request.since,
+            until=request.until,
+        )
 
-        if request.timestamps:
-            docker_command.append("--timestamps")
-
-        if request.since:
-            docker_command.extend(["--since", request.since])
-
-        if request.until:
-            docker_command.extend(["--until", request.until])
-
-        docker_command.append(request.container_name)
-
-        logs_text = run_docker_command(docker_command)
-
-        return HttpResult.ok(data={
-                "container_name": request.container_name,
-                "tail": request.tail,
-                "timestamps": request.timestamps,
-                "since": request.since,
-                "until": request.until,
-                "logs": logs_text,
-            })
+        return HttpResult.ok(data=logs_data)
 
     except subprocess.CalledProcessError as e:
         logger.error(f"查询容器日志失败: {e}")
         return HttpResult.fail(msg=str(e))
-
     except Exception as e:
         logger.error(f"查询容器日志异常: {e}")
+        return HttpResult.fail(msg=str(e))
+
+
+@docker_router.post(
+    "/api/deploy-agent/docker/containers/start",
+    summary="启动容器"
+)
+async def start_container(container_name: str = Query(..., description="容器名称")):
+    try:
+        status = DockerService.get_container_status(container_name)
+
+        if status is None:
+            return HttpResult.fail(code=404, msg="容器不存在")
+
+        if status.startswith("Up"):
+            return HttpResult.fail(msg="容器已在运行")
+
+        output = DockerService.start_container(container_name)
+        return HttpResult.ok(data=output)
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"启动容器失败: {e}")
+        return HttpResult.fail(msg=str(e))
+    except Exception as e:
+        logger.error(f"启动容器异常: {e}")
+        return HttpResult.fail(msg=str(e))
+
+
+@docker_router.post(
+    "/api/deploy-agent/docker/containers/stop",
+    summary="停止容器"
+)
+async def stop_container(container_name: str = Query(..., description="容器名称")):
+    try:
+        status = DockerService.get_container_status(container_name)
+
+        if status is None:
+            return HttpResult.fail(code=404, msg="容器不存在")
+
+        if not status.startswith("Up"):
+            return HttpResult.fail(msg="容器未在运行")
+
+        output = DockerService.stop_container(container_name)
+        return HttpResult.ok(data=output)
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"停止容器失败: {e}")
+        return HttpResult.fail(msg=str(e))
+    except Exception as e:
+        logger.error(f"停止容器异常: {e}")
+        return HttpResult.fail(msg=str(e))
+
+
+@docker_router.post(
+    "/api/deploy-agent/docker/containers/restart",
+    summary="重启容器"
+)
+async def restart_container(container_name: str = Query(..., description="容器名称")):
+    try:
+        status = DockerService.get_container_status(container_name)
+
+        if status is None:
+            return HttpResult.fail(code=404, msg="容器不存在")
+
+        if not status.startswith("Up"):
+            return HttpResult.fail(msg="容器未在运行，无法重启")
+
+        output = DockerService.restart_container(container_name)
+        return HttpResult.ok(data=output)
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"重启容器失败: {e}")
+        return HttpResult.fail(msg=str(e))
+    except Exception as e:
+        logger.error(f"重启容器异常: {e}")
         return HttpResult.fail(msg=str(e))
