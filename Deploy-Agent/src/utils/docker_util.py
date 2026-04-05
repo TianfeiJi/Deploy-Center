@@ -1,4 +1,5 @@
 import subprocess
+from typing import List
 from loguru import logger
 
 
@@ -6,10 +7,11 @@ from loguru import logger
 DOCKER_PATH = "/usr/bin/docker"
 
 # 安全执行Docker命令的辅助函数
-def run_docker_command(args: list) -> str:
+def run_docker_command(args: List[str], log_command: bool = True) -> str:
     command = [DOCKER_PATH] + args
-    
-    logger.debug(f"[docker] exec: {' '.join(command)}")
+
+    if log_command:
+        logger.debug(f"[docker] exec: {' '.join(command)}")
 
     try:
         result = subprocess.run(
@@ -20,9 +22,12 @@ def run_docker_command(args: list) -> str:
             check=True
         )
 
-        logger.debug(f"[docker] success: {result.stdout.strip()}")
+        if log_command:
+            logger.debug(f"[docker] success: {result.stdout.strip()}")
+
         return result.stdout
 
     except subprocess.CalledProcessError as e:
-        logger.error(f"[docker] failed: {' '.join(command)} -> {e.stdout}")
+        if log_command:
+            logger.error(f"[docker] failed: {' '.join(command)} -> {e.stdout}")
         raise
