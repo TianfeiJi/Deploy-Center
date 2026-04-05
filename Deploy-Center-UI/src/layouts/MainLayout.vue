@@ -110,8 +110,8 @@
             class="nav-btn"
             :class="{ 'active-nav': route.path === '/tasks' }"
           >
-            <q-icon name="task_alt" size="20px" />
-            <span class="q-ml-sm nav-text">部署任务</span>
+            <q-icon name="receipt_long" size="20px" />
+            <span class="q-ml-sm nav-text">任务中心</span>
           </q-btn>
 
           <q-btn
@@ -123,8 +123,8 @@
             class="nav-btn"
             :class="{ 'active-nav': route.path === '/deployLog' }"
           >
-            <q-icon name="description" size="20px" />
-            <span class="q-ml-sm nav-text">部署日志</span>
+            <q-icon name="article" size="20px" />
+            <span class="q-ml-sm nav-text">日志中心</span>
           </q-btn>
         </div>
 
