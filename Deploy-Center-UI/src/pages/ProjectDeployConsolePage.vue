@@ -93,6 +93,14 @@
             />
           </template>
 
+          <template v-else-if="activeTab === 'container_stats'">
+            <ContainerStatsPanel :project="projectDetail"/>
+          </template>
+
+          <template v-else-if="activeTab === 'container_log'">
+            <ContainerLogPanel :project="projectDetail"/>
+          </template>
+
           <template v-else-if="activeTab === 'container_info'">
             <ContainerInfoPanel :project="projectDetail" />
           </template>
@@ -101,17 +109,13 @@
             <ContainerInspectPanel :project="projectDetail" />
           </template>
 
-          <template v-else-if="activeTab === 'container_log'">
-            <ContainerLogPanel :project="projectDetail"/>
-          </template>
-
           <template v-else-if="activeTab === 'container_action'">
             <ContainerActionPanel
               :project="projectDetail"
               :runtime-status="runtimeStatus"
               @action-success="handleContainerActionSuccess"
             />
-        </template>
+          </template>
         </div>
       </section>
     </div>
@@ -150,10 +154,19 @@ import ContainerInfoPanel from 'src/components/deploy/panels/ContainerInfoPanel.
 import ContainerInspectPanel from 'src/components/deploy/panels/ContainerInspectPanel.vue'
 import ContainerLogPanel from 'src/components/deploy/panels/ContainerLogPanel.vue'
 import ContainerActionPanel from 'src/components/deploy/panels/ContainerActionPanel.vue'
+import ContainerStatsPanel from 'src/components/deploy/panels/ContainerStatsPanel.vue'
 
 import { projectDetailDialogMap } from 'src/registry/projectDetailDialogRegistry'
 
-type TabKey = 'deploy' | 'tasks' | 'container_info' | 'container_inspect' | 'container_log' | 'container_action'
+type TabKey =
+  | 'deploy'
+  | 'tasks'
+  | 'container_stats'
+  | 'container_log'
+  | 'container_info'
+  | 'container_inspect'
+  | 'container_action'
+
 type ProjectDetail = PythonProject | JavaProject | WebProject
 type ProjectType = keyof typeof projectDetailDialogMap
 
@@ -172,9 +185,10 @@ const runtimeStatus = ref<string>('Checking')
 const tabs = ref<{ key: TabKey; label: string }[]>([
   { key: 'deploy', label: '部署' },
   { key: 'tasks', label: '部署任务' },
+  { key: 'container_stats', label: '容器监控' },
+  { key: 'container_log', label: '容器日志' },
   { key: 'container_info', label: '容器信息' },
   { key: 'container_inspect', label: '容器 Inspect' },
-  { key: 'container_log', label: '容器日志' },
   { key: 'container_action', label: '容器操作' },
 ])
 

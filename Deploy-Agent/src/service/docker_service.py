@@ -142,3 +142,21 @@ class DockerService:
     @staticmethod
     def restart_container(container_name: str) -> str:
         return run_docker_command(["restart", container_name])
+    
+    @staticmethod
+    def get_container_stats(container_name: str) -> Optional[Dict[str, Any]]:
+        """
+        获取指定容器资源使用情况（单次快照）
+        """
+        result = run_docker_command([
+            "stats",
+            "--no-stream",
+            "--format", "{{json .}}",
+            container_name
+        ])
+
+        result = result.strip()
+        if not result:
+            return None
+
+        return json.loads(result)

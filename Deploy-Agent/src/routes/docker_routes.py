@@ -259,3 +259,26 @@ async def restart_container(container_name: str = Query(..., description="容器
     except Exception as e:
         logger.error(f"重启容器异常: {e}")
         return HttpResult.fail(msg=str(e))
+
+@docker_router.get(
+    "/api/deploy-agent/docker/containers/stats",
+    summary="获取指定容器资源监控信息"
+)
+async def get_docker_container_stats(
+    container_name: str = Query(..., description="容器名称")
+):
+    try:
+        stats = DockerService.get_container_stats(container_name)
+
+        if stats is None:
+            return HttpResult.fail(code=404, msg="容器不存在或未运行")
+
+        return HttpResult.ok(data=stats)
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"获取容器 stats 失败: {e}")
+        return HttpResult.fail(msg=str(e))
+
+    except Exception as e:
+        logger.error(f"获取容器 stats 异常: {e}")
+        return HttpResult.fail(msg=str(e))

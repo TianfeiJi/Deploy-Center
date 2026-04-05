@@ -120,6 +120,16 @@ export class AgentProxyApi {
     return httpResult.data.data
   }
 
+  // 获取指定容器 stats 详细信息
+  async fetchDockerContainerStats(container_name: string): Promise<any> {
+    const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(
+      this.agentId,
+      `/api/deploy-agent/docker/containers/stats?container_name=${encodeURIComponent(container_name)}`,
+      'GET'
+    )
+    return httpResult.data.data
+  }
+
   // 获取 Docker 容器状态汇总
   async fetchDockerContainerSummary(): Promise<any> {
     const httpResult: HttpResult<HttpResult<any>> = await callAgentApi(
