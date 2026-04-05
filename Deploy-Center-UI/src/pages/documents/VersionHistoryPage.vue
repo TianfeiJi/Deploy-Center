@@ -15,6 +15,14 @@
 
       <!-- 版本历史列表 -->
       <q-timeline color="primary">
+        <q-timeline-entry title="v1.1.0" subtitle="2026-04-05">
+          <ul>
+            <li>重构部署体系，引入部署任务模型（Deploy Task），实现任务驱动的部署流程与状态流转</li>
+            <li>新增独立部署控制台页面，替代原有部署对话框，提升操作体验</li>
+            <li>构建容器可观测体系，新增监控、日志、信息、Inspect、操作等多面板能力</li>
+            <li>优化部署日志结构，引入步骤化（Step）执行日志与策略标识</li>
+          </ul>
+        </q-timeline-entry>
         <q-timeline-entry title="v1.0.8" subtitle="2025-06-15">
           <ul>
             <li>实现实时获取项目的真实运行状态</li>

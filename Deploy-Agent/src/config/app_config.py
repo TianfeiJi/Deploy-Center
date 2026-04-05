@@ -27,7 +27,7 @@ class AppConfig:
 
         return cls(
             name=app_dict.get("name", "Deploy Agent"),
-            version=app_dict.get("version", "v1.0.8"),
+            version=app_dict.get("version", "v1.1.0"),
             logging=LoggingConfig(
                 file=logging_dict.get("file", False),
                 level=logging_dict.get("level", "DEBUG").upper(),

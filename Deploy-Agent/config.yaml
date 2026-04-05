@@ -1,6 +1,6 @@
 app:
   name: Deploy Agent
-  version: "v1.0.8"
+  version: "v1.1.0"
   logging:
     file: true
     level: debug
