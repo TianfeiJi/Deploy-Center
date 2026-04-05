@@ -18,6 +18,24 @@
       </div>
     </template>
 
+    <template v-else-if="runtimeStatusText === 'Awaiting Deployment'">
+      <div class="empty-state-card">
+        <div class="empty-state-title">项目暂未部署</div>
+        <div class="empty-state-desc">
+          当前项目对应的容器尚不存在，暂时无法执行启动、停止、重启等容器操作。
+        </div>
+      </div>
+    </template>
+
+    <template v-else-if="runtimeStatusText === 'Unknown'">
+      <div class="empty-state-card">
+        <div class="empty-state-title">容器状态未知</div>
+        <div class="empty-state-desc">
+          当前暂时无法确认容器运行状态，请稍后重试，或先检查 Agent 与容器状态。
+        </div>
+      </div>
+    </template>
+
     <template v-else>
       <div class="panel-header">
         <div class="panel-header-left">
@@ -32,6 +50,11 @@
         <div class="summary-item">
           <span class="summary-label">容器名称</span>
           <span class="summary-value">{{ containerName }}</span>
+        </div>
+
+        <div class="summary-item">
+          <span class="summary-label">当前状态</span>
+          <span class="summary-value">{{ runtimeStatusLabel }}</span>
         </div>
       </div>
 
@@ -114,8 +137,18 @@ const containerName = computed(() => {
   return String(props.project.container_name || '').trim()
 })
 
+const runtimeStatusText = computed(() => {
+  return String(props.runtimeStatus || '').trim()
+})
+
 const isRunning = computed(() => {
-  return String(props.runtimeStatus || '').startsWith('Up')
+  return runtimeStatusText.value.startsWith('Up')
+})
+
+const runtimeStatusLabel = computed(() => {
+  if (runtimeStatusText.value === 'Awaiting Deployment') return '未部署'
+  if (runtimeStatusText.value === 'Unknown') return '未知'
+  return runtimeStatusText.value || '-'
 })
 
 const agentProxyApi = provideCurrentAgentProxyApi()
@@ -186,7 +219,7 @@ async function handleRestartContainer() {
 
 watch(
   () => [props.project.id, props.project.project_type, props.project.container_name],
-  async () => {
+  () => {
     lastActionMessage.value = ''
     lastActionLabel.value = ''
   },
@@ -223,13 +256,6 @@ watch(
   font-size: 13px;
   color: #64748b;
   line-height: 1.6;
-}
-
-.panel-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
 }
 
 .summary-bar {
@@ -298,18 +324,6 @@ watch(
 .action-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-}
-
-.action-btn-secondary {
-  background: #fff;
-  color: #334155;
-  border: 1px solid #dbe4ee;
-}
-
-.action-btn-secondary:hover:not(:disabled) {
-  border-color: #bfd2ff;
-  color: #2563eb;
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.08);
 }
 
 .action-btn-start {
@@ -392,8 +406,7 @@ watch(
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
-.empty-state-card,
-.loading-state-card {
+.empty-state-card {
   min-height: 280px;
   border-radius: 20px;
   border: 1px dashed #cbd5e1;
@@ -414,8 +427,7 @@ watch(
   color: #334155;
 }
 
-.empty-state-desc,
-.loading-state-text {
+.empty-state-desc {
   font-size: 14px;
   color: #64748b;
   line-height: 1.7;
@@ -426,11 +438,6 @@ watch(
   .panel-header {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .panel-actions {
-    justify-content: flex-start;
-    flex-wrap: wrap;
   }
 
   .summary-bar {
