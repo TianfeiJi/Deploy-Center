@@ -148,10 +148,12 @@ class DockerService:
         """
         获取指定容器资源使用情况（单次快照）
         """
-        result = run_docker_command(
-            ["stats", "--no-stream", "--format", "{{json .}}", container_name],
-            log_command=False
-        )
+        result = run_docker_command([
+            "stats",
+            "--no-stream",
+            "--format", "{{json .}}",
+            container_name
+        ])
 
         result = result.strip()
         if not result:
